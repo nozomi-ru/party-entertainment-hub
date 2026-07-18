@@ -64,6 +64,8 @@ export type FeatureItem = {
   id: string;
   title: string;
   description: string;
+  /** 幹事・ゲスト向けの短い使い方（余興アプリのみ） */
+  howto?: string;
   icon: "help-circle" | "bar-chart" | "smartphone" | "sparkles" | "grid";
   /** 実アプリがある場合の遷移先。未設定ならリンクなし */
   href?: string;
@@ -75,6 +77,8 @@ export const features: FeatureItem[] = [
     title: "人間ビンゴ",
     description:
       "ゲスト同士が声をかけ合い、マスを埋めていく交流ビンゴ。二次会のアイスブレイクにぴったりです。",
+    howto:
+      "幹事がマスを編集して共有URLを配布 → ゲストはマスをタップして名前を入力 → 縦横斜めが揃うとビンゴ。",
     icon: "grid",
     href: "/app-tools/wedding-bingo/index.html",
   },
@@ -83,6 +87,8 @@ export const features: FeatureItem[] = [
     title: "新郎新婦クイズ",
     description:
       "二人のエピソードを題材にしたクイズで、ゲストの笑顔と会場の声が重なります。",
+    howto:
+      "幹事が問題・正解を編集して共有URLを配布 → ゲストは「はじめる」で4択に回答 → 最後にスコアと正解を確認。",
     icon: "help-circle",
     href: "/app-tools/wedding-quiz/index.html",
   },
@@ -91,6 +97,8 @@ export const features: FeatureItem[] = [
     title: "リアルタイムアンケート",
     description:
       "スマートフォンからその場で投票。結果がすぐに共有され、一体感が生まれます。",
+    howto:
+      "司会が Host で先に入室し質問を編集 → ゲスト用URLを配布して投票 → 司会が結果表示と次の質問を進行。",
     icon: "bar-chart",
     href: "/app-tools/wedding-poll/index.html",
   },

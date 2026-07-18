@@ -52,6 +52,17 @@ When("{string} のアプリリンクを開く", async ({ page }, title: string) 
   await page.getByRole("link", { name: new RegExp(title) }).first().click();
 });
 
+Then(
+  "Featuresに {string} の使い方が表示される",
+  async ({ page }, title: string) => {
+    const link = page.getByRole("link", { name: new RegExp(title) }).first();
+    await expect(link).toBeVisible();
+    await expect(link.getByText("使い方", { exact: true })).toBeVisible();
+    // 幹事向けの短い手順文が入っていること
+    await expect(link).toContainText(/幹事|司会/);
+  },
+);
+
 Then("ビンゴ画面が表示される", async ({ page }) => {
   await expect(page.locator("#main-title")).toHaveText(/Bingo/i);
   await expect(page.locator("#bingo-board")).toBeVisible();
@@ -71,6 +82,67 @@ Given("アンケート開始画面を開いている", async ({ page }) => {
   await page.goto("/app-tools/wedding-poll/index.html");
   await expect(page.locator("#view-start")).toBeVisible();
 });
+
+Then("アンケートの使い方の要点が表示される", async ({ page }) => {
+  await expect(page.locator("#view-start .howto-note")).toContainText(
+    "使い方の要点",
+  );
+  await expect(page.locator("#view-start .howto-note")).toContainText("Host");
+});
+
+Then("Hostに質問編集ボタンがある", async ({ page }) => {
+  await expect(page.locator("#btn-edit-questions")).toBeVisible();
+  await expect(page.locator("#btn-edit-questions")).toHaveText(
+    /質問・選択肢を編集/,
+  );
+});
+
+When(
+  "Hostが先頭の質問文を {string} に変更して保存する",
+  async ({ page }, question: string) => {
+    await page.locator("#btn-edit-questions").click();
+    await expect(page.locator("#admin-panel")).toBeVisible();
+    await page.locator("#admin-form .admin-q").first().fill(question);
+    await page.locator("#admin-save").click();
+    await expect(page.locator("#admin-panel")).toBeHidden({ timeout: 15_000 });
+  },
+);
+
+Then(
+  "セッションの質問文に {string} と表示される",
+  async ({ page }, question: string) => {
+    await expect(page.locator("#question-text")).toContainText(question, {
+      timeout: 15_000,
+    });
+  },
+);
+
+When("GuestがそのURLを開く", async ({ browser, world }) => {
+  expect(world.guestUrl).toBeTruthy();
+  const context = await browser.newContext({
+    locale: "ja-JP",
+    recordVideo: { dir: "test-results/guest-videos" },
+  });
+  await context.addInitScript(() => {
+    localStorage.clear();
+  });
+  const guestPage = await context.newPage();
+  await guestPage.goto(world.guestUrl!);
+  await expect(guestPage.locator("#view-session")).toBeVisible({
+    timeout: 20_000,
+  });
+  world.guestQuestionText =
+    (await guestPage.locator("#question-text").innerText()).trim();
+  await guestPage.close();
+  await context.close();
+});
+
+Then(
+  "Guestの質問文に {string} と表示される",
+  async ({ world }, question: string) => {
+    expect(world.guestQuestionText).toContain(question);
+  },
+);
 
 When("Hostとして新しいテストルームに入室する", async ({ page, world }) => {
   world.room = makeTestRoom();
@@ -193,6 +265,11 @@ Given("ビンゴ画面を開いている", async ({ page }) => {
   await expect(page.locator("#bingo-board")).toBeVisible();
 });
 
+Then("ビンゴの使い方の要点が表示される", async ({ page }) => {
+  await expect(page.locator(".howto-note")).toContainText("使い方の要点");
+  await expect(page.locator(".howto-note")).toContainText("共有URL");
+});
+
 When(
   "中央行の左右マスに名前を登録してビンゴにする",
   async ({ page }) => {
@@ -217,6 +294,15 @@ Given("クイズ画面を開いている", async ({ page }) => {
   });
   await page.reload();
   await expect(page.locator("#btn-start")).toBeVisible();
+});
+
+Then("クイズの使い方の要点が表示される", async ({ page }) => {
+  await expect(page.locator("#view-start .howto-note")).toContainText(
+    "使い方の要点",
+  );
+  await expect(page.locator("#view-start .howto-note")).toContainText(
+    "共有URL",
+  );
 });
 
 When(

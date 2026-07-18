@@ -163,6 +163,26 @@
             font-weight: 600;
         }
 
+        .howto-note {
+            width: 100%;
+            margin: 0 0 1.25em;
+            padding: 0.9em 1em;
+            border: 1px solid var(--color-border);
+            background: #F8F7F5;
+            text-align: left;
+            font-size: 0.78em;
+            line-height: 1.65;
+            color: var(--color-text-light);
+            font-weight: 600;
+        }
+
+        .howto-note strong {
+            display: block;
+            color: var(--color-text);
+            margin-bottom: 0.35em;
+            font-size: 0.95em;
+        }
+
         .progress-wrap {
             width: 100%;
             margin-bottom: 1.5em;
@@ -462,25 +482,31 @@
                 <div class="rules-step-card">
                     <div class="step-num">01</div>
                     <div class="step-body">
-                        <span class="step-title">Listen</span>
-                        <span class="step-desc">新郎新婦にまつわるエピソード問題に挑戦します。</span>
+                        <span class="step-title">Prepare</span>
+                        <span class="step-desc">幹事は「問題を編集・共有URL作成」で問題と正解を整え、共有URLをゲストに配ります。</span>
                     </div>
                 </div>
                 <div class="rules-step-card">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <span class="step-title">Choose</span>
-                        <span class="step-desc">4つの選択肢から、いちばん近い答えを選んでください。</span>
+                        <span class="step-title">Play</span>
+                        <span class="step-desc">「はじめる」を押し、4択から答えを選びます。直後に正誤がわかります。</span>
                     </div>
                 </div>
                 <div class="rules-step-card">
                     <div class="step-num">03</div>
                     <div class="step-body">
-                        <span class="step-title">Celebrate</span>
-                        <span class="step-desc">全問終了後、スコアと正解をその場で確認できます。</span>
+                        <span class="step-title">Review</span>
+                        <span class="step-desc">全問終了後、スコアと各問の正解をその場で確認できます。</span>
                     </div>
                 </div>
             </div>
+
+            <div class="howto-note">
+                <strong>使い方の要点</strong>
+                共有URLを開いたゲストは、幹事が作った同じ問題セットで挑戦できます（DB不要）。問題は端末にも保存されるので、編集後は共有URLの再配布がおすすめです。
+            </div>
+
             <button class="btn-main" id="btn-start">はじめる (START)</button>
             <button class="btn-share" id="open-editor" type="button">問題を編集・共有URL作成</button>
         </div>

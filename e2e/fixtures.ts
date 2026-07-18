@@ -10,6 +10,8 @@ export type E2EWorld = {
   guestVotedOk: boolean;
   /** クイズ共有後に問題文を確認したか */
   quizMarkerOk: boolean;
+  /** Guest が開いたときの質問文（SC-POLL-04） */
+  guestQuestionText: string;
 };
 
 export const test = base.extend<{ world: E2EWorld }>({
@@ -21,6 +23,7 @@ export const test = base.extend<{ world: E2EWorld }>({
       marker: "",
       guestVotedOk: false,
       quizMarkerOk: false,
+      guestQuestionText: "",
     });
   },
 });

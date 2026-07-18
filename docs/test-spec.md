@@ -258,11 +258,13 @@ L4   本番                会場用。上を通ってからだけ
 |----|----------|------------------|--------|
 | SC-LP-01 | `landing.feature` | ブランド名「ことほぎ」が見える | 紹介ページの基本 |
 | SC-LP-02 | `landing.feature` | Features から3アプリへ遷移 | 受け入れ1 |
+| SC-LP-03 | `landing.feature` | Features に使い方一行 | 使い方補足 |
 | SC-POLL-01 | `poll.feature` | Host 入室→Guest 投票 | アンケート最小経路 |
 | SC-POLL-02 | `poll.feature` | Host が結果表示 | 結果公開 |
 | SC-POLL-03 | `poll.feature` | Host は投票不可 | 受け入れ5 |
-| SC-BINGO-01 | `bingo.feature` | ビンゴ達成＋日時 | 受け入れ2 |
-| SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題 | 受け入れ3 |
+| SC-POLL-04 | `poll.feature` | Host が質問編集→Guest 反映 | 要件 P-10 |
+| SC-BINGO-01 | `bingo.feature` | ビンゴ達成＋日時（使い方表示あり） | 受け入れ2 |
+| SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題（使い方表示あり） | 受け入れ3 |
 
 ### 8.3 動画の見方
 

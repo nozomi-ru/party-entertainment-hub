@@ -59,6 +59,17 @@ export function Features() {
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--muted)]">
                     {feature.description}
                   </p>
+                  {feature.howto ? (
+                    <p className="mt-3 max-w-2xl text-xs leading-6 text-[var(--ink)]/70 sm:text-[0.8rem] sm:leading-6">
+                      <span className="font-medium tracking-wide text-[var(--champagne-deep)]">
+                        使い方
+                      </span>
+                      <span className="mx-2 text-[var(--line)]" aria-hidden>
+                        /
+                      </span>
+                      {feature.howto}
+                    </p>
+                  ) : null}
                   {feature.href ? (
                     <p className="mt-3 text-xs font-medium tracking-[0.15em] text-[var(--champagne-deep)]">
                       アプリを開く

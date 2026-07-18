@@ -173,6 +173,26 @@
             font-weight: 600;
         }
 
+        .howto-note {
+            width: 100%;
+            margin: 0 0 1.25em;
+            padding: 0.9em 1em;
+            border: 1px solid var(--color-border);
+            background: #F8F7F5;
+            text-align: left;
+            font-size: 0.78em;
+            line-height: 1.65;
+            color: var(--color-text-light);
+            font-weight: 600;
+        }
+
+        .howto-note strong {
+            display: block;
+            color: var(--color-text);
+            margin-bottom: 0.35em;
+            font-size: 0.95em;
+        }
+
         /* --- ビンゴボード --- */
         .grid {
             display: grid;
@@ -376,26 +396,31 @@
             <div class="rules-step-card">
                 <div class="step-num">01</div>
                 <div class="step-body">
-                    <span class="step-title">Greeting</span>
-                    <span class="step-desc">新郎新婦との関係性を話し、まずは自己紹介をします。</span>
+                    <span class="step-title">Prepare</span>
+                    <span class="step-desc">幹事は「マスを編集・共有URL作成」でマス文言を整え、共有URLをゲストに配ります。</span>
                 </div>
             </div>
             
             <div class="rules-step-card">
                 <div class="step-num">02</div>
                 <div class="step-body">
-                    <span class="step-title">Memory</span>
-                    <span class="step-desc">お一人一マス、お名前を刻んでいきます。</span>
+                    <span class="step-title">Meet</span>
+                    <span class="step-desc">マスの条件に合う人を探し、マスをタップしてお名前を入力します（中央は FREE）。</span>
                 </div>
             </div>
             
             <div class="rules-step-card">
                 <div class="step-num">03</div>
                 <div class="step-body">
-                    <span class="step-title">Celebration</span>
-                    <span class="step-desc">一つでも多くのビンゴラインを完成させてください。</span>
+                    <span class="step-title">Bingo</span>
+                    <span class="step-desc">縦・横・斜めが揃うとビンゴ。初回達成時刻が表示されます。</span>
                 </div>
             </div>
+        </div>
+
+        <div class="howto-note">
+            <strong>使い方の要点</strong>
+            ゲストは共有URLを開くと同じマスで遊べます（名前は端末内のみ保存）。同じ端末で続きから再開もできます。最初からやり直すときは「リセットする」を使ってください。
         </div>
 
         <div class="grid" id="bingo-board"></div>
