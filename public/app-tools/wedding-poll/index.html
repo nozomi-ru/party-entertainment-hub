@@ -699,7 +699,8 @@
             clickTimer: null,
             pollTimer: null,
             waitTimer: null,
-            busy: false
+            busy: false,
+            refreshing: false
         };
 
         function apiUrl(room) {
@@ -806,7 +807,7 @@
                 } catch {
                     /* keep waiting */
                 }
-            }, 1000);
+            }, 2000);
         }
 
         async function enterRoom({ auto = false } = {}) {
@@ -846,7 +847,7 @@
 
         function startPolling() {
             stopPolling();
-            state.pollTimer = setInterval(refreshSession, 800);
+            state.pollTimer = setInterval(refreshSession, 2000);
         }
 
         function stopPolling() {
@@ -857,7 +858,8 @@
         }
 
         async function refreshSession() {
-            if (!state.room || state.busy) return;
+            if (!state.room || state.busy || state.refreshing) return;
+            state.refreshing = true;
             try {
                 const latest = await apiGet(state.room);
                 if (!latest) return;
@@ -870,6 +872,8 @@
                 }
             } catch {
                 document.getElementById("sync-hint").textContent = "再接続中";
+            } finally {
+                state.refreshing = false;
             }
         }
 

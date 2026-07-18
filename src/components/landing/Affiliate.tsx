@@ -18,7 +18,7 @@ export function Affiliate() {
   return (
     <section
       id="affiliate"
-      className="relative overflow-hidden bg-atmosphere grain px-6 py-28 sm:px-8 sm:py-32"
+      className="relative overflow-hidden bg-atmosphere px-6 py-28 sm:px-8 sm:py-32"
     >
       <div className="relative mx-auto max-w-5xl">
         <header className="mx-auto max-w-2xl text-center">

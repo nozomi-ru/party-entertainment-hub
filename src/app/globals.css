@@ -11,7 +11,7 @@
   --champagne: #a89b7c;
   --champagne-deep: #8a7d5f;
   --champagne-soft: #ddd4c0;
-  --champagne-glow: rgba(168, 155, 124, 0.28);
+  --champagne-glow: rgba(168, 155, 124, 0.18);
   --surface: #ffffff;
   --background: var(--paper);
   --foreground: var(--ink);
@@ -41,61 +41,37 @@ body {
   color: var(--ink);
 }
 
-/* Soft atmosphere layers */
+/* Lightweight atmosphere (no SVG filters / blend modes) */
 .bg-atmosphere {
   background:
-    radial-gradient(ellipse 90% 60% at 10% -10%, var(--champagne-glow), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 20%, rgba(20, 21, 26, 0.04), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 0% 0%, var(--champagne-glow), transparent 55%),
     var(--paper);
 }
 
 .bg-atmosphere-inverse {
   background:
-    radial-gradient(ellipse 80% 50% at 90% 0%, var(--champagne-glow), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 100% 0%, var(--champagne-glow), transparent 55%),
     var(--surface);
-}
-
-.grain::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  mix-blend-mode: multiply;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(22px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes soft-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes scroll-cue {
   0%,
   100% {
-    opacity: 0.35;
-    transform: translateY(0);
+    opacity: 0.4;
   }
   50% {
-    opacity: 0.9;
-    transform: translateY(6px);
+    opacity: 0.85;
   }
 }
 
@@ -109,36 +85,28 @@ body {
 }
 
 .animate-fade-up {
-  animation: fade-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.animate-soft-rise {
-  animation: soft-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-scroll-cue {
-  animation: scroll-cue 2.2s ease-in-out infinite;
+  animation: scroll-cue 2.4s ease-in-out infinite;
 }
 
 .animate-line-draw {
   transform-origin: left center;
-  animation: line-draw 1s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  animation: line-draw 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
 }
 
 .animation-delay-100 {
-  animation-delay: 0.12s;
+  animation-delay: 0.1s;
 }
 
 .animation-delay-200 {
-  animation-delay: 0.24s;
+  animation-delay: 0.18s;
 }
 
 .animation-delay-300 {
-  animation-delay: 0.36s;
-}
-
-.animation-delay-400 {
-  animation-delay: 0.48s;
+  animation-delay: 0.26s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -147,7 +115,6 @@ body {
   }
 
   .animate-fade-up,
-  .animate-soft-rise,
   .animate-scroll-cue,
   .animate-line-draw {
     animation: none;

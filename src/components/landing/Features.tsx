@@ -21,7 +21,7 @@ export function Features() {
   return (
     <section
       id="features"
-      className="relative overflow-hidden bg-atmosphere-inverse grain px-6 py-28 sm:px-8 sm:py-32"
+      className="relative overflow-hidden bg-atmosphere-inverse px-6 py-28 sm:px-8 sm:py-32"
     >
       <div className="relative mx-auto max-w-5xl">
         <header className="mx-auto max-w-2xl text-center">

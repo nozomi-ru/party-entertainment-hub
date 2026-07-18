@@ -9,11 +9,11 @@ export function Hero() {
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden">
       <Image
-        src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=2400&q=80"
+        src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1600&q=70"
         alt="祝福に満ちたパーティー会場の様子"
         fill
         priority
-        className="object-cover object-center scale-105 animate-soft-rise"
+        className="object-cover object-center"
         sizes="100vw"
       />
       <div
@@ -21,14 +21,9 @@ export function Hero() {
         aria-hidden
       />
       <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse 70% 45% at 50% 35%, rgba(168, 155, 124, 0.22), transparent 70%)",
-        }}
+        className="absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_35%,rgba(168,155,124,0.18),transparent_70%)]"
         aria-hidden
       />
-      <div className="grain absolute inset-0" aria-hidden />
 
       <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-4xl flex-col items-center justify-center px-6 pb-28 pt-24 text-center sm:px-8">
         <p className="animate-fade-up font-[family-name:var(--font-display)] text-[0.7rem] tracking-[0.45em] text-[var(--champagne-soft)] uppercase sm:text-xs">
@@ -63,7 +58,7 @@ export function Hero() {
             href={appLinks.secondaryCta.href}
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "min-w-[11.5rem] border-white/35 bg-white/5 text-white backdrop-blur-sm hover:border-white/60 hover:bg-white/12",
+              "min-w-[11.5rem] border-white/35 bg-white/10 text-white hover:border-white/60 hover:bg-white/15",
             )}
           >
             {appLinks.secondaryCta.label}

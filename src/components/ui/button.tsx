@@ -11,7 +11,7 @@ const buttonVariants = cva(
           "bg-[var(--ink)] text-white shadow-sm hover:bg-[var(--ink-soft)]",
         gold: "bg-[var(--champagne)] text-[var(--ink)] shadow-sm hover:bg-[var(--champagne-deep)] hover:text-white",
         outline:
-          "border border-[var(--champagne)]/40 bg-[var(--surface)]/80 text-[var(--ink)] backdrop-blur-sm hover:border-[var(--champagne)] hover:bg-[var(--surface)]",
+          "border border-[var(--champagne)]/40 bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--champagne)] hover:bg-[var(--paper)]",
         ghost: "text-[var(--ink)] hover:bg-[var(--paper-deep)]",
         link: "text-[var(--champagne-deep)] underline-offset-4 hover:underline",
       },
