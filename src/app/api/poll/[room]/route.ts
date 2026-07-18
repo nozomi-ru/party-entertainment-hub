@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { normalizeRoom, normalizeVotes } from "@/lib/poll";
 import {
   readPollSession,
   writePollSession,
@@ -7,27 +8,6 @@ import {
 } from "@/lib/poll-store";
 
 export const dynamic = "force-dynamic";
-
-function normalizeRoom(room: string) {
-  return room.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
-}
-
-/** 質問構成と票配列の長さを揃え、不正値を落とす */
-function normalizeVotes(
-  questions: PollQuestion[],
-  votes?: number[][],
-): number[][] {
-  return questions.map((q, qi) => {
-    const row = votes?.[qi];
-    if (!row || row.length !== q.choices.length) {
-      return Array(q.choices.length).fill(0);
-    }
-    return row.map((n) => {
-      const v = Number(n);
-      return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
-    });
-  });
-}
 
 type RouteContext = {
   params: Promise<{ room: string }>;

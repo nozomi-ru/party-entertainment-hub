@@ -9,95 +9,38 @@
 
 ## 優先テーマ一覧
 
-| 優先 | テーマ | 目的 |
-|------|--------|------|
-| 1 | 自動テストを CI/CD に組み込む | 壊れたまま本番へ出さない |
-| 2 | ビンゴ／クイズ結果を KV 経由で管理者へ送る | 幹事・管理者が結果を後から確認できる |
+| 優先 | テーマ | 目的 | 状態 |
+|------|--------|------|------|
+| 1 | 自動テストを CI/CD に組み込む | 壊れたまま本番へ出さない | **基盤は完了**（残りは強化） |
+| 2 | ビンゴ／クイズ結果を KV 経由で管理者へ送る | 幹事・管理者が結果を後から確認できる | 未着手 |
 
 ---
 
 ## 1. 自動テスト × CI/CD
 
-### ゴール
+### いまできていること（2026-07-18）
 
-```text
-push / PR
-  → 自動テスト
-  → 成功したらだけ Cloudflare デプロイ（本番 or プレビュー）
-```
+- [x] `npm test`（Vitest・UT-*）がローカル／CI で通る  
+- [x] シナリオ E2E（ガーキン・SC-*・動画）が `npm run test:e2e` / CI で通る  
+- [x] すべての push / PR で Quality（unit + e2e）が走る（`test.yml` → `quality.yml`）  
+- [x] `main` デプロイ前に同じ Quality を通し、失敗時はデプロイしない（`deploy-cloudflare.yml`）  
+- [x] ローカル `git push` 前に husky が単体を強制  
+- [x] 仕様書: [test-spec.md](./test-spec.md) / [scenario-spec.md](./scenario-spec.md) / [ops/testing.md](./ops/testing.md)  
+- [x] 本番 KV を CI から直接更新しない（方針 D 禁止を文書化）  
 
-いまの「Cursor → プッシュ → Cloudflare がビルド」に、**品質ゲート**を足す。
+### 残タスク（強化）
 
-### やりたいこと
-
-| 層 | 対象例 | ねらい |
-|----|--------|--------|
-| 単体 | ルームコード正規化、ビンゴ判定、UrlPack pack/unpack | ロジックの退行防止 |
-| API | `/api/poll/[room]` の vote / setIndex / toggleResults | 票数・進行の正しさ |
-| E2E（余裕があれば） | Guest URL 入室 → 投票 → Host が結果表示 | 会場オペの最低経路 |
-
-### CI のイメージ
-
-| タイミング | 動作 |
-|------------|------|
-| `pull_request` / `preview` ブランチ | テスト必須。失敗ならマージ・プレビューデプロイしない |
-| `main` | テスト成功後に本番デプロイ（既存 Cloudflare Git 連携 or GitHub Actions） |
-
-既存の `.github/workflows/deploy-cloudflare.yml` がある場合は、**デプロイ job の前に test job** を置く形が分かりやすい。
-
-### 実装時のメモ
-
-- フレームワーク候補: Vitest（単体）+ Playwright（E2E）など。既存スタックに合わせて選ぶ
-- `public/app-tools` のロジックは、可能ならテストしやすい関数に切り出すか、E2E でカバーする
-- Windows ARM ではローカル実行が不安定な場合があるため、**CI（Linux）を正**とする
-
-### 課題：KV まわりをどうテストするか
-
-アンケート（と今後のビンゴ／クイズ結果送信）は **Cloudflare KV** に依存する。ここが自動テストの難所になる。
-
-#### なぜ難しいか
-
-| 理由 | 内容 |
+| 優先 | 内容 |
 |------|------|
-| 本番 KV は共有資源 | CI から本番 `POLL_KV` を叩くと、データ汚染・競合・課金・フレーキーの原因になる |
-| Workers 専用の実行環境 | `getCloudflareContext()` 経由の binding は、素の Node テストではそのまま動かない |
-| ローカル `next dev` はメモリ | いまのフォールバック（プロセス内 Map）は「KV と同じ」ではない。通っても本番挙動の保証にはならない |
-| 同時書き込み | Read-Modify-Write の票加算は、本物の KV でないと再現しにくい |
+| 高 | API 単体（UT-API-*）— poll-store 境界をモック可能にして vote / setIndex 等 |
+| 高 | GitHub Branch protection で `unit` / `e2e` を必須化（リポジトリ設定・手動1回） |
+| 中 | プレビュー専用 KV（`preview_id` 分離）+ 任意スモーク Secret |
+| 中 | ビンゴ判定・UrlPack の単体化（UT-BINGO / UT-PACK） |
+| 低 | 追加シナリオ（ゲスト待機、票クリアなど） |
 
-#### 方針案（推奨順）
+詳細なケース予約は [test-spec.md §12](./test-spec.md)。
 
-| 方針 | やり方 | 向くテスト | 注意 |
-|------|--------|------------|------|
-| **A. KV をモック／スタブ** | `poll-store` の get/put を差し替え可能な境界にする。CI ではインメモリ実装を注入 | API・単体の大半 | 実装のリファクタが先。本物 KV の遅延・一貫性は見ない |
-| **B. プレビュー専用 KV** | `preview_id` 用の別ネームスペースを CI／プレビューだけ使う | 結合に近い確認 | 本番と分離できる。シークレットと掃除（TTL／テスト後 delete）が必要 |
-| **C. Miniflare / workerd ローカル** | ローカルで Workers + KV をエミュレートして API を叩く | 結合 | CI は Linux 推奨。セットアップコストあり |
-| **D. 本番 KV 直叩き** | 使わない（原則禁止） | — | 汚染・不安定のため採用しない |
-
-推奨スタート:
-
-1. **まず A**（ストア境界を切ってモック）で API テストを CI に乗せる  
-2. 余裕が出たら **B または C** で「本当に KV に読める／書ける」煙テストを少数追加  
-3. ビンゴ／クイズ結果の KV 保存を足すときも、同じ境界・同じ方針を再利用する  
-
-#### 設計上やっておくと楽なこと
-
-- `readPollSession` / `writePollSession`（将来の bingo/quiz 用 store も同様）を **KV 具象に密結合しすぎない**  
-- テストから `Map` や fake KV を渡せるようにする  
-- CI 用のルーム名にプレフィックス（例: `T001`）を付け、衝突しにくくする  
-- 結合テスト後は key を消すか、短い TTL に寄せる  
-
-#### この課題の完了目安
-
-- [ ] KV なしでも回る API／単体テストが CI にある（モック方針が文書化されている）  
-- [ ] 「本物に近い KV」を試す場合は、本番とは別リソースだと明記されている  
-- [ ] 本番 KV を CI から直接更新しない  
-
-### 完了の目安
-
-- [ ] `npm test`（または同等）がローカル／CI で通る  
-- [ ] PR または `main` push でテストが自動実行される  
-- [ ] テスト失敗時はデプロイが走らない  
-- [ ] KV 依存部分のテスト方針（上記 A〜C のどれか）が決まっている  
+---
 
 ## 2. ビンゴ／クイズ結果を KV で管理者へ送る
 
@@ -180,7 +123,7 @@ push / PR
 ## 着手順の提案
 
 ```text
-1. 自動テスト（単体 → API → CI でデプロイゲート）
+1. 自動テストの強化（UT-API・Branch protection・preview KV）
 2. 結果送信 API + KV 保存（ビンゴ or クイズのどちらか一方から）
 3. 管理者向け一覧 UI
 4. （任意）通知・改ざん対策の強化
@@ -196,5 +139,8 @@ push / PR
 |------|------|
 | [requirements.md](./requirements.md) | 現行の要件定義 |
 | [design.md](./design.md) | 現行の設計 |
-| [preview-environment.md](./preview-environment.md) | 非本番での確認手順 |
-| [../.cursor/skills/kotohogi-cloudflare/SKILL.md](../.cursor/skills/kotohogi-cloudflare/SKILL.md) | 開発時の進め方スキル |
+| [test-spec.md](./test-spec.md) | 自動テスト仕様 |
+| [scenario-spec.md](./scenario-spec.md) | シナリオテスト仕様 |
+| [ops/preview.md](./ops/preview.md) | 非本番での確認手順 |
+| [ops/testing.md](./ops/testing.md) | テストの実行手順 |
+| [README.md](./README.md) | docs 全体の目次 |

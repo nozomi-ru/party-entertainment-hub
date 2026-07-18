@@ -16,6 +16,13 @@
 /build
 /coverage
 
+# Playwright / BDD
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/.features-gen/
+
 # ローカル秘密情報
 .env*.local
 .env

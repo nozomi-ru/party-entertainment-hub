@@ -1,6 +1,9 @@
 # プレビュー（非本番）環境の使い方
 
-本番（`main` → `kotohogi.*.workers.dev`）を壊さずに、変更を確認するための手順です。
+本番（`main` → `kotohogi.*.workers.dev`）を壊さずに、変更を確認するための手順です。  
+**本番相当の動作確認は、まずここで行う**（単体テストだけでは足りない）。全体の順番は [testing.md](./testing.md)。
+
+プロダクトの要件・設計は [../requirements.md](../requirements.md) / [../design.md](../design.md) を参照。
 
 Cloudflare の Git 連携で **「非本番ブランチのビルド」** をオンにしている前提です。
 
@@ -16,7 +19,8 @@ preview など   ──ビルド──► 非本番（プレビュー / Versions
 | | 本番 | 非本番（プレビュー） |
 |--|------|----------------------|
 | ブランチ | `main` | `preview` など `main` 以外 |
-| デプロイ | `npx wrangler deploy` | `npx wrangler versions upload`（設定時の例） |
+| デプロイ（ダッシュボード例） | `npx wrangler deploy` | `npx wrangler versions upload` |
+| デプロイ（このリポの GHA） | `npm run deploy`（Quality 成功後） | CF 非本番ビルド、または手元確認 |
 | 用途 | 会場・公開用 | デザインや機能の試し打ち |
 
 ---
@@ -62,6 +66,20 @@ git push -u origin preview
 それを開いて LP・ビンゴ・クイズ・アンケートを確認します。
 
 ※ URL の形は Cloudflare の UI 更新で変わることがあります。ダッシュボードの表示を正とします。
+
+ビルド後、プレビュー URL が分かったら手元から最小スモークもできます。
+
+```powershell
+# PowerShell
+$env:SMOKE_BASE_URL="https://<プレビューのホスト>"
+npm run smoke
+```
+
+```bat
+REM cmd.exe
+set SMOKE_BASE_URL=https://<プレビューのホスト>
+npm run smoke
+```
 
 ### 4. 問題なければ本番へ
 

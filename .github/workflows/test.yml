@@ -1,0 +1,13 @@
+# すべての push / pull_request で品質ゲートを強制
+# ローカル push 前は husky が単体のみ強制（docs/ops/testing.md）
+name: Test
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+    secrets:
+      SMOKE_BASE_URL: ${{ secrets.SMOKE_BASE_URL }}

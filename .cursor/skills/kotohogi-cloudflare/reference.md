@@ -1,59 +1,35 @@
-# Kotohogi Cloudflare — 詳細リファレンス
+# Kotohogi — Agent 用リファレンス
 
-SKILL.md から必要時のみ読む。
+SKILL.md から必要時のみ読む。  
+**リポジトリ構成・API・データモデルの正は [docs/design.md](../../../docs/design.md)。** ここでは Agent 向けの短い補足だけ置く。
 
-## リポジトリ地図
+## すぐ使うパス
 
-```
-src/app/                 LP + API
-src/components/landing/  LP セクション
-src/config/site.ts       リンク・文言の単一設定源
-src/lib/poll-store.ts    KV / メモリ永続化
-public/app-tools/        ビンゴ・クイズ・アンケート HTML
-public/app-tools/shared/pack.js   UrlPack (LZ-String)
-docs/                    要件・設計・Qiita（非公開）
-wrangler.jsonc           Worker / KV / assets
-```
+| 用途 | パス |
+|------|------|
+| LP + API | `src/app/` |
+| リンク・文言 | `src/config/site.ts` |
+| ルーム／票の正規化 | `src/lib/poll.ts` |
+| KV / メモリ | `src/lib/poll-store.ts` |
+| 余興 HTML | `public/app-tools/` |
+| UrlPack | `public/app-tools/shared/pack.js` |
+| Worker / KV | `wrangler.jsonc` |
+| シナリオ E2E | `e2e/` |
+| スモーク | `scripts/smoke.mjs` |
 
-Git に含めない: `node_modules/`, `.next/`, `.open-next/`, `.wrangler/`, `.dev.vars`
+Git に含めない: `node_modules/`, `.next/`, `.open-next/`, `.wrangler/`, `.dev.vars`, `test-results/`, `playwright-report/`, `.features-gen/`
 
-## wrangler 要点
+## 公開の経路（使い分け）
 
-- `name`: `kotohogi`
-- `main`: `.open-next/worker.js`
-- `assets.directory`: `.open-next/assets`
-- `compatibility_flags`: `nodejs_compat`, `global_fetch_strictly_public`
-- `kv_namespaces[0].binding`: **`POLL_KV`**（コードの `env.POLL_KV` と一致必須）
-- KV TTL: 24h（`poll-store.ts`）
+| 経路 | コマンド／動き |
+|------|----------------|
+| 手元 or GitHub Actions Deploy | `npm run deploy`（OpenNext build + deploy） |
+| CF ダッシュボード（本番例） | Build: `npx opennextjs-cloudflare build` → Deploy: `npx wrangler deploy` |
+| CF ダッシュボード（非本番例） | Deploy: `npx wrangler versions upload` |
+| 品質ゲート | `.github/workflows/quality.yml`（unit + e2e）。Test / Deploy から呼び出し |
 
-## アンケート API
-
-`GET|POST /api/poll/[room]`
-
-- ルーム: 大文字英数字、ちょうど 4 文字
-- actions: `upsert` | `vote` | `tally` | `setIndex` | `toggleResults` | `clearVotes`
-- upsert 時は票配列を質問構成に正規化する（長さずれ防止）
-
-## Guest URL 形式
-
-```
-/app-tools/wedding-poll/index.html?room=XXXX
-```
-
-- `?room=` のみ → Guest 自動入室
-- `?mode=host` → Host
-- Host 未作成時は 1s 間隔で待機
-
-## Cloudflare ダッシュボード連携
-
-1. Workers → Import 既存 GitHub リポ（新規リポ作成にしない）
-2. Build: `npx opennextjs-cloudflare build`
-3. Deploy（本番）: `npx wrangler deploy`
-4. Deploy（非本番）: `npx wrangler versions upload`
-5. 非本番ブランチのビルド: オン（`preview` 等で確認）
-6. 本番確認: `https://kotohogi.nozoisfun.workers.dev/`（環境により異なる場合あり）
-
-プレビュー手順の詳細: リポジトリの `docs/preview-environment.md`
+本番 URL 例: `https://kotohogi.nozoisfun.workers.dev/`（環境により異なる場合あり）  
+プレビュー手順: [docs/ops/preview.md](../../../docs/ops/preview.md)
 
 ## KPT テンプレ（記事・振り返り用）
 

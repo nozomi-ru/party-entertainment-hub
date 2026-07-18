@@ -1,5 +1,8 @@
 # Cloudflare Workers へデプロイ（Linux ランナー推奨）
 # 必要な Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#
+# デプロイ前に必ず Quality（unit + e2e）を通す。
+# ※ Test ワークフローとは別に、ここでも同じ Quality を呼び出す（デプロイ直前のゲート）。
 name: Deploy to Cloudflare
 
 on:
@@ -8,7 +11,13 @@ on:
     branches: [main, master]
 
 jobs:
+  quality:
+    uses: ./.github/workflows/quality.yml
+    secrets:
+      SMOKE_BASE_URL: ${{ secrets.SMOKE_BASE_URL }}
+
   deploy:
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -1,0 +1,2 @@
+# Force L1 unit tests before push. E2E runs on GitHub Actions.
+npm test

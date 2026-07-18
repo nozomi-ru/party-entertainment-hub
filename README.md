@@ -12,10 +12,17 @@
 
 ## 開発ドキュメント
 
-要件定義・設計は [`docs/`](./docs/) にあります（サイトには公開されません）。
+内部文書は [`docs/`](./docs/)（サイト非公開）。目次は [docs/README.md](./docs/README.md)。
 
-- [要件定義書](./docs/requirements.md)
-- [設計書](./docs/design.md)
+| 文書 | 内容 |
+|------|------|
+| [要件](./docs/requirements.md) | 何を作るか |
+| [設計](./docs/design.md) | どう作っているか |
+| [自動テスト仕様](./docs/test-spec.md) | 何をどう自動検証するか |
+| [シナリオテスト仕様](./docs/scenario-spec.md) | 利用者ストーリー（E2E） |
+| [テスト実行手順](./docs/ops/testing.md) | コマンド・強制タイミング・動画の見方 |
+| [ロードマップ](./docs/roadmap.md) | 次にやること |
+| [プレビュー手順](./docs/ops/preview.md) | 非本番ブランチでの確認 |
 
 ## ディレクトリ構成（何をデプロイするか）
 
@@ -34,19 +41,26 @@ party-entertainment-hub/
 ├── public/                   ✅ 含める … そのまま配信される静的ファイル
 │   └── app-tools/            … ビンゴ / クイズ / アンケート（HTML）
 │
+├── e2e/                      ✅ 含める … シナリオ E2E（ガーキン）
+├── scripts/                  ✅ 含める … smoke など補助スクリプト
 ├── package.json              ✅ 含める … 依存関係の定義
 ├── package-lock.json         ✅ 含める
 ├── wrangler.jsonc            ✅ 含める … Cloudflare Workers / KV 設定
 ├── next.config.ts            ✅ 含める
 ├── open-next.config.ts       ✅ 含める
+├── vitest.config.ts          ✅ 含める
+├── playwright.config.ts      ✅ 含める
 ├── tsconfig.json ほか設定    ✅ 含める
-├── .github/workflows/        ✅ 含める … CI デプロイ（任意）
-├── docs/                     ✅ 含める … 要件・設計（サイト非公開）
+├── .github/workflows/        ✅ 含める … Test（Quality）/ Deploy（品質ゲート必須）
+├── docs/                     ✅ 含める … 要件・設計・テスト仕様（サイト非公開。構成は docs/README.md）
 │
 ├── node_modules/             ❌ 含めない … ローカル専用（自動生成）
 ├── .next/                    ❌ 含めない … Next ビルドキャッシュ
 ├── .open-next/               ❌ 含めない … Cloudflare 向けビルド出力
 ├── .wrangler/                ❌ 含めない … wrangler ローカル状態
+├── test-results/             ❌ 含めない … Playwright 録画・結果
+├── playwright-report/        ❌ 含めない … E2E HTML レポート
+├── .features-gen/            ❌ 含めない … bddgen 生成物
 └── .dev.vars / .env*         ❌ 含めない … 秘密情報
 ```
 
@@ -73,6 +87,31 @@ npm run dev
 ```
 
 ブラウザで [http://localhost:3000](http://localhost:3000) を開きます。
+
+単体テスト（ロジックの早期検知・KV 不使用）:
+
+```bash
+npm test
+```
+
+`git push` 時は husky が単体を**自動実行**（失敗したら push 中止）。  
+GitHub では push / PR のたびに単体 + E2E を強制。詳細は [`docs/ops/testing.md`](./docs/ops/testing.md)。
+
+E2E（**ガーキン記法**・結果は動画で確認。初回はブラウザ導入が必要）:
+
+```powershell
+npm run test:e2e:install
+npm run test:e2e
+npm run test:e2e:report
+```
+
+**本番相当の確認は Cloudflare 非本番が先**（手順: [`docs/ops/testing.md`](./docs/ops/testing.md) / [`docs/ops/preview.md`](./docs/ops/preview.md)）:
+
+```powershell
+# PowerShell
+$env:SMOKE_BASE_URL="https://<preview-host>"
+npm run smoke
+```
 
 - ビンゴ / クイズ: 設定は URL（`?c=`）に圧縮して共有（DB不要）
 - アンケート: ローカルではメモリ同期。Cloudflare 本番では KV 同期
@@ -120,7 +159,7 @@ npm run preview
 3. 表示されたプレビュー URL / Version で動作確認  
 4. 問題なければ `main` にマージして本番反映  
 
-詳細手順・KV の分離方法は [`docs/preview-environment.md`](./docs/preview-environment.md) を参照してください。
+詳細手順・KV の分離方法は [`docs/ops/preview.md`](./docs/ops/preview.md) を参照してください。
 
 ### 注意
 

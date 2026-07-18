@@ -1,0 +1,47 @@
+# 品質ゲート（単体 + E2E）。他 workflow から呼び出す。
+name: Quality
+
+on:
+  workflow_call:
+    secrets:
+      SMOKE_BASE_URL:
+        required: false
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    env:
+      SMOKE_BASE_URL: ${{ secrets.SMOKE_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Smoke against Cloudflare preview (optional)
+        if: env.SMOKE_BASE_URL != ''
+        run: npm run smoke
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Upload E2E videos and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-videos
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14

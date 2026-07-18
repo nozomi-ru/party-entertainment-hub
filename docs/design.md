@@ -3,10 +3,10 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.0 |
+| 文書バージョン | 1.1 |
 | 最終更新 | 2026-07-18 |
 
-関連: [要件定義書](./requirements.md)
+関連: [要件定義書](./requirements.md) · [docs 目次](./README.md) · [ロードマップ](./roadmap.md) · [自動テスト](./test-spec.md) · [シナリオ](./scenario-spec.md)
 
 ---
 
@@ -54,7 +54,16 @@ flowchart TB
 
 ```
 party-entertainment-hub/
-├── docs/                      # 本ドキュメント（サイト非公開）
+├── docs/                      # 内部文書（サイト非公開）— 目次は docs/README.md
+│   ├── requirements.md        # 要件（正）
+│   ├── design.md              # 設計（正）
+│   ├── test-spec.md           # 自動テスト仕様
+│   ├── scenario-spec.md       # シナリオテスト仕様
+│   ├── roadmap.md             # 次の施策
+│   ├── ops/                   # 運用手順（testing / preview）
+│   └── drafts/                # 記事など外部公開用下書き
+├── e2e/                       # シナリオ E2E（ガーキン + Playwright）
+├── scripts/                   # smoke.mjs など
 ├── src/
 │   ├── app/                   # LP・API
 │   │   ├── page.tsx           # ランディング
@@ -62,7 +71,9 @@ party-entertainment-hub/
 │   │   └── api/poll/[room]/  # アンケート API
 │   ├── components/landing/    # LP セクション
 │   ├── config/site.ts         # リンク・文言の単一設定源
-│   └── lib/poll-store.ts      # KV / メモリ永続化
+│   └── lib/
+│       ├── poll.ts            # ルーム／票の正規化（単体テスト対象）
+│       └── poll-store.ts      # KV / メモリ永続化
 ├── public/
 │   ├── _headers
 │   └── app-tools/
@@ -73,10 +84,12 @@ party-entertainment-hub/
 ├── wrangler.jsonc             # Workers / KV バインディング
 ├── open-next.config.ts
 ├── next.config.ts
-└── .github/workflows/         # 任意の CI デプロイ
+├── vitest.config.ts
+├── playwright.config.ts
+└── .github/workflows/         # Test（Quality）/ Deploy（品質ゲート必須）
 ```
 
-Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangler/`（`.gitignore` 参照）
+Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangler/`, `test-results/`, `playwright-report/`, `.features-gen/`（`.gitignore` 参照）
 
 ---
 
@@ -90,6 +103,8 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 | 静的アプリ | HTML / CSS / Vanilla JS |
 | URL 圧縮 | LZ-String + `public/app-tools/shared/pack.js` |
 | Worker 名 | `kotohogi`（`wrangler.jsonc`） |
+| 単体テスト | Vitest（`npm test`） |
+| シナリオ E2E | Playwright + playwright-bdd（ガーキン、`npm run test:e2e`） |
 
 ---
 
@@ -206,7 +221,7 @@ sequenceDiagram
 
   G->>API: POST vote
   API->>KV: 加算して保存
-  loop 約 800ms
+  loop 約 2s
     UI->>API: GET（Host/Guest 同期）
   end
   H->>API: POST toggleResults
@@ -219,7 +234,7 @@ sequenceDiagram
 | URL | 動作 |
 |-----|------|
 | `.../wedding-poll/index.html?room=XXXX` | Guest として自動入室 |
-| `...?room=XXXX&mode=host` | Host として開く |
+| `...?room=XXXX&mode=host` | Host モードを選択（入室はボタン操作が必要） |
 | `...?mode=guest` | Guest 選択（room があれば自動入室） |
 
 Host 画面の「ゲスト用 URL」は `guestInviteUrl(room)` で生成し、コピー可能。
@@ -231,8 +246,8 @@ Host 画面の「ゲスト用 URL」は `guestInviteUrl(room)` で生成し、�
 | `weddingPollQuestions` | Host 編集中の質問ドラフト |
 | `weddingPollMyVotes_{ROOM}` | `{ [questionIndex]: choiceIndex }` 二重投票防止（端末単位） |
 
-同期: セッション中 `setInterval(refreshSession, 800)`  
-Guest 待機: Host 未作成時 `setInterval(..., 1000)` で GET リトライ
+同期: セッション中 `setInterval(refreshSession, 2000)`  
+Guest 待機: Host 未作成時 `setInterval(..., 2000)` で GET リトライ
 
 ### 8.5 セッションデータモデル
 
@@ -258,7 +273,7 @@ TTL: 24 時間（KV `expirationTtl`）
 ### 8.6 API 設計
 
 **エンドポイント:** `/api/poll/[room]`  
-**正規化:** 大文字英数字、長さちょうど 4（`src/app/api/poll/[room]/route.ts`）
+**正規化:** `normalizeRoom` / `normalizeVotes` は `src/lib/poll.ts`。API（`route.ts`）は正規化後の長さがちょうど 4 であることを検証する。
 
 | Method | action | 説明 |
 |--------|--------|------|
@@ -291,16 +306,26 @@ TTL: 24 時間（KV `expirationTtl`）
 
 | 方法 | 内容 |
 |------|------|
-| 手動 | `npm run deploy`（OpenNext build + deploy） |
-| Cloudflare Git 連携 | Build: `npx opennextjs-cloudflare build` → Deploy: `npx wrangler deploy` |
-| GitHub Actions | `.github/workflows/deploy-cloudflare.yml`（Secrets: API Token / Account ID） |
+| 手元 / GitHub Actions | `npm run deploy`（`opennextjs-cloudflare build` + `opennextjs-cloudflare deploy`） |
+| Cloudflare Git 連携（ダッシュボード） | Build: `npx opennextjs-cloudflare build` → Deploy: `npx wrangler deploy`（設定例） |
+| GitHub Actions Deploy | `.github/workflows/deploy-cloudflare.yml`（先に Quality＝単体+E2E） |
 
-### 9.3 環境差分
+### 9.3 自動テスト（概要）
+
+品質ゲートの詳細は [test-spec.md](./test-spec.md) / [ops/testing.md](./ops/testing.md) / [scenario-spec.md](./scenario-spec.md)。
+
+| 層 | 道具 | 入口 |
+|----|------|------|
+| 単体 | Vitest | `npm test`、husky pre-push、CI `unit` |
+| シナリオ E2E | Playwright + ガーキン | `npm run test:e2e`、CI `e2e`（動画あり） |
+| スモーク（任意） | `scripts/smoke.mjs` | `SMOKE_BASE_URL` 指定時 |
+
+### 9.4 環境差分
 
 | 環境 | アンケート同期 |
 |------|----------------|
 | 本番 Workers | Cloudflare KV |
-| `next dev` | メモリ Map（インスタンス単一前提） |
+| `next dev` / E2E 既定 | メモリ Map（インスタンス単一前提） |
 
 ---
 
@@ -312,9 +337,7 @@ TTL: 24 時間（KV `expirationTtl`）
 
 ---
 
-## 11. 今後の拡張候補
+## 11. 今後の拡張
 
-- アンケートの Durable Objects 等による厳密な同時投票制御
-- ゲスト URL の QR コード自動表示
-- ビンゴ／クイズのホスト画面とゲスト画面の分離
-- カスタムドメイン・ブランドアセットの本番差し替え
+未着手の施策・優先度は **[roadmap.md](./roadmap.md)** を正とする。  
+設計に影響する決定が出たら、この文書を更新する。

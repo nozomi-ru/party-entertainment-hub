@@ -842,6 +842,7 @@
                 console.error(err);
             } finally {
                 state.busy = false;
+                if (state.session) renderSession();
             }
         }
 
