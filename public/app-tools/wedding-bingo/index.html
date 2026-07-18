@@ -520,7 +520,17 @@
             const timeArea = document.getElementById('display-time');
             if (count > 0) {
                 document.getElementById('bingo-count-text').innerText = `${count} BINGO`;
-                if (!timeArea.innerText) timeArea.innerText = `達成: ${new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                if (!timeArea.innerText) {
+                    const stamped = new Date().toLocaleString('ja-JP', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                    });
+                    timeArea.innerText = `達成: ${stamped}`;
+                }
                 msgArea.style.display = 'block';
             } else {
                 msgArea.style.display = 'none';
