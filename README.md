@@ -10,6 +10,13 @@
 - Cloudflare Workers（`@opennextjs/cloudflare`）
 - Cloudflare KV（リアルタイムアンケートの同期）
 
+## 開発ドキュメント
+
+要件定義・設計は [`docs/`](./docs/) にあります（サイトには公開されません）。
+
+- [要件定義書](./docs/requirements.md)
+- [設計書](./docs/design.md)
+
 ## ディレクトリ構成（何をデプロイするか）
 
 静的ファイルを個別に選んで上げる構成ではありません。  
@@ -34,6 +41,7 @@ party-entertainment-hub/
 ├── open-next.config.ts       ✅ 含める
 ├── tsconfig.json ほか設定    ✅ 含める
 ├── .github/workflows/        ✅ 含める … CI デプロイ（任意）
+├── docs/                     ✅ 含める … 要件・設計（サイト非公開）
 │
 ├── node_modules/             ❌ 含めない … ローカル専用（自動生成）
 ├── .next/                    ❌ 含めない … Next ビルドキャッシュ
