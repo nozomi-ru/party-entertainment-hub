@@ -7,5 +7,8 @@
 |------|------|
 | [要件定義書](./requirements.md) | 目的・対象ユーザー・機能要件・非機能要件 |
 | [設計書](./design.md) | 構成・データ・API・画面・デプロイ |
+| [次にやること](./roadmap.md) | 自動テスト CI/CD・結果の管理者連携など |
+| [プレビュー環境](./preview-environment.md) | Cloudflare 非本番ブランチでの確認手順 |
+| [Qiita 記事ドラフト](./qiita-cursor-cloudflare.md) | 開発体験の紹介記事（投稿用 Markdown） |
 
 アプリ本体の使い方・デプロイ手順はリポジトリ直下の [README.md](../README.md) を参照してください。

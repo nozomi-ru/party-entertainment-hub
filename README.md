@@ -111,6 +111,17 @@ Workers ランタイムでの確認（x64 / macOS / Linux）:
 npm run preview
 ```
 
+### 3. プレビュー（非本番）で確認する
+
+本番（`main`）を触らずに確かめる場合は、Cloudflare の **非本番ブランチのビルド** を使います。
+
+1. `preview` など `main` 以外のブランチに push  
+2. ダッシュボードの Deployments でビルド成功を確認  
+3. 表示されたプレビュー URL / Version で動作確認  
+4. 問題なければ `main` にマージして本番反映  
+
+詳細手順・KV の分離方法は [`docs/preview-environment.md`](./docs/preview-environment.md) を参照してください。
+
 ### 注意
 
 - アンケートは本番で **Cloudflare KV** にルーム状態を保存します（TTL 24時間）

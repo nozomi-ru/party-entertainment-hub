@@ -7,14 +7,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { affiliateItems, type AffiliateItem } from "@/config/site";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 const iconMap: Record<AffiliateItem["icon"], LucideIcon> = {
   "shopping-bag": ShoppingBag,
@@ -26,54 +18,52 @@ export function Affiliate() {
   return (
     <section
       id="affiliate"
-      className="relative bg-[var(--cream)] px-6 py-24 sm:px-8 sm:py-28"
+      className="relative overflow-hidden bg-atmosphere grain px-6 py-28 sm:px-8 sm:py-32"
     >
-      <div className="mx-auto max-w-5xl">
+      <div className="relative mx-auto max-w-5xl">
         <header className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-medium tracking-[0.25em] text-[var(--gold-deep)] uppercase">
+          <p className="font-[family-name:var(--font-display)] text-[0.7rem] tracking-[0.35em] text-[var(--champagne-deep)] uppercase">
             Recommendations
           </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-wide text-[var(--charcoal)] sm:text-4xl">
+          <h2 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-wide text-[var(--ink)] sm:text-[2.5rem] sm:leading-tight">
             景品・ギフトのおすすめ
           </h2>
-          <p className="mt-4 text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+          <p className="mt-5 text-sm leading-relaxed text-[var(--muted)] sm:text-[0.95rem] sm:leading-7">
             余興の盛り上がりを支える、景品選びの参考リンクです。必要に応じて差し替えてご利用ください。
           </p>
         </header>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-16 grid gap-px bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-3">
           {affiliateItems.map((item) => {
             const Icon = iconMap[item.icon];
             return (
-              <Card
+              <Link
                 key={item.id}
-                className="group flex flex-col border-[var(--border)] bg-white/90 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--gold)]/50 hover:shadow-md"
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="group flex flex-col bg-[var(--surface)] p-7 transition-colors duration-300 hover:bg-[var(--ink)] sm:p-8"
               >
-                <CardHeader>
-                  <div className="mb-3 flex items-center justify-between">
-                    <span className="inline-flex items-center rounded-md bg-[var(--gold-muted)] px-2.5 py-1 text-xs font-medium tracking-wide text-[var(--gold-deep)]">
-                      {item.badge}
-                    </span>
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--cream)] text-[var(--charcoal)] transition-colors group-hover:bg-[var(--gold)] group-hover:text-white">
-                      <Icon className="h-4 w-4" strokeWidth={1.5} />
-                    </div>
-                  </div>
-                  <CardTitle>{item.title}</CardTitle>
-                  <CardDescription>{item.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1" />
-                <CardFooter>
-                  <Link
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer sponsored"
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--gold-deep)] transition-colors hover:text-[var(--charcoal)]"
-                  >
-                    ショップを見る
-                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                  </Link>
-                </CardFooter>
-              </Card>
+                <div className="mb-8 flex items-center justify-between">
+                  <span className="font-[family-name:var(--font-display)] text-[0.65rem] tracking-[0.25em] text-[var(--champagne-deep)] uppercase transition-colors group-hover:text-[var(--champagne-soft)]">
+                    {item.badge}
+                  </span>
+                  <Icon
+                    className="h-4 w-4 text-[var(--ink-soft)] transition-colors group-hover:text-[var(--champagne-soft)]"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-wide text-[var(--ink)] transition-colors group-hover:text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-3 flex-1 text-sm leading-7 text-[var(--muted)] transition-colors group-hover:text-white/70">
+                  {item.description}
+                </p>
+                <span className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--champagne-deep)] transition-colors group-hover:text-[var(--champagne-soft)]">
+                  ショップを見る
+                  <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </Link>
             );
           })}
         </div>

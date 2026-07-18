@@ -12,8 +12,21 @@ function normalizeRoom(room: string) {
   return room.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
 }
 
-function emptyVotes(questions: PollQuestion[]) {
-  return questions.map((q) => Array(q.choices.length).fill(0));
+/** 質問構成と票配列の長さを揃え、不正値を落とす */
+function normalizeVotes(
+  questions: PollQuestion[],
+  votes?: number[][],
+): number[][] {
+  return questions.map((q, qi) => {
+    const row = votes?.[qi];
+    if (!row || row.length !== q.choices.length) {
+      return Array(q.choices.length).fill(0);
+    }
+    return row.map((n) => {
+      const v = Number(n);
+      return Number.isFinite(v) && v > 0 ? Math.floor(v) : 0;
+    });
+  });
 }
 
 type RouteContext = {
@@ -57,14 +70,19 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "questions required" }, { status: 400 });
     }
 
+    const rawIndex = Number(body.index);
+    const index =
+      Number.isInteger(rawIndex) &&
+      rawIndex >= 0 &&
+      rawIndex < questions.length
+        ? rawIndex
+        : 0;
+
     const session: PollSession = {
       room,
-      index: Number(body.index) || 0,
+      index,
       showResults: Boolean(body.showResults),
-      votes:
-        votes && votes.length === questions.length
-          ? votes
-          : emptyVotes(questions),
+      votes: normalizeVotes(questions, votes),
       questions,
       updatedAt: Date.now(),
     };

@@ -965,6 +965,7 @@
             if (state.myVotes[key] !== undefined || state.busy) return;
 
             state.busy = true;
+            renderSession();
             try {
                 const latest = await apiPost(state.room, {
                     action: "vote",
@@ -978,8 +979,10 @@
             } catch (err) {
                 setStatus("session-status", "投票に失敗しました");
                 console.error(err);
+                renderSession();
             } finally {
                 state.busy = false;
+                renderSession();
             }
         }
 

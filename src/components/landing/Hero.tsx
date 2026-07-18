@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowDown, ArrowRight } from "lucide-react";
 import { appLinks, siteConfig } from "@/config/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,41 +13,47 @@ export function Hero() {
         alt="祝福に満ちたパーティー会場の様子"
         fill
         priority
-        className="object-cover object-center"
+        className="object-cover object-center scale-105 animate-soft-rise"
         sizes="100vw"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-b from-[var(--charcoal)]/55 via-[var(--charcoal)]/40 to-[var(--charcoal)]/70"
+        className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/70 via-[var(--ink)]/45 to-[var(--ink)]/80"
         aria-hidden
       />
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0"
         style={{
           backgroundImage:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(197, 165, 114, 0.35), transparent 60%)",
+            "radial-gradient(ellipse 70% 45% at 50% 35%, rgba(168, 155, 124, 0.22), transparent 70%)",
         }}
         aria-hidden
       />
+      <div className="grain absolute inset-0" aria-hidden />
 
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-6 py-24 text-center sm:px-8">
-        <p className="animate-fade-up font-[family-name:var(--font-display)] text-sm tracking-[0.35em] text-[var(--gold-light)] uppercase sm:text-base">
+      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-4xl flex-col items-center justify-center px-6 pb-28 pt-24 text-center sm:px-8">
+        <p className="animate-fade-up font-[family-name:var(--font-display)] text-[0.7rem] tracking-[0.45em] text-[var(--champagne-soft)] uppercase sm:text-xs">
           {siteConfig.nameEn}
         </p>
-        <h1 className="animate-fade-up animation-delay-100 mt-5 font-[family-name:var(--font-display)] text-5xl leading-[1.15] font-semibold tracking-wide text-white sm:text-6xl md:text-7xl">
+
+        <h1 className="animate-fade-up animation-delay-100 mt-6 font-[family-name:var(--font-display)] text-[clamp(3.25rem,12vw,5.75rem)] leading-[1.05] font-semibold tracking-[0.04em] text-white">
           {siteConfig.name}
         </h1>
-        <p className="animate-fade-up animation-delay-200 mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/90 sm:text-lg">
+
+        <div
+          className="animate-line-draw mx-auto mt-7 h-px w-16 bg-[var(--champagne-soft)]/80"
+          aria-hidden
+        />
+
+        <p className="animate-fade-up animation-delay-200 mx-auto mt-7 max-w-md text-[0.95rem] leading-[1.85] text-white/85 sm:text-base">
           {siteConfig.tagline}
-          <br className="hidden sm:block" />
-          二次会の余興を、もっと穏やかに、もっと一体感のある時間へ。
         </p>
 
-        <div className="animate-fade-up animation-delay-300 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+        <div className="animate-fade-up animation-delay-300 mt-11 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <Link
             href={appLinks.primaryCta.href}
             className={cn(
               buttonVariants({ variant: "gold", size: "lg" }),
-              "min-w-[200px]",
+              "min-w-[11.5rem] tracking-wide",
             )}
           >
             {appLinks.primaryCta.label}
@@ -57,7 +63,7 @@ export function Hero() {
             href={appLinks.secondaryCta.href}
             className={cn(
               buttonVariants({ variant: "outline", size: "lg" }),
-              "min-w-[200px] border-white/40 bg-white/10 text-white hover:border-white/70 hover:bg-white/20",
+              "min-w-[11.5rem] border-white/35 bg-white/5 text-white backdrop-blur-sm hover:border-white/60 hover:bg-white/12",
             )}
           >
             {appLinks.secondaryCta.label}
@@ -65,8 +71,19 @@ export function Hero() {
         </div>
       </div>
 
+      <a
+        href="#solutions"
+        className="animate-scroll-cue absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[var(--champagne-soft)]/80 transition-opacity hover:opacity-100"
+        aria-label="次のセクションへ"
+      >
+        <span className="font-[family-name:var(--font-display)] text-[0.65rem] tracking-[0.3em] uppercase">
+          Scroll
+        </span>
+        <ArrowDown className="h-4 w-4" strokeWidth={1.5} />
+      </a>
+
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--cream)] to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[var(--paper)] to-transparent"
         aria-hidden
       />
     </section>

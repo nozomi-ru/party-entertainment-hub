@@ -1,17 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --cream: #f7f7f5;
-  --charcoal: #2a2a2a;
-  --charcoal-soft: #3d3d3d;
-  --muted: #6b6b6b;
-  --gold: #c5a572;
-  --gold-deep: #a8894f;
-  --gold-light: #e4d4b5;
-  --gold-muted: #f3ebe0;
-  --border: #e6e2db;
-  --background: #ffffff;
-  --foreground: #2a2a2a;
+  /* Cool ivory + ink + muted champagne (avoid cream/terracotta cluster) */
+  --paper: #f4f5f7;
+  --paper-deep: #e8eaee;
+  --ink: #14151a;
+  --ink-soft: #2c2e36;
+  --muted: #6a6d78;
+  --line: #d5d8e0;
+  --champagne: #a89b7c;
+  --champagne-deep: #8a7d5f;
+  --champagne-soft: #ddd4c0;
+  --champagne-glow: rgba(168, 155, 124, 0.28);
+  --surface: #ffffff;
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
@@ -26,22 +29,46 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-body), "Hiragino Sans", "Noto Sans JP", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--gold) 35%, white);
-  color: var(--charcoal);
+  background: color-mix(in srgb, var(--champagne) 40%, white);
+  color: var(--ink);
+}
+
+/* Soft atmosphere layers */
+.bg-atmosphere {
+  background:
+    radial-gradient(ellipse 90% 60% at 10% -10%, var(--champagne-glow), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 20%, rgba(20, 21, 26, 0.04), transparent 50%),
+    var(--paper);
+}
+
+.bg-atmosphere-inverse {
+  background:
+    radial-gradient(ellipse 80% 50% at 90% 0%, var(--champagne-glow), transparent 55%),
+    var(--surface);
+}
+
+.grain::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
 }
 
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(22px);
   }
   to {
     opacity: 1;
@@ -49,20 +76,69 @@ body {
   }
 }
 
+@keyframes soft-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes scroll-cue {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes line-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .animate-fade-up {
-  animation: fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: fade-up 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-soft-rise {
+  animation: soft-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-scroll-cue {
+  animation: scroll-cue 2.2s ease-in-out infinite;
+}
+
+.animate-line-draw {
+  transform-origin: left center;
+  animation: line-draw 1s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
 }
 
 .animation-delay-100 {
-  animation-delay: 0.1s;
+  animation-delay: 0.12s;
 }
 
 .animation-delay-200 {
-  animation-delay: 0.2s;
+  animation-delay: 0.24s;
 }
 
 .animation-delay-300 {
-  animation-delay: 0.3s;
+  animation-delay: 0.36s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.48s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -70,7 +146,10 @@ body {
     scroll-behavior: auto;
   }
 
-  .animate-fade-up {
+  .animate-fade-up,
+  .animate-soft-rise,
+  .animate-scroll-cue,
+  .animate-line-draw {
     animation: none;
   }
 }

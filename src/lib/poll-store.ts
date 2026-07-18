@@ -21,16 +21,16 @@ type KvLike = {
   ): Promise<void>;
 };
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __weddingPollMemory: Map<string, string> | undefined;
-}
+type GlobalPollMemory = typeof globalThis & {
+  __weddingPollMemory?: Map<string, string>;
+};
 
 function getMemoryStore(): Map<string, string> {
-  if (!globalThis.__weddingPollMemory) {
-    globalThis.__weddingPollMemory = new Map();
+  const g = globalThis as GlobalPollMemory;
+  if (!g.__weddingPollMemory) {
+    g.__weddingPollMemory = new Map();
   }
-  return globalThis.__weddingPollMemory;
+  return g.__weddingPollMemory;
 }
 
 function sessionKey(room: string) {
