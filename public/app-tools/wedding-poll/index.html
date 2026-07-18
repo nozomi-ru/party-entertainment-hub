@@ -404,6 +404,81 @@
             min-height: 1.2em;
         }
 
+        .host-hint {
+            width: 100%;
+            margin-bottom: 1em;
+            padding: 12px 14px;
+            background: #FAF9F7;
+            border: 1px solid var(--color-border);
+            font-size: 0.82em;
+            font-weight: 600;
+            color: var(--color-text-light);
+            line-height: 1.55;
+            text-align: left;
+        }
+
+        .invite-box {
+            width: 100%;
+            margin-top: 1.25em;
+            text-align: left;
+        }
+
+        .invite-box label {
+            display: block;
+            font-size: 0.78em;
+            font-weight: 600;
+            color: var(--color-text-light);
+            margin-bottom: 6px;
+        }
+
+        .invite-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .invite-row input {
+            flex: 1;
+            min-width: 0;
+            padding: 0.75em 0.8em;
+            border: 1px solid var(--color-border);
+            background: #FAF9F7;
+            font-family: inherit;
+            font-size: 0.72em;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .invite-row button {
+            flex-shrink: 0;
+            border: 1px solid var(--color-gold);
+            background: #fff;
+            color: var(--color-text);
+            padding: 0.75em 1em;
+            font-family: inherit;
+            font-size: 0.8em;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+        }
+
+        .option-btn.host-readonly {
+            cursor: default;
+            opacity: 0.95;
+        }
+
+        .option-btn.host-readonly:hover {
+            border-color: var(--color-border);
+            background: #F8F7F5;
+        }
+
+        .voted-note {
+            margin-top: 1em;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--color-gold);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -485,15 +560,15 @@
                 <div class="rules-step-card">
                     <div class="step-num">01</div>
                     <div class="step-body">
-                        <span class="step-title">Room</span>
-                        <span class="step-desc">司会がルームを開き、ゲストに同じコードを伝えます。</span>
+                        <span class="step-title">Host</span>
+                        <span class="step-desc">司会がルームを開きます。投票はせず、進行と結果表示だけ担当します。</span>
                     </div>
                 </div>
                 <div class="rules-step-card">
                     <div class="step-num">02</div>
                     <div class="step-body">
-                        <span class="step-title">Vote</span>
-                        <span class="step-desc">ゲストはスマホから投票。結果は会場の画面に即反映されます。</span>
+                        <span class="step-title">Share</span>
+                        <span class="step-desc">表示されるゲスト用URLを渡せば、ゲストはすぐに投票画面へ入れます。</span>
                     </div>
                 </div>
                 <div class="rules-step-card">
@@ -508,11 +583,11 @@
             <div class="mode-grid">
                 <button type="button" class="mode-btn selected" data-mode="host" id="mode-host">
                     <strong>Host</strong>
-                    <span>司会・スクリーン用<br>進行と結果表示</span>
+                    <span>司会・スクリーン用<br>進行のみ（投票不可）</span>
                 </button>
                 <button type="button" class="mode-btn" data-mode="guest" id="mode-guest">
                     <strong>Guest</strong>
-                    <span>ゲスト投票用<br>手元のスマホから</span>
+                    <span>ゲスト投票用<br>URL共有がおすすめ</span>
                 </button>
             </div>
 
@@ -524,7 +599,7 @@
             <button class="btn-main" id="btn-enter">入室する (ENTER)</button>
             <p class="status-msg" id="start-status"></p>
             <p style="margin-top:0.75em; font-size:0.72em; color:#888; line-height:1.5; font-weight:600;">
-                投票データはサーバー（本番は Cloudflare KV）で同期されます。司会が先に Host で入室してください。
+                ゲストは <code>?room=XXXX</code> 付きのURLを開くだけで投票できます。司会が先に Host で入室してください。
             </p>
         </div>
 
@@ -538,8 +613,13 @@
                 <span id="sync-hint">同期中</span>
             </div>
 
+            <p class="host-hint" id="host-hint" style="display:none;">
+                Host は投票できません。下のゲスト用URLを共有し、会場スクリーンで結果を表示してください。
+            </p>
+
             <p class="question-text" id="question-text"></p>
             <div class="options" id="options"></div>
+            <p class="voted-note" id="voted-note" style="display:none;">投票済みです。結果発表をお待ちください。</p>
 
             <div class="results" id="results">
                 <div id="results-body"></div>
@@ -547,6 +627,13 @@
             </div>
 
             <div id="host-controls" style="width:100%;">
+                <div class="invite-box">
+                    <label for="guest-url">ゲスト用URL（これを渡せばすぐ投票できます）</label>
+                    <div class="invite-row">
+                        <input id="guest-url" type="text" readonly>
+                        <button type="button" id="btn-copy-guest-url">コピー</button>
+                    </div>
+                </div>
                 <div class="nav-row">
                     <button type="button" class="btn-ghost" id="btn-prev">前へ</button>
                     <button type="button" class="btn-ghost" id="btn-next">次へ</button>
@@ -611,11 +698,27 @@
             clickCount: 0,
             clickTimer: null,
             pollTimer: null,
+            waitTimer: null,
             busy: false
         };
 
         function apiUrl(room) {
             return `/api/poll/${encodeURIComponent(room)}`;
+        }
+
+        function guestInviteUrl(room) {
+            const u = new URL(location.href);
+            u.search = "";
+            u.hash = "";
+            u.searchParams.set("room", room);
+            return u.toString();
+        }
+
+        function selectMode(mode) {
+            state.mode = mode;
+            document.querySelectorAll(".mode-btn").forEach((b) => {
+                b.classList.toggle("selected", b.dataset.mode === mode);
+            });
         }
 
         function loadLocalQuestions() {
@@ -668,7 +771,45 @@
             return data;
         }
 
-        async function enterRoom() {
+        function stopWaitingForHost() {
+            if (state.waitTimer) {
+                clearInterval(state.waitTimer);
+                state.waitTimer = null;
+            }
+        }
+
+        function beginSession(room, session) {
+            stopWaitingForHost();
+            state.room = room;
+            state.session = session;
+            state.questions = session.questions;
+            try {
+                state.myVotes = JSON.parse(localStorage.getItem(`weddingPollMyVotes_${room}`)) || {};
+            } catch {
+                state.myVotes = {};
+            }
+            startPolling();
+            renderSession();
+            showView("view-session");
+            setStatus("start-status", "");
+        }
+
+        function waitForHostRoom(room) {
+            stopWaitingForHost();
+            setStatus("start-status", "司会の準備を待っています…（このままお待ちください）");
+            state.waitTimer = setInterval(async () => {
+                try {
+                    const session = await apiGet(room);
+                    if (session) {
+                        beginSession(room, session);
+                    }
+                } catch {
+                    /* keep waiting */
+                }
+            }, 1000);
+        }
+
+        async function enterRoom({ auto = false } = {}) {
             const room = normalizeRoom(document.getElementById("room-input").value);
             if (room.length < 4) {
                 setStatus("start-status", "ルームコードは4文字で入力してください");
@@ -676,7 +817,7 @@
             }
 
             state.busy = true;
-            setStatus("start-status", "接続中…");
+            setStatus("start-status", auto ? "ルームに接続しています…" : "接続中…");
             try {
                 let session = await apiGet(room);
 
@@ -688,27 +829,13 @@
                         votes: session ? session.votes : emptyVotes(state.questions),
                         questions: state.questions
                     });
+                    beginSession(room, session);
+                } else if (session) {
+                    beginSession(room, session);
                 } else {
-                    if (!session) {
-                        setStatus("start-status", "ルームが見つかりません。司会が先に入室してください");
-                        state.busy = false;
-                        return;
-                    }
+                    // ゲストは Host 開設を待つ（URL共有で先に開いた場合も想定）
+                    waitForHostRoom(room);
                 }
-
-                state.room = room;
-                state.session = session;
-                state.questions = session.questions;
-                try {
-                    state.myVotes = JSON.parse(localStorage.getItem(`weddingPollMyVotes_${room}`)) || {};
-                } catch {
-                    state.myVotes = {};
-                }
-
-                startPolling();
-                renderSession();
-                showView("view-session");
-                setStatus("start-status", "");
             } catch (err) {
                 setStatus("start-status", "接続に失敗しました。サーバーが起動しているか確認してください");
                 console.error(err);
@@ -756,13 +883,21 @@
             const q = s.questions[s.index];
             const isHost = state.mode === "host";
 
-            document.getElementById("role-label").textContent = isHost ? "Host · 司会" : "Guest · 投票";
+            document.getElementById("role-label").textContent = isHost ? "Host · 司会（投票不可）" : "Guest · 投票";
             document.getElementById("room-badge").textContent = state.room;
             document.getElementById("q-progress").textContent = `Question ${s.index + 1} / ${s.questions.length}`;
             document.getElementById("question-text").textContent = q.q;
             document.getElementById("host-controls").style.display = isHost ? "block" : "none";
+            document.getElementById("host-hint").style.display = isHost ? "block" : "none";
+
+            if (isHost) {
+                document.getElementById("guest-url").value = guestInviteUrl(state.room);
+            }
 
             const already = state.myVotes[String(s.index)];
+            const votedNote = document.getElementById("voted-note");
+            votedNote.style.display = !isHost && already !== undefined && !s.showResults ? "block" : "none";
+
             const options = document.getElementById("options");
             options.innerHTML = "";
 
@@ -771,18 +906,21 @@
                 btn.type = "button";
                 btn.className = "option-btn" + (already === i ? " voted" : "");
                 btn.innerHTML = `<span class="option-key">${KEYS[i]}</span><span>${text}</span>`;
-                if (!isHost) {
+
+                if (isHost) {
+                    // Host は投票できない（表示のみ）
+                    btn.disabled = true;
+                    btn.classList.add("host-readonly");
+                } else {
                     btn.disabled = already !== undefined || state.busy;
                     btn.addEventListener("click", () => guestVote(i));
-                } else {
-                    btn.addEventListener("click", () => hostTally(i, btn));
                 }
                 options.appendChild(btn);
             });
 
             const results = document.getElementById("results");
-            const show = isHost ? s.showResults : already !== undefined;
-            if (show) {
+            // 結果は Host が公開したときだけ全員に表示
+            if (s.showResults) {
                 results.classList.add("show");
                 renderResults();
             } else {
@@ -791,6 +929,8 @@
 
             document.getElementById("btn-toggle-results").textContent =
                 s.showResults ? "結果を隠す" : "結果を表示";
+
+            document.getElementById("show-reset-confirm").style.display = isHost ? "" : "none";
         }
 
         function renderResults() {
@@ -821,6 +961,7 @@
         async function guestVote(choiceIdx) {
             const s = state.session;
             const key = String(s.index);
+            if (state.mode === "host") return;
             if (state.myVotes[key] !== undefined || state.busy) return;
 
             state.busy = true;
@@ -836,29 +977,6 @@
                 renderSession();
             } catch (err) {
                 setStatus("session-status", "投票に失敗しました");
-                console.error(err);
-            } finally {
-                state.busy = false;
-            }
-        }
-
-        async function hostTally(choiceIdx, btn) {
-            if (state.busy) return;
-            state.busy = true;
-            try {
-                const latest = await apiPost(state.room, {
-                    action: "tally",
-                    questionIndex: state.session.index,
-                    choiceIndex: choiceIdx
-                });
-                state.session = latest;
-                if (btn) {
-                    btn.classList.add("pulse");
-                    setTimeout(() => btn.classList.remove("pulse"), 350);
-                }
-                renderSession();
-            } catch (err) {
-                setStatus("session-status", "集計に失敗しました");
                 console.error(err);
             } finally {
                 state.busy = false;
@@ -909,8 +1027,22 @@
             }
         }
 
+        async function copyGuestUrl() {
+            const url = document.getElementById("guest-url").value;
+            const status = document.getElementById("session-status");
+            try {
+                await navigator.clipboard.writeText(url);
+                setStatus("session-status", "ゲスト用URLをコピーしました");
+            } catch {
+                document.getElementById("guest-url").select();
+                setStatus("session-status", "コピーできない場合はURLを長押しして共有してください");
+            }
+            if (status) setTimeout(() => { if (status.textContent.includes("コピー")) setStatus("session-status", ""); }, 2500);
+        }
+
         function leaveRoom() {
             stopPolling();
+            stopWaitingForHost();
             state.room = "";
             state.session = null;
             showView("view-start");
@@ -969,11 +1101,7 @@
 
         function initEvents() {
             document.querySelectorAll(".mode-btn").forEach((btn) => {
-                btn.addEventListener("click", () => {
-                    document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("selected"));
-                    btn.classList.add("selected");
-                    state.mode = btn.dataset.mode;
-                });
+                btn.addEventListener("click", () => selectMode(btn.dataset.mode));
             });
 
             document.getElementById("room-input").addEventListener("input", (e) => {
@@ -991,11 +1119,12 @@
                 }
             });
 
-            document.getElementById("btn-enter").addEventListener("click", enterRoom);
+            document.getElementById("btn-enter").addEventListener("click", () => enterRoom());
             document.getElementById("btn-prev").addEventListener("click", () => changeQuestion(-1));
             document.getElementById("btn-next").addEventListener("click", () => changeQuestion(1));
             document.getElementById("btn-toggle-results").addEventListener("click", toggleResults);
             document.getElementById("btn-clear-votes").addEventListener("click", clearVotes);
+            document.getElementById("btn-copy-guest-url").addEventListener("click", copyGuestUrl);
             document.getElementById("btn-leave").addEventListener("click", leaveRoom);
 
             document.getElementById("show-reset-confirm").addEventListener("click", () => {
@@ -1021,22 +1150,33 @@
                     document.getElementById("admin-panel").style.display = "none";
                 }
             });
+        }
 
+        function bootFromUrl() {
             const params = new URLSearchParams(location.search);
             const presetRoom = normalizeRoom(params.get("room"));
+            const modeParam = params.get("mode");
+
             if (presetRoom.length === 4) {
                 document.getElementById("room-input").value = presetRoom;
             }
-            if (params.get("mode") === "guest") {
-                state.mode = "guest";
-                document.getElementById("mode-host").classList.remove("selected");
-                document.getElementById("mode-guest").classList.add("selected");
+
+            // ルーム付きURLはゲスト参加が本命。mode=host のときだけ司会として開く
+            if (modeParam === "host") {
+                selectMode("host");
+            } else if (presetRoom.length === 4 || modeParam === "guest") {
+                selectMode("guest");
+            }
+
+            if (presetRoom.length === 4 && state.mode === "guest") {
+                enterRoom({ auto: true });
             }
         }
 
         window.addEventListener("DOMContentLoaded", () => {
             loadLocalQuestions();
             initEvents();
+            bootFromUrl();
         });
     </script>
 </body>
