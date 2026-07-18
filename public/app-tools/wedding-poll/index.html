@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>リアルタイムアンケート | Wedding Poll</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #FCFBF9;
+            --color-text: #1A1A1A;
+            --color-text-light: #4A4A4A;
+            --color-gold: #B4975A;
+            --color-border: #DCD7D0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Serif JP', 'Yu Mincho', serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 20px 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #main-box {
+            max-width: 480px;
+            width: 100%;
+            background: #FFFFFF;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3.5em 1.5em 2em;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #main-box::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid #EBE7E0;
+            pointer-events: none;
+        }
+
+        .header-ornament {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-ornament::before,
+        .header-ornament::after {
+            content: '';
+            width: 30px;
+            height: 1.5px;
+            background-color: var(--color-gold);
+            margin: 0 15px;
+        }
+
+        .header-ornament svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--color-gold);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 8vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin: 0 0 8px;
+            cursor: pointer;
+            user-select: none;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1em;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--color-gold);
+            margin-bottom: 2em;
+        }
+
+        .view { width: 100%; display: none; }
+        .view.active { display: block; animation: fadeIn 0.45s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 1.5em;
+            text-align: left;
+        }
+
+        .rules-step-card {
+            display: flex;
+            align-items: center;
+            background: #FAFAFA;
+            border: 1px solid var(--color-border);
+            padding: 12px 16px;
+            gap: 16px;
+        }
+
+        .step-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            color: var(--color-gold);
+            font-weight: 600;
+            min-width: 35px;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-num::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 24px;
+            background-color: var(--color-border);
+        }
+
+        .step-title {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .step-desc {
+            display: block;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 1em;
+        }
+
+        .mode-btn {
+            border: 1px solid var(--color-border);
+            background: #F8F7F5;
+            padding: 1.2em 0.8em;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.25s ease;
+        }
+
+        .mode-btn:hover,
+        .mode-btn.selected {
+            border-color: var(--color-gold);
+            background: #fff;
+            box-shadow: 0 0 0 1px var(--color-gold) inset;
+        }
+
+        .mode-btn strong {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05em;
+            margin-bottom: 4px;
+        }
+
+        .mode-btn span {
+            font-size: 0.72em;
+            color: var(--color-text-light);
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .room-row {
+            width: 100%;
+            margin-bottom: 1.25em;
+            text-align: left;
+        }
+
+        .room-row label {
+            display: block;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--color-text-light);
+            margin-bottom: 6px;
+        }
+
+        .room-row input {
+            width: 100%;
+            padding: 1em;
+            border: 1px solid var(--color-border);
+            background: #FAF9F7;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            letter-spacing: 0.35em;
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .btn-main {
+            background-color: var(--color-text);
+            color: #FFFFFF;
+            border: none;
+            padding: 1.2em;
+            width: 100%;
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.9em;
+            width: 100%;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+
+        .btn-reset-trigger {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px;
+            font-size: 0.85em;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: inherit;
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 1em;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--color-text-light);
+        }
+
+        .room-badge {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-gold);
+            letter-spacing: 0.2em;
+        }
+
+        .question-text {
+            font-size: 1.2em;
+            font-weight: 700;
+            line-height: 1.7;
+            margin: 0 0 1.25em;
+            text-align: left;
+            width: 100%;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1em 1.1em;
+            border: 1px solid var(--color-border);
+            background: #F8F7F5;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--color-gold);
+            background: #fff;
+        }
+
+        .option-btn.voted {
+            border-color: var(--color-gold);
+            background: #fff;
+            box-shadow: 0 0 0 1px var(--color-gold) inset;
+        }
+
+        .option-btn:disabled { cursor: default; }
+
+        .option-key {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-gold);
+            font-size: 1.1em;
+            min-width: 1.2em;
+        }
+
+        .results {
+            width: 100%;
+            margin-top: 1.5em;
+            display: none;
+            text-align: left;
+        }
+
+        .results.show { display: block; animation: fadeIn 0.4s ease; }
+
+        .result-row { margin-bottom: 14px; }
+
+        .result-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .result-bar-track {
+            height: 10px;
+            background: #F0EEEA;
+            overflow: hidden;
+        }
+
+        .result-bar-fill {
+            height: 100%;
+            background: var(--color-gold);
+            width: 0;
+            transition: width 0.45s ease;
+        }
+
+        .total-votes {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .nav-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+            margin-top: 1.25em;
+        }
+
+        .footer-actions {
+            margin-top: 1.25em;
+            width: 100%;
+        }
+
+        .pulse { animation: pulse 0.35s ease; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .status-msg {
+            font-size: 0.78em;
+            color: #888;
+            font-weight: 600;
+            margin-top: 10px;
+            min-height: 1.2em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            inset: 0;
+            background: rgba(252, 251, 249, 0.92);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            padding: 2.5em 2em;
+            width: 90%;
+            max-width: 360px;
+            border: 1px solid var(--color-border);
+            text-align: center;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid #EBE7E0;
+            pointer-events: none;
+        }
+
+        #admin-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--color-bg);
+            z-index: 3000;
+            padding: 24px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .admin-card {
+            background: #fff;
+            border: 1px solid var(--color-border);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .admin-card label {
+            display: block;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            margin: 8px 0 4px;
+            font-weight: 600;
+        }
+
+        .admin-card input,
+        .admin-card textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            background: #FAF9F7;
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="main-box">
+        <div class="header-ornament">
+            <svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>
+        </div>
+        <h1 id="main-title">Live Poll</h1>
+        <div class="subtitle">Share the Moment</div>
+
+        <div id="view-start" class="view active">
+            <div class="rules-container">
+                <div class="rules-step-card">
+                    <div class="step-num">01</div>
+                    <div class="step-body">
+                        <span class="step-title">Room</span>
+                        <span class="step-desc">司会がルームを開き、ゲストに同じコードを伝えます。</span>
+                    </div>
+                </div>
+                <div class="rules-step-card">
+                    <div class="step-num">02</div>
+                    <div class="step-body">
+                        <span class="step-title">Vote</span>
+                        <span class="step-desc">ゲストはスマホから投票。結果は会場の画面に即反映されます。</span>
+                    </div>
+                </div>
+                <div class="rules-step-card">
+                    <div class="step-num">03</div>
+                    <div class="step-body">
+                        <span class="step-title">Reveal</span>
+                        <span class="step-desc">司会が結果表示や次の質問への進行をコントロールします。</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mode-grid">
+                <button type="button" class="mode-btn selected" data-mode="host" id="mode-host">
+                    <strong>Host</strong>
+                    <span>司会・スクリーン用<br>進行と結果表示</span>
+                </button>
+                <button type="button" class="mode-btn" data-mode="guest" id="mode-guest">
+                    <strong>Guest</strong>
+                    <span>ゲスト投票用<br>手元のスマホから</span>
+                </button>
+            </div>
+
+            <div class="room-row">
+                <label for="room-input">ルームコード（英数字4文字）</label>
+                <input id="room-input" type="text" maxlength="4" placeholder="LOVE" autocomplete="off">
+            </div>
+
+            <button class="btn-main" id="btn-enter">入室する (ENTER)</button>
+            <p class="status-msg" id="start-status"></p>
+            <p style="margin-top:0.75em; font-size:0.72em; color:#888; line-height:1.5; font-weight:600;">
+                投票データはサーバー（本番は Cloudflare KV）で同期されます。司会が先に Host で入室してください。
+            </p>
+        </div>
+
+        <div id="view-session" class="view">
+            <div class="meta-row">
+                <span id="role-label">Host</span>
+                <span class="room-badge" id="room-badge">LOVE</span>
+            </div>
+            <div class="meta-row" style="margin-top:-0.5em;">
+                <span id="q-progress">Question 1 / 3</span>
+                <span id="sync-hint">同期中</span>
+            </div>
+
+            <p class="question-text" id="question-text"></p>
+            <div class="options" id="options"></div>
+
+            <div class="results" id="results">
+                <div id="results-body"></div>
+                <div class="total-votes" id="total-votes">0 votes</div>
+            </div>
+
+            <div id="host-controls" style="width:100%;">
+                <div class="nav-row">
+                    <button type="button" class="btn-ghost" id="btn-prev">前へ</button>
+                    <button type="button" class="btn-ghost" id="btn-next">次へ</button>
+                </div>
+                <button type="button" class="btn-main" id="btn-toggle-results" style="margin-top:10px;">結果を表示</button>
+                <button type="button" class="btn-ghost" id="btn-clear-votes">この質問の票をクリア</button>
+            </div>
+
+            <div class="footer-actions">
+                <button class="btn-reset-trigger" id="btn-leave">ルームを出る</button>
+                <button class="btn-reset-trigger" id="show-reset-confirm">問題を初期化</button>
+            </div>
+            <p class="status-msg" id="session-status"></p>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color:var(--color-text); margin-top:0; font-size:1.3em;">リセットの確認</h2>
+            <p style="color:var(--color-text-light); font-size:0.9em; line-height:1.6; margin-bottom:2em;">
+                問題設定を初期状態に戻しますか？
+            </p>
+            <button class="btn-main" id="execute-reset" style="margin-bottom:10px;">実行する (RESET)</button>
+            <button class="btn-reset-trigger" id="close-confirm-modal" style="width:100%;">キャンセル (CANCEL)</button>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <h2 style="font-family:'Playfair Display',serif;">Poll Settings</h2>
+        <p style="font-size:0.85em; color:var(--color-text-light);">質問と選択肢を編集できます（Hostが入室時に共有されます）。</p>
+        <div id="admin-form"></div>
+        <button class="btn-main" id="admin-save" style="margin-top:12px;">保存して閉じる</button>
+        <button class="btn-reset-trigger" id="admin-close" style="width:100%; margin-top:8px;">閉じる</button>
+    </div>
+
+    <script>
+        "use strict";
+
+        const QUESTIONS_KEY = "weddingPollQuestions";
+        const KEYS = ["A", "B", "C", "D"];
+        const DEFAULT_QUESTIONS = [
+            {
+                q: "今日の二次会、いちばん盛り上がりそうなのは？",
+                choices: ["余興タイム", "歓談・乾杯", "ゲーム大会", "締めの合唱"]
+            },
+            {
+                q: "新郎新婦の新婚旅行先に似合うのは？",
+                choices: ["ハワイ", "ヨーロッパ", "温泉めぐり", "国内リゾート"]
+            },
+            {
+                q: "二人へのお祝いメッセージ、テーマは？",
+                choices: ["感謝", "笑い話", "これからへの期待", "思い出話"]
+            }
+        ];
+
+        const state = {
+            mode: "host",
+            room: "",
+            questions: [],
+            session: null,
+            myVotes: {},
+            clickCount: 0,
+            clickTimer: null,
+            pollTimer: null,
+            busy: false
+        };
+
+        function apiUrl(room) {
+            return `/api/poll/${encodeURIComponent(room)}`;
+        }
+
+        function loadLocalQuestions() {
+            try {
+                const raw = localStorage.getItem(QUESTIONS_KEY);
+                state.questions = raw ? JSON.parse(raw) : structuredClone(DEFAULT_QUESTIONS);
+            } catch {
+                state.questions = structuredClone(DEFAULT_QUESTIONS);
+            }
+        }
+
+        function saveLocalQuestions() {
+            localStorage.setItem(QUESTIONS_KEY, JSON.stringify(state.questions));
+        }
+
+        function emptyVotes(questions) {
+            return questions.map((q) => Array(q.choices.length).fill(0));
+        }
+
+        function showView(id) {
+            document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+        }
+
+        function normalizeRoom(value) {
+            return String(value || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+        }
+
+        function setStatus(target, message) {
+            const el = document.getElementById(target);
+            if (el) el.textContent = message || "";
+        }
+
+        async function apiPost(room, body) {
+            const res = await fetch(apiUrl(room), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "API error");
+            return data;
+        }
+
+        async function apiGet(room) {
+            const res = await fetch(apiUrl(room), { cache: "no-store" });
+            if (res.status === 404) return null;
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "API error");
+            return data;
+        }
+
+        async function enterRoom() {
+            const room = normalizeRoom(document.getElementById("room-input").value);
+            if (room.length < 4) {
+                setStatus("start-status", "ルームコードは4文字で入力してください");
+                return;
+            }
+
+            state.busy = true;
+            setStatus("start-status", "接続中…");
+            try {
+                let session = await apiGet(room);
+
+                if (state.mode === "host") {
+                    session = await apiPost(room, {
+                        action: "upsert",
+                        index: session ? session.index : 0,
+                        showResults: session ? session.showResults : false,
+                        votes: session ? session.votes : emptyVotes(state.questions),
+                        questions: state.questions
+                    });
+                } else {
+                    if (!session) {
+                        setStatus("start-status", "ルームが見つかりません。司会が先に入室してください");
+                        state.busy = false;
+                        return;
+                    }
+                }
+
+                state.room = room;
+                state.session = session;
+                state.questions = session.questions;
+                try {
+                    state.myVotes = JSON.parse(localStorage.getItem(`weddingPollMyVotes_${room}`)) || {};
+                } catch {
+                    state.myVotes = {};
+                }
+
+                startPolling();
+                renderSession();
+                showView("view-session");
+                setStatus("start-status", "");
+            } catch (err) {
+                setStatus("start-status", "接続に失敗しました。サーバーが起動しているか確認してください");
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        function startPolling() {
+            stopPolling();
+            state.pollTimer = setInterval(refreshSession, 800);
+        }
+
+        function stopPolling() {
+            if (state.pollTimer) {
+                clearInterval(state.pollTimer);
+                state.pollTimer = null;
+            }
+        }
+
+        async function refreshSession() {
+            if (!state.room || state.busy) return;
+            try {
+                const latest = await apiGet(state.room);
+                if (!latest) return;
+                if (!state.session || latest.updatedAt !== state.session.updatedAt) {
+                    state.session = latest;
+                    state.questions = latest.questions;
+                    renderSession();
+                    setStatus("session-status", "");
+                    document.getElementById("sync-hint").textContent = "同期OK";
+                }
+            } catch {
+                document.getElementById("sync-hint").textContent = "再接続中";
+            }
+        }
+
+        function saveMyVotes() {
+            localStorage.setItem(`weddingPollMyVotes_${state.room}`, JSON.stringify(state.myVotes));
+        }
+
+        function renderSession() {
+            const s = state.session;
+            if (!s) return;
+            const q = s.questions[s.index];
+            const isHost = state.mode === "host";
+
+            document.getElementById("role-label").textContent = isHost ? "Host · 司会" : "Guest · 投票";
+            document.getElementById("room-badge").textContent = state.room;
+            document.getElementById("q-progress").textContent = `Question ${s.index + 1} / ${s.questions.length}`;
+            document.getElementById("question-text").textContent = q.q;
+            document.getElementById("host-controls").style.display = isHost ? "block" : "none";
+
+            const already = state.myVotes[String(s.index)];
+            const options = document.getElementById("options");
+            options.innerHTML = "";
+
+            q.choices.forEach((text, i) => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "option-btn" + (already === i ? " voted" : "");
+                btn.innerHTML = `<span class="option-key">${KEYS[i]}</span><span>${text}</span>`;
+                if (!isHost) {
+                    btn.disabled = already !== undefined || state.busy;
+                    btn.addEventListener("click", () => guestVote(i));
+                } else {
+                    btn.addEventListener("click", () => hostTally(i, btn));
+                }
+                options.appendChild(btn);
+            });
+
+            const results = document.getElementById("results");
+            const show = isHost ? s.showResults : already !== undefined;
+            if (show) {
+                results.classList.add("show");
+                renderResults();
+            } else {
+                results.classList.remove("show");
+            }
+
+            document.getElementById("btn-toggle-results").textContent =
+                s.showResults ? "結果を隠す" : "結果を表示";
+        }
+
+        function renderResults() {
+            const s = state.session;
+            const votes = s.votes[s.index] || [];
+            const total = votes.reduce((a, b) => a + b, 0);
+            const q = s.questions[s.index];
+
+            document.getElementById("results-body").innerHTML = q.choices.map((label, i) => {
+                const count = votes[i] || 0;
+                const pct = total ? Math.round((count / total) * 100) : 0;
+                return `
+                    <div class="result-row">
+                        <div class="result-label">
+                            <span>${KEYS[i]}. ${label}</span>
+                            <span>${pct}%（${count}）</span>
+                        </div>
+                        <div class="result-bar-track">
+                            <div class="result-bar-fill" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            document.getElementById("total-votes").textContent = `${total} votes`;
+        }
+
+        async function guestVote(choiceIdx) {
+            const s = state.session;
+            const key = String(s.index);
+            if (state.myVotes[key] !== undefined || state.busy) return;
+
+            state.busy = true;
+            try {
+                const latest = await apiPost(state.room, {
+                    action: "vote",
+                    questionIndex: s.index,
+                    choiceIndex: choiceIdx
+                });
+                state.myVotes[key] = choiceIdx;
+                saveMyVotes();
+                state.session = latest;
+                renderSession();
+            } catch (err) {
+                setStatus("session-status", "投票に失敗しました");
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        async function hostTally(choiceIdx, btn) {
+            if (state.busy) return;
+            state.busy = true;
+            try {
+                const latest = await apiPost(state.room, {
+                    action: "tally",
+                    questionIndex: state.session.index,
+                    choiceIndex: choiceIdx
+                });
+                state.session = latest;
+                if (btn) {
+                    btn.classList.add("pulse");
+                    setTimeout(() => btn.classList.remove("pulse"), 350);
+                }
+                renderSession();
+            } catch (err) {
+                setStatus("session-status", "集計に失敗しました");
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        async function changeQuestion(delta) {
+            if (state.busy) return;
+            const next = state.session.index + delta;
+            if (next < 0 || next >= state.session.questions.length) return;
+            state.busy = true;
+            try {
+                state.session = await apiPost(state.room, { action: "setIndex", index: next });
+                renderSession();
+            } catch (err) {
+                setStatus("session-status", "切り替えに失敗しました");
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        async function toggleResults() {
+            if (state.busy) return;
+            state.busy = true;
+            try {
+                state.session = await apiPost(state.room, { action: "toggleResults" });
+                renderSession();
+            } catch (err) {
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        async function clearVotes() {
+            if (state.busy) return;
+            state.busy = true;
+            try {
+                state.session = await apiPost(state.room, { action: "clearVotes" });
+                delete state.myVotes[String(state.session.index)];
+                saveMyVotes();
+                renderSession();
+            } catch (err) {
+                console.error(err);
+            } finally {
+                state.busy = false;
+            }
+        }
+
+        function leaveRoom() {
+            stopPolling();
+            state.room = "";
+            state.session = null;
+            showView("view-start");
+        }
+
+        function openAdmin() {
+            const form = document.getElementById("admin-form");
+            form.innerHTML = state.questions.map((q, i) => `
+                <div class="admin-card">
+                    <strong>質問 ${i + 1}</strong>
+                    <label>質問文</label>
+                    <textarea class="admin-q" rows="2">${escapeHtml(q.q)}</textarea>
+                    ${q.choices.map((c, ci) => `
+                        <label>選択肢 ${KEYS[ci]}</label>
+                        <input type="text" class="admin-choice" value="${escapeAttr(c)}">
+                    `).join("")}
+                </div>
+            `).join("");
+            document.getElementById("admin-panel").style.display = "block";
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function escapeAttr(s) {
+            return escapeHtml(s).replace(/"/g, "&quot;");
+        }
+
+        async function saveAdmin() {
+            const cards = document.querySelectorAll(".admin-card");
+            state.questions = Array.from(cards).map((card) => ({
+                q: card.querySelector(".admin-q").value.trim() || "（無題）",
+                choices: Array.from(card.querySelectorAll(".admin-choice")).map((el) => el.value.trim() || "???")
+            }));
+            saveLocalQuestions();
+            document.getElementById("admin-panel").style.display = "none";
+
+            if (state.room && state.mode === "host") {
+                try {
+                    state.session = await apiPost(state.room, {
+                        action: "upsert",
+                        index: 0,
+                        showResults: false,
+                        votes: emptyVotes(state.questions),
+                        questions: state.questions
+                    });
+                    state.myVotes = {};
+                    saveMyVotes();
+                    renderSession();
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
+        function initEvents() {
+            document.querySelectorAll(".mode-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    document.querySelectorAll(".mode-btn").forEach((b) => b.classList.remove("selected"));
+                    btn.classList.add("selected");
+                    state.mode = btn.dataset.mode;
+                });
+            });
+
+            document.getElementById("room-input").addEventListener("input", (e) => {
+                e.target.value = normalizeRoom(e.target.value);
+            });
+
+            document.getElementById("main-title").addEventListener("click", () => {
+                state.clickCount += 1;
+                if (state.clickCount >= 3) {
+                    openAdmin();
+                    state.clickCount = 0;
+                } else {
+                    clearTimeout(state.clickTimer);
+                    state.clickTimer = setTimeout(() => { state.clickCount = 0; }, 500);
+                }
+            });
+
+            document.getElementById("btn-enter").addEventListener("click", enterRoom);
+            document.getElementById("btn-prev").addEventListener("click", () => changeQuestion(-1));
+            document.getElementById("btn-next").addEventListener("click", () => changeQuestion(1));
+            document.getElementById("btn-toggle-results").addEventListener("click", toggleResults);
+            document.getElementById("btn-clear-votes").addEventListener("click", clearVotes);
+            document.getElementById("btn-leave").addEventListener("click", leaveRoom);
+
+            document.getElementById("show-reset-confirm").addEventListener("click", () => {
+                document.getElementById("confirm-modal").style.display = "flex";
+            });
+            document.getElementById("execute-reset").addEventListener("click", () => {
+                localStorage.removeItem(QUESTIONS_KEY);
+                loadLocalQuestions();
+                document.getElementById("confirm-modal").style.display = "none";
+                leaveRoom();
+            });
+            document.getElementById("close-confirm-modal").addEventListener("click", () => {
+                document.getElementById("confirm-modal").style.display = "none";
+            });
+            document.getElementById("admin-save").addEventListener("click", saveAdmin);
+            document.getElementById("admin-close").addEventListener("click", () => {
+                document.getElementById("admin-panel").style.display = "none";
+            });
+
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    document.getElementById("confirm-modal").style.display = "none";
+                    document.getElementById("admin-panel").style.display = "none";
+                }
+            });
+
+            const params = new URLSearchParams(location.search);
+            const presetRoom = normalizeRoom(params.get("room"));
+            if (presetRoom.length === 4) {
+                document.getElementById("room-input").value = presetRoom;
+            }
+            if (params.get("mode") === "guest") {
+                state.mode = "guest";
+                document.getElementById("mode-host").classList.remove("selected");
+                document.getElementById("mode-guest").classList.add("selected");
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            loadLocalQuestions();
+            initEvents();
+        });
+    </script>
+</body>
+</html>

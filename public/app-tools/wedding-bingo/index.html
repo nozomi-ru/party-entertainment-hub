@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人間ビンゴ | Wedding Human Bingo</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="../shared/pack.js"></script>
+    
+
+    <style>
+        :root {
+            --color-bg: #FCFBF9;
+            --color-text: #1A1A1A;
+            --color-text-light: #4A4A4A;
+            --color-gold: #B4975A;
+            --color-border: #DCD7D0;
+        }
+
+        body {
+            font-family: 'Noto Serif JP', 'Yu Mincho', '游明朝', serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 20px 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            -webkit-font-smoothing: antialiased;
+            box-sizing: border-box;
+        }
+
+        #main-box {
+            max-width: 480px;
+            width: 100%;
+            background: #FFFFFF;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3.5em 1.5em 2em 1.5em;
+            text-align: center;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #main-box::before {
+            content: '';
+            position: absolute;
+            top: 6px; left: 6px; right: 6px; bottom: 6px;
+            border: 1px solid #EBE7E0;
+            pointer-events: none;
+        }
+
+        .header-ornament {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .header-ornament::before,
+        .header-ornament::after {
+            content: '';
+            width: 30px;
+            height: 1.5px;
+            background-color: var(--color-gold);
+            margin: 0 15px;
+        }
+
+        .header-ornament svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--color-gold);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 8vw, 2.6rem);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin: 0 0 8px 0;
+            color: var(--color-text);
+            cursor: pointer;
+            user-select: none;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1em;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--color-gold);
+            margin-bottom: 2em;
+        }
+
+        /* --- 整理済み：ルールセクション --- */
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 2.5em;
+            text-align: left;
+        }
+
+        .rules-step-card {
+            display: flex;
+            align-items: center;
+            background: #FAFAFA;
+            border: 1px solid var(--color-border);
+            padding: 12px 16px;
+            gap: 16px;
+            position: relative;
+        }
+
+        .step-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            color: var(--color-gold);
+            font-weight: 600;
+            min-width: 35px;
+            position: relative;
+            text-align: center;
+        }
+
+        .step-num::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 24px;
+            background-color: var(--color-border);
+        }
+
+        .step-body {
+            flex: 1;
+        }
+
+        .step-title {
+            display: block;
+            font-family: 'Playfair Display', 'Noto Serif JP', serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: var(--color-text);
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .step-title small {
+            font-size: 0.75em;
+            color: var(--color-gold);
+            margin-left: 8px;
+            font-weight: 600;
+        }
+
+        .step-desc {
+            display: block;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        /* --- ビンゴボード --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            width: 100%;
+        }
+
+        .cell {
+            background: #F8F7F5;
+            border: 1px solid var(--color-border);
+            aspect-ratio: 1/1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            position: relative;
+            color: var(--color-text-light);
+            line-height: 1.4;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .cell.active {
+            background: #FFFFFF;
+            border-color: var(--color-gold);
+            color: var(--color-text);
+            box-shadow: 0 0 0 1px var(--color-gold) inset;
+        }
+
+        .cell.resetting { opacity: 0; transform: scale(0.95); }
+
+        .cell#free-cell {
+            background: #FFFFFF;
+            border-color: var(--color-gold);
+            color: var(--color-gold);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25em;
+            font-weight: 600;
+        }
+
+        .name-display {
+            font-weight: 700;
+            color: var(--color-text);
+            margin-top: 8px;
+            font-size: 1.25em;
+            word-break: break-all;
+            border-bottom: 2px solid var(--color-gold);
+            padding: 0 4px 2px 4px;
+            display: inline-block;
+            font-family: 'Noto Serif JP', serif;
+        }
+
+        .cell:not(.active) .name-display { display: none; }
+
+        .cell#free-cell .name-display {
+            font-size: 0.8em;
+            margin-top: 6px;
+            border-bottom: none;
+            color: var(--color-text);
+            display: block;
+        }
+
+        /* --- ビンゴメッセージ --- */
+        #bingo-msg {
+            display: none;
+            margin: 2em 0 0 0;
+            background: #FFFFFF;
+            padding: 1.5em;
+            border: 2px solid var(--color-gold);
+            width: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.8s ease forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .bingo-text {
+            font-size: 2.2em;
+            font-weight: 600;
+            font-family: 'Playfair Display', serif;
+            color: var(--color-gold);
+            margin: 0;
+            letter-spacing: 0.1em;
+        }
+
+        .bingo-time { 
+            font-size: 0.9em; 
+            color: var(--color-text-light); 
+            margin-top: 10px; 
+            display: block; 
+            font-weight: 600;
+        }
+
+        .footer-actions { margin-top: 2.5em; width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+        .btn-reset-trigger { 
+            background: transparent; 
+            border: none; 
+            color: #888; 
+            padding: 10px; 
+            font-size: 0.85em; 
+            cursor: pointer; 
+            text-decoration: underline;
+            font-family: inherit;
+        }
+        .btn-share {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.9em 1.2em;
+            width: 100%;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .share-status {
+            font-size: 0.78em;
+            color: var(--color-gold);
+            font-weight: 600;
+            min-height: 1.2em;
+            text-align: center;
+        }
+        .share-box {
+            width: 100%;
+            margin-top: 16px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            background: #FAFAFA;
+            word-break: break-all;
+            font-size: 0.72em;
+            color: var(--color-text-light);
+            line-height: 1.5;
+            display: none;
+            text-align: left;
+        }
+        .share-box.show { display: block; }
+        #admin-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--color-bg);
+            z-index: 3000;
+            padding: 24px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        #admin-panel h2 {
+            font-family: 'Playfair Display', serif;
+            margin-top: 0;
+        }
+        #admin-panel .hint {
+            font-size: 0.85em;
+            color: var(--color-text-light);
+            line-height: 1.6;
+            margin-bottom: 1.25em;
+        }
+
+        /* --- モーダル --- */
+        .modal { 
+            display: none; position: fixed; z-index: 2000; inset: 0; 
+            background: rgba(252, 251, 249, 0.92); backdrop-filter: blur(4px); 
+            align-items: center; justify-content: center; 
+        }
+        .modal-content { 
+            background: #FFFFFF; padding: 2.5em 2em; width: 90%; max-width: 360px; 
+            border: 1px solid var(--color-border); text-align: center; position: relative; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+        .modal-content::before {
+            content: ''; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px;
+            border: 1px solid #EBE7E0; pointer-events: none;
+        }
+        input[type="text"] { 
+            width: 100%; padding: 1em; border: 1px solid var(--color-border); 
+            background: #FAF9F7; font-size: 1.2em; margin: 1.5em 0; box-sizing: border-box; 
+            text-align: center; outline: none; font-family: inherit; font-weight: 600;
+        }
+        .btn-main { 
+            background-color: var(--color-text); color: #FFFFFF; border: none; 
+            padding: 1.2em; width: 100%; font-size: 1em; font-weight: 600; letter-spacing: 0.15em; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="main-box">
+        <div class="header-ornament">
+            <svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>
+        </div>
+        <h1 id="main-title">Wedding Bingo</h1>
+        <div class="subtitle">Human Connection Game</div>
+
+        <div class="rules-container">
+            <div class="rules-step-card">
+                <div class="step-num">01</div>
+                <div class="step-body">
+                    <span class="step-title">Greeting</span>
+                    <span class="step-desc">新郎新婦との関係性を話し、まずは自己紹介をします。</span>
+                </div>
+            </div>
+            
+            <div class="rules-step-card">
+                <div class="step-num">02</div>
+                <div class="step-body">
+                    <span class="step-title">Memory</span>
+                    <span class="step-desc">お一人一マス、お名前を刻んでいきます。</span>
+                </div>
+            </div>
+            
+            <div class="rules-step-card">
+                <div class="step-num">03</div>
+                <div class="step-body">
+                    <span class="step-title">Celebration</span>
+                    <span class="step-desc">一つでも多くのビンゴラインを完成させてください。</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid" id="bingo-board"></div>
+
+        <div id="bingo-msg">
+            <p class="bingo-text" id="bingo-count-text">1 BINGO</p>
+            <span class="bingo-time" id="display-time"></span>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn-share" id="open-editor" type="button">マスを編集・共有URL作成</button>
+            <button class="btn-reset-trigger" id="show-reset-confirm">リセットする (Reset)</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="name-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 id="modal-title" class="modal-title-text" style="margin-top:0; color:var(--color-gold);">お名前をご入力ください</h3>
+            <input type="text" id="name-input" placeholder="Name" maxlength="12">
+            <button class="btn-main" id="submit-name">登録する (SAVE)</button>
+            <button class="btn-reset-trigger" id="close-name-modal" style="margin-top:15px; width:100%;">閉じる (CLOSE)</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color:var(--color-text); margin-top:0; font-size:1.3em;">リセットの確認</h2>
+            <p style="color:var(--color-text-light); font-size:0.9em; line-height:1.6; margin-bottom:2em;">
+                すべての記録を消去し、<br>最初からやり直しますか？
+            </p>
+            <button class="btn-main" id="execute-reset" style="margin-bottom: 10px;">実行する (RESET)</button>
+            <button class="btn-reset-trigger" id="close-confirm-modal" style="width:100%;">キャンセル (CANCEL)</button>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <h2>Bingo Settings</h2>
+        <p class="hint">
+            8マスの内容を自由に編集できます。「共有URLをコピー」でゲストに同じマス構成を届けられます（内容はURLに圧縮して埋め込み。DB不要）。
+        </p>
+        <div id="admin-form"></div>
+        <button class="btn-main" id="admin-save" style="margin-top:16px;">保存する</button>
+        <button class="btn-share" id="admin-copy-url" style="margin-top:10px;" type="button">共有URLをコピー</button>
+        <p class="share-status" id="share-status"></p>
+        <div class="share-box" id="share-box"></div>
+        <button class="btn-reset-trigger" id="admin-close" style="width:100%; margin-top:12px;">閉じる</button>
+    </div>
+
+    <script>
+        "use strict";
+
+        const DEFAULT_LABELS = [
+            '血液型が自分と同じ人', 'まだ話していない人', '靴下を履いている人',
+            'ペットを飼ったことがある人', '兄弟姉妹がいる人', '新幹線や飛行機で来た人',
+            '習い事を2つ以上していた人', '同じ飲み物を飲んでる人'
+        ];
+        const WIN_PATTERNS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+        const state = { names: [], labels: [], currentIdx: null, clickCount: 0, clickTimer: null };
+
+        function packPayload(labels) {
+            return { v: 1, l: labels };
+        }
+
+        function unpackPayload(data) {
+            if (!data) return null;
+            if (Array.isArray(data) && data.length === 8) return data.map(String);
+            if (data.l && Array.isArray(data.l) && data.l.length === 8) return data.l.map(String);
+            return null;
+        }
+
+        function loadData() {
+            const fromUrl = unpackPayload(UrlPack.readFromLocation());
+            if (fromUrl) {
+                state.labels = fromUrl;
+                localStorage.setItem('bingoLabels', JSON.stringify(state.labels));
+            } else {
+                try {
+                    state.labels = JSON.parse(localStorage.getItem('bingoLabels')) || [...DEFAULT_LABELS];
+                } catch {
+                    state.labels = [...DEFAULT_LABELS];
+                }
+            }
+            try {
+                state.names = JSON.parse(localStorage.getItem('bingoNames')) || Array(9).fill('');
+            } catch {
+                state.names = Array(9).fill('');
+            }
+            if (!state.names[4]) state.names[4] = '主役の2人';
+        }
+
+        function saveData() {
+            localStorage.setItem('bingoLabels', JSON.stringify(state.labels));
+            localStorage.setItem('bingoNames', JSON.stringify(state.names));
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('bingo-board');
+            board.innerHTML = '';
+            state.names.forEach((name, i) => {
+                const cell = document.createElement('div');
+                cell.className = 'cell' + (name ? ' active' : '');
+                if (i === 4) {
+                    cell.id = 'free-cell';
+                    cell.innerHTML = `FREE<div class="name-display">${name}</div>`;
+                } else {
+                    const labelIdx = i < 4 ? i : i - 1;
+                    const label = state.labels[labelIdx];
+                    cell.innerHTML = `<div>${label}</div><div class="name-display">${name}</div>`;
+                    cell.addEventListener('click', () => openModal(i, label));
+                }
+                board.appendChild(cell);
+            });
+            checkBingo();
+        }
+
+        function checkBingo() {
+            const active = state.names.map(n => !!n);
+            const count = WIN_PATTERNS.filter(p => p.every(idx => active[idx])).length;
+            const msgArea = document.getElementById('bingo-msg');
+            const timeArea = document.getElementById('display-time');
+            if (count > 0) {
+                document.getElementById('bingo-count-text').innerText = `${count} BINGO`;
+                if (!timeArea.innerText) timeArea.innerText = `達成: ${new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}`;
+                msgArea.style.display = 'block';
+            } else {
+                msgArea.style.display = 'none';
+                timeArea.innerText = '';
+            }
+        }
+
+        function openModal(idx, label) {
+            state.currentIdx = idx;
+            document.getElementById('modal-title').innerText = label;
+            document.getElementById('name-input').value = state.names[idx];
+            document.getElementById('name-modal').style.display = 'flex';
+            setTimeout(() => document.getElementById('name-input').focus(), 100);
+        }
+
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+
+        function saveName() {
+            const val = document.getElementById('name-input').value.trim();
+            if (state.currentIdx !== null) {
+                state.names[state.currentIdx] = val;
+                document.getElementById('display-time').innerText = '';
+                saveData(); renderBoard(); closeModals();
+            }
+        }
+
+        function escapeAttr(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function openAdmin() {
+            const form = document.getElementById('admin-form');
+            form.innerHTML = state.labels.map((l, i) => `
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.85em; font-weight:600; color:var(--color-text-light);">マス ${i + 1}</label><br>
+                    <input type="text" value="${escapeAttr(l)}" class="admin-edit-input" style="width:100%; padding:10px; border:1px solid var(--color-border); background:#FAF9F7; font-family:inherit; font-weight:600; box-sizing:border-box;">
+                </div>
+            `).join('');
+            document.getElementById('share-status').textContent = '';
+            document.getElementById('share-box').classList.remove('show');
+            document.getElementById('admin-panel').style.display = 'block';
+        }
+
+        function readAdminLabels() {
+            return Array.from(document.querySelectorAll('.admin-edit-input')).map(i => i.value.trim() || '???');
+        }
+
+        function saveAdmin() {
+            state.labels = readAdminLabels();
+            saveData();
+            history.replaceState(null, '', UrlPack.buildShareUrl(packPayload(state.labels)));
+            document.getElementById('admin-panel').style.display = 'none';
+            renderBoard();
+        }
+
+        async function copyShare() {
+            state.labels = readAdminLabels();
+            saveData();
+            const result = await UrlPack.copyShareUrl(packPayload(state.labels));
+            const status = document.getElementById('share-status');
+            const box = document.getElementById('share-box');
+            box.textContent = result.url;
+            box.classList.add('show');
+            history.replaceState(null, '', result.url);
+            status.textContent = result.ok
+                ? `コピーしました（約 ${result.length} 文字）`
+                : 'コピーできないため、下のURLを長押しでコピーしてください';
+        }
+
+        function initEvents() {
+            document.getElementById('main-title').addEventListener('click', () => {
+                state.clickCount++;
+                if (state.clickCount >= 3) { openAdmin(); state.clickCount = 0; }
+                else { clearTimeout(state.clickTimer); state.clickTimer = setTimeout(() => state.clickCount = 0, 500); }
+            });
+            document.getElementById('open-editor').addEventListener('click', openAdmin);
+            document.getElementById('submit-name').addEventListener('click', saveName);
+            document.getElementById('close-name-modal').addEventListener('click', closeModals);
+            document.getElementById('show-reset-confirm').addEventListener('click', () => document.getElementById('confirm-modal').style.display = 'flex');
+            document.getElementById('execute-reset').addEventListener('click', () => {
+                localStorage.removeItem('bingoLabels');
+                localStorage.removeItem('bingoNames');
+                history.replaceState(null, '', location.pathname);
+                state.labels = [...DEFAULT_LABELS];
+                state.names = Array(9).fill('');
+                state.names[4] = '主役の2人';
+                renderBoard();
+                closeModals();
+            });
+            document.getElementById('close-confirm-modal').addEventListener('click', closeModals);
+            document.getElementById('admin-save').addEventListener('click', saveAdmin);
+            document.getElementById('admin-copy-url').addEventListener('click', copyShare);
+            document.getElementById('admin-close').addEventListener('click', () => {
+                document.getElementById('admin-panel').style.display = 'none';
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModals();
+                    document.getElementById('admin-panel').style.display = 'none';
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { loadData(); initEvents(); renderBoard(); });
+    </script>
+</body>
+</html>

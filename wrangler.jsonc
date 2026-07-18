@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kotohogi",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "kotohogi"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "POLL_KV",
+      "id": "REPLACE_WITH_POLL_KV_ID",
+      "preview_id": "REPLACE_WITH_POLL_KV_PREVIEW_ID"
+    }
+  ]
+}

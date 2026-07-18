@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新郎新婦クイズ | Wedding Quiz</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+    <script src="../shared/pack.js"></script>
+    <style>
+        :root {
+            --color-bg: #FCFBF9;
+            --color-text: #1A1A1A;
+            --color-text-light: #4A4A4A;
+            --color-gold: #B4975A;
+            --color-border: #DCD7D0;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Serif JP', 'Yu Mincho', serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            margin: 0;
+            padding: 20px 10px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #main-box {
+            max-width: 480px;
+            width: 100%;
+            background: #FFFFFF;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            padding: 3.5em 1.5em 2em;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #main-box::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid #EBE7E0;
+            pointer-events: none;
+        }
+
+        .header-ornament {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .header-ornament::before,
+        .header-ornament::after {
+            content: '';
+            width: 30px;
+            height: 1.5px;
+            background-color: var(--color-gold);
+            margin: 0 15px;
+        }
+
+        .header-ornament svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--color-gold);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 8vw, 2.4rem);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            margin: 0 0 8px;
+            cursor: pointer;
+            user-select: none;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1em;
+            font-weight: 500;
+            letter-spacing: 0.1em;
+            color: var(--color-gold);
+            margin-bottom: 2em;
+        }
+
+        .view { width: 100%; display: none; }
+        .view.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .rules-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-bottom: 2em;
+            text-align: left;
+        }
+
+        .rules-step-card {
+            display: flex;
+            align-items: center;
+            background: #FAFAFA;
+            border: 1px solid var(--color-border);
+            padding: 12px 16px;
+            gap: 16px;
+        }
+
+        .step-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4em;
+            color: var(--color-gold);
+            font-weight: 600;
+            min-width: 35px;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-num::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1px;
+            height: 24px;
+            background-color: var(--color-border);
+        }
+
+        .step-title {
+            display: block;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.1em;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .step-desc {
+            display: block;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            line-height: 1.5;
+            font-weight: 600;
+        }
+
+        .progress-wrap {
+            width: 100%;
+            margin-bottom: 1.5em;
+        }
+
+        .progress-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: var(--color-border);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-gold);
+            transition: width 0.35s ease;
+        }
+
+        .question-text {
+            font-size: 1.15em;
+            font-weight: 700;
+            line-height: 1.7;
+            margin: 0 0 1.5em;
+            text-align: left;
+        }
+
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .choice-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1em 1.1em;
+            border: 1px solid var(--color-border);
+            background: #F8F7F5;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            border-color: var(--color-gold);
+            background: #FFFFFF;
+        }
+
+        .choice-btn:disabled { cursor: default; }
+
+        .choice-key {
+            font-family: 'Playfair Display', serif;
+            color: var(--color-gold);
+            font-weight: 600;
+            font-size: 1.1em;
+            min-width: 1.2em;
+        }
+
+        .choice-btn.correct {
+            border-color: var(--color-gold);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 1px var(--color-gold) inset;
+        }
+
+        .choice-btn.wrong {
+            opacity: 0.45;
+        }
+
+        .feedback {
+            margin-top: 1.25em;
+            padding: 1em;
+            border: 1px solid var(--color-gold);
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--color-text-light);
+            display: none;
+        }
+
+        .feedback.show { display: block; animation: fadeIn 0.4s ease; }
+
+        .btn-main {
+            background-color: var(--color-text);
+            color: #FFFFFF;
+            border: none;
+            padding: 1.2em;
+            width: 100%;
+            font-size: 1em;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-main:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .footer-actions {
+            margin-top: 1.5em;
+            width: 100%;
+        }
+
+        .btn-reset-trigger {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px;
+            font-size: 0.85em;
+            cursor: pointer;
+            text-decoration: underline;
+            font-family: inherit;
+        }
+
+        .score-hero {
+            margin: 0.5em 0 1.5em;
+            padding: 1.5em;
+            border: 2px solid var(--color-gold);
+            width: 100%;
+        }
+
+        .score-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 3em;
+            color: var(--color-gold);
+            margin: 0;
+            letter-spacing: 0.05em;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: var(--color-text-light);
+            font-weight: 600;
+            margin-top: 6px;
+            display: block;
+        }
+
+        .review-list {
+            width: 100%;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 1.5em;
+        }
+
+        .review-item {
+            padding: 12px 14px;
+            border: 1px solid var(--color-border);
+            background: #FAFAFA;
+            font-size: 0.85em;
+            line-height: 1.55;
+        }
+
+        .review-item .q {
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .review-item .ok { color: var(--color-gold); font-weight: 700; }
+        .review-item .ng { color: #888; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            inset: 0;
+            background: rgba(252, 251, 249, 0.92);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #FFFFFF;
+            padding: 2.5em 2em;
+            width: 90%;
+            max-width: 360px;
+            border: 1px solid var(--color-border);
+            text-align: center;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border: 1px solid #EBE7E0;
+            pointer-events: none;
+        }
+
+        #admin-panel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--color-bg);
+            z-index: 3000;
+            padding: 24px;
+            overflow-y: auto;
+            text-align: left;
+        }
+
+        .admin-card {
+            background: #fff;
+            border: 1px solid var(--color-border);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .admin-card label {
+            display: block;
+            font-size: 0.8em;
+            color: var(--color-text-light);
+            margin: 8px 0 4px;
+            font-weight: 600;
+        }
+
+        .admin-card input,
+        .admin-card select,
+        .admin-card textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            background: #FAF9F7;
+            font-family: inherit;
+            font-size: 0.95em;
+            font-weight: 600;
+        }
+
+        .btn-share {
+            background: transparent;
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 0.9em 1.2em;
+            width: 100%;
+            font-size: 0.9em;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            font-family: inherit;
+            margin-top: 8px;
+        }
+
+        .share-status {
+            font-size: 0.78em;
+            color: var(--color-gold);
+            font-weight: 600;
+            min-height: 1.2em;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .share-box {
+            width: 100%;
+            margin-top: 12px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            background: #FAFAFA;
+            word-break: break-all;
+            font-size: 0.72em;
+            color: var(--color-text-light);
+            line-height: 1.5;
+            display: none;
+            text-align: left;
+        }
+
+        .share-box.show { display: block; }
+    </style>
+</head>
+<body>
+    <div id="main-box">
+        <div class="header-ornament">
+            <svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg>
+        </div>
+        <h1 id="main-title">Wedding Quiz</h1>
+        <div class="subtitle">Know the Couple</div>
+
+        <!-- START -->
+        <div id="view-start" class="view active">
+            <div class="rules-container">
+                <div class="rules-step-card">
+                    <div class="step-num">01</div>
+                    <div class="step-body">
+                        <span class="step-title">Listen</span>
+                        <span class="step-desc">新郎新婦にまつわるエピソード問題に挑戦します。</span>
+                    </div>
+                </div>
+                <div class="rules-step-card">
+                    <div class="step-num">02</div>
+                    <div class="step-body">
+                        <span class="step-title">Choose</span>
+                        <span class="step-desc">4つの選択肢から、いちばん近い答えを選んでください。</span>
+                    </div>
+                </div>
+                <div class="rules-step-card">
+                    <div class="step-num">03</div>
+                    <div class="step-body">
+                        <span class="step-title">Celebrate</span>
+                        <span class="step-desc">全問終了後、スコアと正解をその場で確認できます。</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-main" id="btn-start">はじめる (START)</button>
+            <button class="btn-share" id="open-editor" type="button">問題を編集・共有URL作成</button>
+        </div>
+
+        <!-- QUIZ -->
+        <div id="view-quiz" class="view">
+            <div class="progress-wrap">
+                <div class="progress-meta">
+                    <span id="progress-label">Question 1</span>
+                    <span id="progress-count">1 / 5</span>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+            </div>
+            <p class="question-text" id="question-text"></p>
+            <div class="choices" id="choices"></div>
+            <div class="feedback" id="feedback"></div>
+            <div class="footer-actions">
+                <button class="btn-main" id="btn-next" disabled>次へ (NEXT)</button>
+            </div>
+        </div>
+
+        <!-- RESULT -->
+        <div id="view-result" class="view">
+            <div class="score-hero">
+                <p class="score-number" id="score-number">0 / 0</p>
+                <span class="score-label" id="score-message">お疲れさまでした</span>
+            </div>
+            <div class="review-list" id="review-list"></div>
+            <button class="btn-main" id="btn-retry">もう一度 (RETRY)</button>
+            <div class="footer-actions">
+                <button class="btn-reset-trigger" id="show-reset-confirm">データをリセットする</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h2 style="color:var(--color-text); margin-top:0; font-size:1.3em;">リセットの確認</h2>
+            <p style="color:var(--color-text-light); font-size:0.9em; line-height:1.6; margin-bottom:2em;">
+                問題設定を初期状態に戻しますか？
+            </p>
+            <button class="btn-main" id="execute-reset" style="margin-bottom:10px;">実行する (RESET)</button>
+            <button class="btn-reset-trigger" id="close-confirm-modal" style="width:100%;">キャンセル (CANCEL)</button>
+        </div>
+    </div>
+
+    <div id="admin-panel">
+        <h2 style="font-family:'Playfair Display',serif;">Quiz Settings</h2>
+        <p style="font-size:0.85em; color:var(--color-text-light); line-height:1.6;">
+            問題を自由に作成できます。「共有URLをコピー」でゲストに同じ問題セットを届けられます（内容はURLに圧縮して埋め込み。DB不要）。
+        </p>
+        <div id="admin-form"></div>
+        <button class="btn-share" id="admin-add-q" type="button" style="margin-top:8px;">＋ 問題を追加</button>
+        <button class="btn-main" id="admin-save" style="margin-top:12px;">保存する</button>
+        <button class="btn-share" id="admin-copy-url" type="button">共有URLをコピー</button>
+        <p class="share-status" id="share-status"></p>
+        <div class="share-box" id="share-box"></div>
+        <button class="btn-reset-trigger" id="admin-close" style="width:100%; margin-top:8px;">閉じる</button>
+    </div>
+
+    <script>
+        "use strict";
+
+        const STORAGE_KEY = "weddingQuizQuestions";
+        const KEYS = ["A", "B", "C", "D"];
+
+        const DEFAULT_QUESTIONS = [
+            {
+                q: "新郎の朝のルーティンにいちばん近いのは？",
+                choices: ["コーヒーを淹れる", "SNSをチェック", "ストレッチ", "二度寝する"],
+                answer: 0
+            },
+            {
+                q: "新婦が好きな季節は？",
+                choices: ["春", "夏", "秋", "冬"],
+                answer: 2
+            },
+            {
+                q: "二人の初めてのデートはどこ？",
+                choices: ["映画館", "カフェ", "水族館", "美術館"],
+                answer: 1
+            },
+            {
+                q: "新郎が新婦にもらって嬉しいものは？",
+                choices: ["手紙", "手作りスイーツ", "時計", "旅行の計画"],
+                answer: 0
+            },
+            {
+                q: "二人の将来の夢にいちばん近いのは？",
+                choices: ["世界一周", "マイホーム", "ペットを飼う", "お店を開く"],
+                answer: 1
+            }
+        ];
+
+        const state = {
+            questions: [],
+            index: 0,
+            answers: [],
+            locked: false,
+            clickCount: 0,
+            clickTimer: null
+        };
+
+        /** 共有用の短い配列形式: [question, [choices], answerIndex][] */
+        function packPayload(questions) {
+            return {
+                v: 1,
+                q: questions.map((item) => [item.q, item.choices, item.answer])
+            };
+        }
+
+        function unpackPayload(data) {
+            if (!data) return null;
+            let rows = null;
+            if (Array.isArray(data)) rows = data;
+            else if (data.q && Array.isArray(data.q)) rows = data.q;
+            if (!rows || rows.length === 0) return null;
+
+            const questions = rows.map((row) => {
+                if (row && typeof row === "object" && !Array.isArray(row) && row.q) {
+                    return {
+                        q: String(row.q),
+                        choices: (row.choices || []).map(String),
+                        answer: Number(row.answer) || 0
+                    };
+                }
+                const [q, choices, answer] = row;
+                return {
+                    q: String(q || "（無題）"),
+                    choices: (choices || ["A", "B", "C", "D"]).map(String),
+                    answer: Number(answer) || 0
+                };
+            }).filter((item) => item.choices.length >= 2);
+
+            return questions.length ? questions : null;
+        }
+
+        function loadQuestions() {
+            const fromUrl = unpackPayload(UrlPack.readFromLocation());
+            if (fromUrl) {
+                state.questions = fromUrl;
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state.questions));
+                return;
+            }
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                state.questions = raw ? JSON.parse(raw) : structuredClone(DEFAULT_QUESTIONS);
+            } catch {
+                state.questions = structuredClone(DEFAULT_QUESTIONS);
+            }
+        }
+
+        function saveQuestions() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state.questions));
+        }
+
+        function showView(id) {
+            document.querySelectorAll(".view").forEach((v) => v.classList.remove("active"));
+            document.getElementById(id).classList.add("active");
+        }
+
+        function startQuiz() {
+            state.index = 0;
+            state.answers = [];
+            state.locked = false;
+            showView("view-quiz");
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const total = state.questions.length;
+            const q = state.questions[state.index];
+            state.locked = false;
+
+            document.getElementById("progress-label").textContent = `Question ${state.index + 1}`;
+            document.getElementById("progress-count").textContent = `${state.index + 1} / ${total}`;
+            document.getElementById("progress-fill").style.width = `${((state.index + 1) / total) * 100}%`;
+            document.getElementById("question-text").textContent = q.q;
+            document.getElementById("feedback").classList.remove("show");
+            document.getElementById("feedback").textContent = "";
+
+            const nextBtn = document.getElementById("btn-next");
+            nextBtn.disabled = true;
+            nextBtn.textContent = state.index === total - 1 ? "結果を見る (RESULT)" : "次へ (NEXT)";
+
+            const box = document.getElementById("choices");
+            box.innerHTML = "";
+            q.choices.forEach((text, i) => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "choice-btn";
+                btn.innerHTML = `<span class="choice-key">${KEYS[i] || i + 1}</span><span>${text}</span>`;
+                btn.addEventListener("click", () => selectAnswer(i, btn));
+                box.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(choiceIdx) {
+            if (state.locked) return;
+            state.locked = true;
+            state.answers[state.index] = choiceIdx;
+
+            const q = state.questions[state.index];
+            const buttons = document.querySelectorAll(".choice-btn");
+            buttons.forEach((b, i) => {
+                b.disabled = true;
+                if (i === q.answer) b.classList.add("correct");
+                else if (i === choiceIdx) b.classList.add("wrong");
+            });
+
+            const feedback = document.getElementById("feedback");
+            const ok = choiceIdx === q.answer;
+            feedback.textContent = ok
+                ? "正解です。お見事！"
+                : `残念… 正解は「${q.choices[q.answer]}」でした。`;
+            feedback.classList.add("show");
+            document.getElementById("btn-next").disabled = false;
+        }
+
+        function goNext() {
+            if (!state.locked) return;
+            if (state.index >= state.questions.length - 1) {
+                showResult();
+            } else {
+                state.index += 1;
+                renderQuestion();
+            }
+        }
+
+        function scoreMessage(score, total) {
+            const rate = score / total;
+            if (rate === 1) return "パーフェクト！二人のことをよくご存じですね";
+            if (rate >= 0.8) return "素晴らしい！かなり詳しいですね";
+            if (rate >= 0.5) return "いい感じ！二次会も盛り上がりそうです";
+            return "これからもっと二人のことを知りましょう";
+        }
+
+        function showResult() {
+            const total = state.questions.length;
+            let score = 0;
+            const review = document.getElementById("review-list");
+            review.innerHTML = "";
+
+            state.questions.forEach((q, i) => {
+                const picked = state.answers[i];
+                const ok = picked === q.answer;
+                if (ok) score += 1;
+                const item = document.createElement("div");
+                item.className = "review-item";
+                item.innerHTML = `
+                    <div class="q">Q${i + 1}. ${q.q}</div>
+                    <div class="${ok ? "ok" : "ng"}">あなたの答え: ${q.choices[picked] ?? "—"}</div>
+                    ${ok ? "" : `<div class="ok">正解: ${q.choices[q.answer]}</div>`}
+                `;
+                review.appendChild(item);
+            });
+
+            document.getElementById("score-number").textContent = `${score} / ${total}`;
+            document.getElementById("score-message").textContent = scoreMessage(score, total);
+            showView("view-result");
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        function escapeAttr(s) {
+            return escapeHtml(s).replace(/"/g, "&quot;");
+        }
+
+        function renderAdminForm(questions) {
+            const form = document.getElementById("admin-form");
+            form.innerHTML = questions.map((q, i) => `
+                <div class="admin-card" data-idx="${i}">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong>問題 ${i + 1}</strong>
+                        <button type="button" class="btn-reset-trigger admin-remove" data-idx="${i}" ${questions.length <= 1 ? "disabled" : ""}>削除</button>
+                    </div>
+                    <label>問題文</label>
+                    <textarea class="admin-q" rows="2">${escapeHtml(q.q)}</textarea>
+                    ${q.choices.map((c, ci) => `
+                        <label>選択肢 ${KEYS[ci] || ci + 1}</label>
+                        <input type="text" class="admin-choice" data-ci="${ci}" value="${escapeAttr(c)}">
+                    `).join("")}
+                    <label>正解</label>
+                    <select class="admin-answer">
+                        ${q.choices.map((_, ki) => `<option value="${ki}" ${ki === q.answer ? "selected" : ""}>${KEYS[ki] || ki + 1}</option>`).join("")}
+                    </select>
+                </div>
+            `).join("");
+
+            form.querySelectorAll(".admin-remove").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const draft = readAdminQuestions();
+                    if (draft.length <= 1) return;
+                    draft.splice(Number(btn.dataset.idx), 1);
+                    renderAdminForm(draft);
+                });
+            });
+        }
+
+        function openAdmin() {
+            renderAdminForm(state.questions);
+            document.getElementById("share-status").textContent = "";
+            document.getElementById("share-box").classList.remove("show");
+            document.getElementById("admin-panel").style.display = "block";
+        }
+
+        function readAdminQuestions() {
+            return Array.from(document.querySelectorAll(".admin-card")).map((card) => {
+                const choices = Array.from(card.querySelectorAll(".admin-choice")).map((el) => el.value.trim() || "???");
+                return {
+                    q: card.querySelector(".admin-q").value.trim() || "（無題）",
+                    choices,
+                    answer: Number(card.querySelector(".admin-answer").value) || 0
+                };
+            });
+        }
+
+        function saveAdmin() {
+            state.questions = readAdminQuestions();
+            saveQuestions();
+            history.replaceState(null, "", UrlPack.buildShareUrl(packPayload(state.questions)));
+            document.getElementById("admin-panel").style.display = "none";
+            showView("view-start");
+        }
+
+        async function copyShare() {
+            state.questions = readAdminQuestions();
+            saveQuestions();
+            const result = await UrlPack.copyShareUrl(packPayload(state.questions));
+            const status = document.getElementById("share-status");
+            const box = document.getElementById("share-box");
+            box.textContent = result.url;
+            box.classList.add("show");
+            history.replaceState(null, "", result.url);
+            status.textContent = result.ok
+                ? `コピーしました（約 ${result.length} 文字）`
+                : "コピーできないため、下のURLを長押しでコピーしてください";
+        }
+
+        function initEvents() {
+            document.getElementById("main-title").addEventListener("click", () => {
+                state.clickCount += 1;
+                if (state.clickCount >= 3) {
+                    openAdmin();
+                    state.clickCount = 0;
+                } else {
+                    clearTimeout(state.clickTimer);
+                    state.clickTimer = setTimeout(() => { state.clickCount = 0; }, 500);
+                }
+            });
+
+            document.getElementById("open-editor").addEventListener("click", openAdmin);
+            document.getElementById("btn-start").addEventListener("click", startQuiz);
+            document.getElementById("btn-next").addEventListener("click", goNext);
+            document.getElementById("btn-retry").addEventListener("click", () => showView("view-start"));
+            document.getElementById("show-reset-confirm").addEventListener("click", () => {
+                document.getElementById("confirm-modal").style.display = "flex";
+            });
+            document.getElementById("execute-reset").addEventListener("click", () => {
+                localStorage.removeItem(STORAGE_KEY);
+                history.replaceState(null, "", location.pathname);
+                state.questions = structuredClone(DEFAULT_QUESTIONS);
+                document.getElementById("confirm-modal").style.display = "none";
+                showView("view-start");
+            });
+            document.getElementById("close-confirm-modal").addEventListener("click", () => {
+                document.getElementById("confirm-modal").style.display = "none";
+            });
+            document.getElementById("admin-save").addEventListener("click", saveAdmin);
+            document.getElementById("admin-copy-url").addEventListener("click", copyShare);
+            document.getElementById("admin-add-q").addEventListener("click", () => {
+                const draft = readAdminQuestions();
+                draft.push({
+                    q: "新しい問題",
+                    choices: ["選択肢A", "選択肢B", "選択肢C", "選択肢D"],
+                    answer: 0
+                });
+                renderAdminForm(draft);
+            });
+            document.getElementById("admin-close").addEventListener("click", () => {
+                document.getElementById("admin-panel").style.display = "none";
+            });
+            window.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    document.getElementById("confirm-modal").style.display = "none";
+                    document.getElementById("admin-panel").style.display = "none";
+                }
+            });
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            loadQuestions();
+            initEvents();
+        });
+    </script>
+</body>
+</html>
