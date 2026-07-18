@@ -19,6 +19,7 @@
 | テストがいつ走るか・コマンド・pre-push | [ops/testing.md](./ops/testing.md) |
 | 本番を壊さず Cloudflare で確認する | [ops/preview.md](./ops/preview.md) |
 | 次に何をやるか | [roadmap.md](./roadmap.md) |
+| まだ着手しないアプリ案 | [ideas.md](./ideas.md) |
 | Qiita など外部向け下書き | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) |
 
 **仕様の正**は次の4つです。記事や Cursor skill は、同じ内容を複製せずここへリンクします。
@@ -66,6 +67,7 @@ docs/
 ├── test-spec.md       ← 自動テスト仕様（正）
 ├── scenario-spec.md   ← シナリオテスト仕様（利用者ストーリー）
 ├── roadmap.md         ← 次の施策
+├── ideas.md           ← アプリ／機能のアイディアメモ（未着手）
 ├── ops/               ← 運用手順
 │   ├── preview.md     ← 非本番（Cloudflare preview）の手順
 │   └── testing.md     ← テストの実行・仕組み・関係資材マップ
