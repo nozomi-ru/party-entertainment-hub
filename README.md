@@ -12,17 +12,18 @@
 
 ## 開発ドキュメント
 
-内部文書は [`docs/`](./docs/)（サイト非公開）。目次は [docs/README.md](./docs/README.md)。
+内部文書は [`docs/`](./docs/)（サイト非公開）。  
+**迷ったら目次** [docs/README.md](./docs/README.md)（各文書の関係・コード側の資材地図あり）。
 
 | 文書 | 内容 |
 |------|------|
-| [要件](./docs/requirements.md) | 何を作るか |
-| [設計](./docs/design.md) | どう作っているか |
+| [要件](./docs/requirements.md) | 何を作るか（機能 ID・受け入れ） |
+| [設計](./docs/design.md) | どう作っているか（API・KV・パス） |
 | [自動テスト仕様](./docs/test-spec.md) | 何をどう自動検証するか |
-| [シナリオテスト仕様](./docs/scenario-spec.md) | 利用者ストーリー（E2E） |
-| [テスト実行手順](./docs/ops/testing.md) | コマンド・強制タイミング・動画の見方 |
+| [シナリオテスト仕様](./docs/scenario-spec.md) | 利用者ストーリー（E2E / SC-*） |
+| [テスト実行手順](./docs/ops/testing.md) | 仕組み・pre-push・関係ファイル・コマンド |
+| [プレビュー手順](./docs/ops/preview.md) | 非本番ブランチでの確認・KV 注意 |
 | [ロードマップ](./docs/roadmap.md) | 次にやること |
-| [プレビュー手順](./docs/ops/preview.md) | 非本番ブランチでの確認 |
 
 ## ディレクトリ構成（何をデプロイするか）
 
@@ -94,8 +95,9 @@ npm run dev
 npm test
 ```
 
-`git push` 時は husky が単体を**自動実行**（失敗したら push 中止）。  
-GitHub では push / PR のたびに単体 + E2E を強制。詳細は [`docs/ops/testing.md`](./docs/ops/testing.md)。
+`git push` 時は husky の **pre-push** が単体を**自動実行**（失敗したら push 中止）。  
+GitHub では push / PR のたびに単体 + E2E を強制。  
+仕組み・関係ファイルの場所・コマンドは [`docs/ops/testing.md`](./docs/ops/testing.md) を読んでください。
 
 E2E（**ガーキン記法**・結果は動画で確認。初回はブラウザ導入が必要）:
 

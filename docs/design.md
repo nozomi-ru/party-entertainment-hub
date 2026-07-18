@@ -3,10 +3,55 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.1 |
+| 文書バージョン | 1.2 |
 | 最終更新 | 2026-07-18 |
+| この文書の役割 | **「どう作っているか」**の正本（構成・API・データ・デプロイ） |
+| 要件（何を作るか） | [requirements.md](./requirements.md) |
 
-関連: [要件定義書](./requirements.md) · [docs 目次](./README.md) · [ロードマップ](./roadmap.md) · [自動テスト](./test-spec.md) · [シナリオ](./scenario-spec.md)
+関連: [docs 目次](./README.md) · [ロードマップ](./roadmap.md) · [自動テスト](./test-spec.md) · [シナリオ](./scenario-spec.md) · [テスト手順](./ops/testing.md) · [プレビュー手順](./ops/preview.md)
+
+---
+
+## 0. この文書の読み方
+
+設計書は、要件を満たすための**実装の地図**です。ファイルパス・API・データ形・デプロイの事実をここに揃えます。
+
+| 読みたいこと | 読む節 |
+|--------------|--------|
+| 全体のつながりの図 | §1 |
+| リポジトリのどこに何があるか | §2・§0.1 |
+| 技術の一覧 | §3 |
+| LP / ビンゴ / クイズ / アンケート | §4〜§8 |
+| Cloudflare・デプロイ・テストとの関係 | §9 |
+| セキュリティ上の注意 | §10 |
+| これから足すもの | §11 → [roadmap.md](./roadmap.md) |
+
+要件 ID（P-05 など）との対応を変えたり、API の振る舞いを変えたりしたら、この文書とテスト仕様を同じ変更の中で更新してください。
+
+---
+
+## 0.1 関係資材マップ
+
+| 領域 | パス | この文書 |
+|------|------|----------|
+| LP ページ | `src/app/page.tsx`, `src/app/layout.tsx` | §4 |
+| LP セクション部品 | `src/components/landing/` | §4 |
+| リンク・文言設定 | `src/config/site.ts` | §4.2 |
+| アンケート API | `src/app/api/poll/[room]/route.ts` | §8.6 |
+| ルーム／票の正規化 | `src/lib/poll.ts` | §8.6（単体テスト対象） |
+| KV / メモリ永続化 | `src/lib/poll-store.ts` | §8.5 |
+| ビンゴ | `public/app-tools/wedding-bingo/index.html` | §6 |
+| クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
+| アンケート UI | `public/app-tools/wedding-poll/index.html` | §8 |
+| URL 圧縮 | `public/app-tools/shared/pack.js` | §5.2 |
+| Workers / KV 設定 | `wrangler.jsonc` | §9.1 |
+| OpenNext | `open-next.config.ts`, `next.config.ts` | §9 |
+| CI / Deploy | `.github/workflows/` | §9.2–9.3 |
+| 単体 / E2E 設定 | `vitest.config.ts`, `playwright.config.ts`, `e2e/` | §9.3 · [ops/testing.md](./ops/testing.md) |
+| 内部文書 | `docs/` | [README.md](./README.md) |
+| Agent チェックリスト | `.cursor/skills/kotohogi-cloudflare/` | 仕様の正は docs |
+
+**余興 UI は `public/app-tools/` のみ。** `src/app` に HTML アプリ本体を置かない（静的配信と責務分離のため）。
 
 ---
 
@@ -41,12 +86,20 @@ flowchart TB
   Worker --> Assets
 ```
 
-**設計方針**
+**設計方針（なぜこうするか）**
 
-- LP と API は Next.js（App Router）+ OpenNext で Workers に載せる
-- 余興アプリ本体は `public/app-tools/` の静的 HTML（依存少なく、会場スマホでも軽い）
-- ビンゴ／クイズは **URL 埋め込み共有**（DB 不要）
-- アンケートのみ **サーバー同期**（本番 KV / ローカルはメモリ）
+- LP と API は Next.js（App Router）+ OpenNext で Workers に載せる → 1つのデプロイ単位で紹介サイトと API を出せる
+- 余興アプリ本体は `public/app-tools/` の静的 HTML → 依存が少なく、会場スマホでも軽い
+- ビンゴ／クイズは **URL 埋め込み共有**（DB 不要）→ 幹事が設定を配るだけで足りる
+- アンケートのみ **サーバー同期**（本番 KV / ローカルはメモリ）→ 全員の票を共有する必要があるため
+
+状態の置き場の要約:
+
+| 置き場 | 用途 | 例 |
+|--------|------|----|
+| 端末 localStorage | 個人状態 | ビンゴの名前、投票済み |
+| URL（`?c=` + UrlPack） | 設定の配布 | ビンゴマス、クイズ問題 |
+| Cloudflare KV（`POLL_KV`） | 端末横断の共有 | アンケート票・進行 |
 
 ---
 
@@ -56,7 +109,7 @@ flowchart TB
 party-entertainment-hub/
 ├── docs/                      # 内部文書（サイト非公開）— 目次は docs/README.md
 │   ├── requirements.md        # 要件（正）
-│   ├── design.md              # 設計（正）
+│   ├── design.md              # 設計（正・この文書）
 │   ├── test-spec.md           # 自動テスト仕様
 │   ├── scenario-spec.md       # シナリオテスト仕様
 │   ├── roadmap.md             # 次の施策
@@ -120,9 +173,11 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 4. Affiliate
 5. Footer
 
+コンポーネント実体は `src/components/landing/` 配下です。
+
 ### 4.2 設定
 
-`src/config/site.ts` がコピー・URL の単一ソース。  
+`src/config/site.ts` がコピー・URL の単一ソース（要件 LP-04 / LP-05）。  
 機能リンク例:
 
 - `/app-tools/wedding-bingo/index.html`
@@ -134,6 +189,7 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 - 表示: Cormorant Garamond
 - 本文: Zen Kaku Gothic New
 - `layout.tsx` の metadata は `siteConfig` 由来
+- トーンの CSS 変数は `globals.css`（cool paper / ink / muted champagne）
 
 ---
 
@@ -145,7 +201,7 @@ Next / OpenNext の静的アセットとして `public/` 以下を配信。パ�
 
 ### 5.2 URL パック（ビンゴ・クイズ）
 
-`UrlPack`（`pack.js`）:
+`UrlPack`（`public/app-tools/shared/pack.js`）:
 
 | 関数 | 役割 |
 |------|------|
@@ -162,7 +218,8 @@ Next / OpenNext の静的アセットとして `public/` 以下を配信。パ�
 
 ## 6. 人間ビンゴ設計
 
-**ファイル:** `public/app-tools/wedding-bingo/index.html`
+**ファイル:** `public/app-tools/wedding-bingo/index.html`  
+**要件:** B-01〜B-08
 
 | 項目 | 内容 |
 |------|------|
@@ -176,7 +233,8 @@ Next / OpenNext の静的アセットとして `public/` 以下を配信。パ�
 
 ## 7. 新郎新婦クイズ設計
 
-**ファイル:** `public/app-tools/wedding-quiz/index.html`
+**ファイル:** `public/app-tools/wedding-quiz/index.html`  
+**要件:** Q-01〜Q-06
 
 | 項目 | 内容 |
 |------|------|
@@ -188,6 +246,10 @@ Next / OpenNext の静的アセットとして `public/` 以下を配信。パ�
 ---
 
 ## 8. リアルタイムアンケート設計
+
+**UI:** `public/app-tools/wedding-poll/index.html`  
+**API:** `src/app/api/poll/[room]/route.ts`  
+**要件:** P-01〜P-11
 
 ### 8.1 ロール
 
@@ -214,7 +276,7 @@ sequenceDiagram
   G->>UI: URL を開く（自動 Guest 入室）
   UI->>API: GET
   alt ルーム未作成
-    UI-->>G: 待機ポーリング（1s）
+    UI-->>G: 待機ポーリング（約2s）
   else 存在
     UI-->>G: 投票画面
   end
@@ -247,7 +309,7 @@ Host 画面の「ゲスト用 URL」は `guestInviteUrl(room)` で生成し、�
 | `weddingPollMyVotes_{ROOM}` | `{ [questionIndex]: choiceIndex }` 二重投票防止（端末単位） |
 
 同期: セッション中 `setInterval(refreshSession, 2000)`  
-Guest 待機: Host 未作成時 `setInterval(..., 2000)` で GET リトライ
+Guest 待機: Host 未作成時も約 **2秒** 間隔で GET リトライ
 
 ### 8.5 セッションデータモデル
 
@@ -310,15 +372,17 @@ TTL: 24 時間（KV `expirationTtl`）
 | Cloudflare Git 連携（ダッシュボード） | Build: `npx opennextjs-cloudflare build` → Deploy: `npx wrangler deploy`（設定例） |
 | GitHub Actions Deploy | `.github/workflows/deploy-cloudflare.yml`（先に Quality＝単体+E2E） |
 
+非本番ブランチでの確認手順は [ops/preview.md](./ops/preview.md)。
+
 ### 9.3 自動テスト（概要）
 
 品質ゲートの詳細は [test-spec.md](./test-spec.md) / [ops/testing.md](./ops/testing.md) / [scenario-spec.md](./scenario-spec.md)。
 
-| 層 | 道具 | 入口 |
-|----|------|------|
-| 単体 | Vitest | `npm test`、husky pre-push、CI `unit` |
-| シナリオ E2E | Playwright + ガーキン | `npm run test:e2e`、CI `e2e`（動画あり） |
-| スモーク（任意） | `scripts/smoke.mjs` | `SMOKE_BASE_URL` 指定時 |
+| 層 | 道具 | 入口 | 主なファイル |
+|----|------|------|--------------|
+| 単体 | Vitest | `npm test`、husky pre-push、CI `unit` | `src/lib/*.test.ts`, `.husky/pre-push` |
+| シナリオ E2E | Playwright + ガーキン | `npm run test:e2e`、CI `e2e`（動画あり） | `e2e/`, `playwright.config.ts` |
+| スモーク（任意） | `scripts/smoke.mjs` | `SMOKE_BASE_URL` 指定時 | `scripts/smoke.mjs` |
 
 ### 9.4 環境差分
 
@@ -327,6 +391,8 @@ TTL: 24 時間（KV `expirationTtl`）
 | 本番 Workers | Cloudflare KV |
 | `next dev` / E2E 既定 | メモリ Map（インスタンス単一前提） |
 
+いまの既知の負債: `preview_id` が本番 KV と同じ ID を指しうる → 分離は [roadmap.md](./roadmap.md) / [ops/preview.md](./ops/preview.md)。
+
 ---
 
 ## 10. セキュリティ・運用上の注意
@@ -334,6 +400,7 @@ TTL: 24 時間（KV `expirationTtl`）
 - ルームコードは短く推測可能なため、**秘匿情報や個人の機微データの収集に使わない**
 - Guest の二重投票防止は localStorage 依存（端末・ブラウザ単位）。厳密な本人確認は行わない
 - KV ID・API Token 等の秘密情報をドキュメントや公開 Issue に書かない（`wrangler.jsonc` の namespace id はアカウント固有のため取扱注意）
+- `.dev.vars` / `.env*` は Git に含めない
 
 ---
 
@@ -341,3 +408,16 @@ TTL: 24 時間（KV `expirationTtl`）
 
 未着手の施策・優先度は **[roadmap.md](./roadmap.md)** を正とする。  
 設計に影響する決定が出たら、この文書を更新する。
+
+---
+
+## 12. 次に読むもの
+
+| 目的 | 文書 |
+|------|------|
+| 機能要件・受け入れ | [requirements.md](./requirements.md) |
+| テスト仕様 | [test-spec.md](./test-spec.md) |
+| シナリオ | [scenario-spec.md](./scenario-spec.md) |
+| 実行コマンド・pre-push | [ops/testing.md](./ops/testing.md) |
+| 非本番確認 | [ops/preview.md](./ops/preview.md) |
+| docs 全体 | [README.md](./README.md) |

@@ -3,18 +3,19 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.2 |
+| 文書バージョン | 1.3 |
 | 最終更新 | 2026-07-18 |
 | この文書の役割 | **「何を・どの基準で自動テストするか」の正本** |
-| 実行の仕方 | コマンドや push 時の動きは [ops/testing.md](./ops/testing.md) |
+| 実行の仕方 | コマンドや push 時の動き・関係ファイルは [ops/testing.md](./ops/testing.md) |
 
-関連: [要件](./requirements.md) · [設計](./design.md) · [ロードマップ](./roadmap.md) · [プレビュー手順](./ops/preview.md)
+関連: [要件](./requirements.md) · [設計](./design.md) · [ロードマップ](./roadmap.md) · [プレビュー手順](./ops/preview.md) · [docs 目次](./README.md)
 
 ---
 
 ## 0. この文書の読み方
 
-自動テストとは、**人が毎回手で確認しなくても、プログラムが「壊れていないか」を代わりに確かめる仕組み**です。
+自動テストとは、**人が毎回手で確認しなくても、プログラムが「壊れていないか」を代わりに確かめる仕組み**です。  
+この文書は「合格条件と方針」の正本で、**打ち方・仕組みの長い説明**は [ops/testing.md](./ops/testing.md) にあります。
 
 | 読みたいこと | 読む節 |
 |--------------|--------|
@@ -24,6 +25,16 @@
 | シナリオ／E2E の合格条件 | [§8](#8-l2b-e2eガーキン--動画いま実装済みの内容) および [scenario-spec.md](./scenario-spec.md) |
 | いつ強制で走るか | [§9 いつ・どこで走らせるか](#9-いつどこで走らせるか) + [実行手順](./ops/testing.md) |
 | いま何が単体テストされているか | [§6〜§7](#6-l1-単体テストいま実装済みの内容) |
+| ファイルがどこにあるか | [ops/testing.md §1 関係資材マップ](./ops/testing.md#1-関係資材マップこのファイルは何) |
+
+### 0.1 関係資材マップ（要約）
+
+| 層 | 仕様 | 実装・設定 | 手順 |
+|----|------|------------|------|
+| L1 単体 | この文書 §6 | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
+| L2 スモーク | この文書 §7 | `scripts/smoke.mjs` | `npm run smoke` |
+| L2b E2E | [scenario-spec.md](./scenario-spec.md) | `e2e/`, `playwright.config.ts` | [ops/testing.md](./ops/testing.md) |
+| CI | この文書 §9 | `.github/workflows/quality.yml` ほか | [ops/testing.md](./ops/testing.md) |
 
 ---
 
@@ -280,20 +291,22 @@ npm run test:e2e
 
 ## 9. いつ・どこで走らせるか
 
-詳細な操作手順は [ops/testing.md](./ops/testing.md) です。仕様としてのまとめだけここに書きます。
+**操作のくわしい説明・関係ファイルの場所・pre-push の意味**は [ops/testing.md](./ops/testing.md) を正とします。  
+ここでは仕様としての要約だけ書きます。
 
-| あなたがすること | どこでテストが走るか | 強制される内容 |
-|------------------|----------------------|----------------|
-| `git commit`（記録） | ローカル | **なし**（作業中の途中保存を妨げない） |
-| `git push`（GitHub へ送る） | ローカル（husky） | **L1 単体**。失敗したら push 自体が止まる |
-| すべての push / PR | GitHub Actions **Test** | reusable **Quality**（`unit` + `e2e`）。動画 Artifact `e2e-videos` |
-| `main` / `master` への push | 加えて **Deploy to Cloudflare** | 同じ Quality を**もう一度**通してから `deploy`（失敗したら公開しない） |
+| あなたがすること | どこでテストが走るか | 強制される内容 | 主な関係ファイル |
+|------------------|----------------------|----------------|------------------|
+| `git commit`（記録） | ローカル | **なし**（作業中の途中保存を妨げない） | — |
+| `git push`（GitHub へ送る） | ローカル（husky **pre-push**） | **L1 単体**。失敗したら push 自体が止まる | `.husky/pre-push` → `npm test` |
+| すべての push / PR | GitHub Actions **Test** | reusable **Quality**（`unit` + `e2e`）。動画 Artifact `e2e-videos` | `test.yml` → `quality.yml` |
+| `main` / `master` への push | 加えて **Deploy to Cloudflare** | 同じ Quality を**もう一度**通してから `deploy`（失敗したら公開しない） | `deploy-cloudflare.yml` |
 
 補足:
 
-- L2 スモーク（`npm run smoke`）は Secret `SMOKE_BASE_URL` があるときだけ Quality の `unit` ジョブで任意実行（未設定ならスキップ）
+- **なぜ pre-push は単体だけか**: E2E は遅く、push のたびに強制すると習慣が壊れやすい。重い確認は GitHub 側で担保する（詳しくは [ops/testing.md §2](./ops/testing.md#2-なぜこう分けているか設計の意図)）
+- L2 スモーク（`npm run smoke`）は Secret `SMOKE_BASE_URL` があるときだけ Quality の `unit` ジョブで任意実行（未設定ならスキップ）。実装は `scripts/smoke.mjs`
 - Test は全ブランチ。Deploy は `main`/`master`（と手動 `workflow_dispatch`）だけ
-- **マージボタンまで止める**には Branch protection で Quality 由来の `unit` / `e2e` を必須にする（手順は [ops/testing.md](./ops/testing.md)）
+- ローカル husky は `--no-verify` で回避できるため、**マージボタンまで止める**には Branch protection で Quality 由来の `unit` / `e2e` を必須にする（手順は [ops/testing.md](./ops/testing.md)）
 
 ---
 

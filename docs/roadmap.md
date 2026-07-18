@@ -1,9 +1,37 @@
 # 次にやること（ロードマップ）
 
-最終更新: 2026-07-18
+| 項目 | 内容 |
+|------|------|
+| 最終更新 | 2026-07-18 |
+| この文書の役割 | **これから着手する施策**の優先度と方針メモ（実装前の地図） |
+| 現行の仕様の正 | [requirements.md](./requirements.md) · [design.md](./design.md) |
 
-いま動いていること（LP・ビンゴ・クイズ・アンケート・Cloudflare 公開）の **次の施策** をまとめた文書です。  
-実装前の方針メモであり、着手時に要件・設計を更新してください。
+いま動いていること（LP・ビンゴ・クイズ・アンケート・Cloudflare 公開・自動テスト基盤）の **次** をまとめた文書です。  
+着手したら、要件・設計・テスト仕様を同じ変更の中で更新してください。ここだけが古いまま残らないようにします。
+
+---
+
+## 0. この文書の読み方
+
+| 読みたいこと | 読む場所 |
+|--------------|----------|
+| いま何が優先か | §優先テーマ一覧 |
+| テストまわりの残り | §1 |
+| ビンゴ／クイズ結果のサーバー集約 | §2 |
+| どの順で着手するか | §着手順の提案 |
+| 関係する現行仕様・手順 | §関係ドキュメント |
+
+---
+
+## 0.1 関係資材マップ
+
+| テーマ | 触りそうなパス | 更新すべき文書 |
+|--------|----------------|----------------|
+| テスト強化（UT-API など） | `src/lib/poll-store.ts`, `src/app/api/poll/`, `src/lib/*.test.ts` | test-spec · ops/testing |
+| Branch protection | GitHub Settings（コード外） | ops/testing |
+| preview KV 分離 | `wrangler.jsonc` | design §9 · ops/preview |
+| ビンゴ／クイズ結果 → KV | 新規 API、`public/app-tools/wedding-*` | requirements · design · test-spec · scenario-spec |
+| 管理者一覧 UI | `src/` または `public/app-tools/`（方針決定後） | requirements · design |
 
 ---
 
@@ -20,25 +48,27 @@
 
 ### いまできていること（2026-07-18）
 
+基盤の「いつ・どこで走るか」は [ops/testing.md](./ops/testing.md) に詳しく書いてあります。
+
 - [x] `npm test`（Vitest・UT-*）がローカル／CI で通る  
 - [x] シナリオ E2E（ガーキン・SC-*・動画）が `npm run test:e2e` / CI で通る  
 - [x] すべての push / PR で Quality（unit + e2e）が走る（`test.yml` → `quality.yml`）  
 - [x] `main` デプロイ前に同じ Quality を通し、失敗時はデプロイしない（`deploy-cloudflare.yml`）  
-- [x] ローカル `git push` 前に husky が単体を強制  
+- [x] ローカル `git push` 前に husky が単体を強制（`.husky/pre-push`）  
 - [x] 仕様書: [test-spec.md](./test-spec.md) / [scenario-spec.md](./scenario-spec.md) / [ops/testing.md](./ops/testing.md)  
-- [x] 本番 KV を CI から直接更新しない（方針 D 禁止を文書化）  
+- [x] 本番 KV を CI から直接更新しない（方針を文書化）  
 
 ### 残タスク（強化）
 
-| 優先 | 内容 |
-|------|------|
-| 高 | API 単体（UT-API-*）— poll-store 境界をモック可能にして vote / setIndex 等 |
-| 高 | GitHub Branch protection で `unit` / `e2e` を必須化（リポジトリ設定・手動1回） |
-| 中 | プレビュー専用 KV（`preview_id` 分離）+ 任意スモーク Secret |
-| 中 | ビンゴ判定・UrlPack の単体化（UT-BINGO / UT-PACK） |
-| 低 | 追加シナリオ（ゲスト待機、票クリアなど） |
+| 優先 | 内容 | 関係資材 |
+|------|------|----------|
+| 高 | API 単体（UT-API-*）— poll-store 境界をモック可能にして vote / setIndex 等 | `src/lib/poll-store.ts`, test-spec §12 |
+| 高 | GitHub Branch protection で `unit` / `e2e` を必須化（リポジトリ設定・手動1回） | [ops/testing.md](./ops/testing.md) |
+| 中 | プレビュー専用 KV（`preview_id` 分離）+ 任意スモーク Secret | `wrangler.jsonc`, [ops/preview.md](./ops/preview.md) |
+| 中 | ビンゴ判定・UrlPack の単体化（UT-BINGO / UT-PACK） | `wedding-bingo/`, `shared/pack.js` |
+| 低 | 追加シナリオ（ゲスト待機、票クリアなど） | `e2e/`, scenario-spec |
 
-詳細なケース予約は [test-spec.md §12](./test-spec.md)。
+詳細なケース予約は [test-spec.md §12](./test-spec.md)（あれば）または test-spec 末尾の拡張予定を参照。
 
 ---
 
@@ -52,7 +82,9 @@
 | クイズ | 端末ローカル／URL 設定 | なし |
 | アンケート | すでに **KV** で同期 | Host 画面で確認可 |
 
-ビンゴ・クイズは「個人プレイ／URL 配布」向きのため、**結果の集約がない**。次はここを足したい。
+ビンゴ・クイズは「個人プレイ／URL 配布」向きのため、**結果の集約がない**。次はここを足したい、というのがこのテーマです。
+
+現行の共有の仕方（URL パック）は [design.md §5.2](./design.md) です。アンケートの KV パターンは [design.md §8](./design.md) が手本になります。
 
 ### ゴール
 
@@ -111,6 +143,7 @@
 - [ ] 管理者が URL または画面で結果一覧を見られる  
 - [ ] 本番とプレビューで KV を分けられる（既存の `id` / `preview_id` 方針に合わせる）  
 - [ ] 要件定義・設計書（`docs/requirements.md` / `docs/design.md`）を更新する  
+- [ ] 必要ならシナリオ（SC-*）と単体（UT-*）を追加する  
 
 ### 注意（先に決めること）
 
@@ -129,18 +162,19 @@
 4. （任意）通知・改ざん対策の強化
 ```
 
-テスト基盤があると、結果送信 API を足したときの退行も防ぎやすい。
+テスト基盤があると、結果送信 API を足したときの退行も防ぎやすい、という理由でテスト強化を先に置いています。
 
 ---
 
-## 関連ドキュメント
+## 関係ドキュメント
 
 | 文書 | 内容 |
 |------|------|
+| [README.md](./README.md) | docs 全体の目次・資材地図 |
 | [requirements.md](./requirements.md) | 現行の要件定義 |
 | [design.md](./design.md) | 現行の設計 |
 | [test-spec.md](./test-spec.md) | 自動テスト仕様 |
 | [scenario-spec.md](./scenario-spec.md) | シナリオテスト仕様 |
 | [ops/preview.md](./ops/preview.md) | 非本番での確認手順 |
-| [ops/testing.md](./ops/testing.md) | テストの実行手順 |
-| [README.md](./README.md) | docs 全体の目次 |
+| [ops/testing.md](./ops/testing.md) | テストの実行・仕組み・関係ファイル |
+| [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) | 外部向け下書き（仕様の正ではない） |

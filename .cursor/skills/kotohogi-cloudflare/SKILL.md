@@ -12,17 +12,19 @@ description: >-
 
 このリポジトリ（ことほぎ）向けの進め方。小さく出して直し、共有が必要な所だけクラウドに寄せる。
 
-**仕様の正は `docs/`。** アーキテクチャ・API・画面の詳細はここに書かず、文書へ誘導する。
+**仕様の正は `docs/`。** アーキテクチャ・API・画面の詳細はここに書かず、文書へ誘導する。  
+各文書の冒頭に「読み方」と「関係資材マップ」（どのパスを触るか）がある。まず [docs/README.md](../../../docs/README.md) の目次を見る。
 
 | 知りたいこと | 読む先 |
 |--------------|--------|
+| docs 全体の地図 | [docs/README.md](../../../docs/README.md) |
 | 要件 | [docs/requirements.md](../../../docs/requirements.md) |
 | 設計・API・構成 | [docs/design.md](../../../docs/design.md) |
 | 自動テスト仕様 | [docs/test-spec.md](../../../docs/test-spec.md) |
 | シナリオテスト仕様 | [docs/scenario-spec.md](../../../docs/scenario-spec.md) |
 | 次の施策 | [docs/roadmap.md](../../../docs/roadmap.md) |
 | プレビュー手順 | [docs/ops/preview.md](../../../docs/ops/preview.md) |
-| テストの実行手順 | [docs/ops/testing.md](../../../docs/ops/testing.md) |
+| テストの実行・pre-push・関係ファイル | [docs/ops/testing.md](../../../docs/ops/testing.md) |
 | Agent 用の短い補足 | [reference.md](reference.md) |
 
 ## アーキテクチャ（要約のみ）
@@ -80,8 +82,9 @@ description: >-
 
 ## ドキュメント / Qiita
 
+- 目次・資材地図: `docs/README.md`（まずここ）
 - プロダクト文書: `docs/requirements.md`, `docs/design.md`, `docs/test-spec.md`, `docs/scenario-spec.md`, `docs/roadmap.md`
-- 運用: `docs/ops/`（実行手順の正は `ops/testing.md`）
+- 運用: `docs/ops/`（実行手順の正。testing は仕組み＋関係ファイル、preview は非本番）
 - Qiita 下書き: `docs/drafts/qiita-cursor-cloudflare.md`
 - 記事方針:
   - 有用なことだけ（冗長な内部実装の羅列は避ける）

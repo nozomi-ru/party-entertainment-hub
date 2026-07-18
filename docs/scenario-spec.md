@@ -3,19 +3,20 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.0 |
+| 文書バージョン | 1.1 |
 | 最終更新 | 2026-07-18 |
 | この文書の役割 | **利用者の一連の操作（シナリオ）をどう確認するか**の正本 |
 | 自動テストの全体方針 | [test-spec.md](./test-spec.md) |
-| コマンドの打ち方 | [ops/testing.md](./ops/testing.md) |
+| コマンドの打ち方・仕組み | [ops/testing.md](./ops/testing.md) |
 
-関連: [要件](./requirements.md) · [設計](./design.md)
+関連: [要件](./requirements.md) · [設計](./design.md) · [docs 目次](./README.md)
 
 ---
 
 ## 0. この文書の読み方
 
-**シナリオテスト**とは、「ユーザーが画面上でこういう順番で操作したとき、こうなるはず」という**物語単位**の確認です。
+**シナリオテスト**とは、「ユーザーが画面上でこういう順番で操作したとき、こうなるはず」という**物語単位**の確認です。  
+「部品が正しいか」は単体テスト（L1）、「通信が生きているか」はスモーク（L2）の領域です。この文書は **L2b（E2E）** の合格条件の正本です。
 
 | 似ている言葉 | ちがい |
 |--------------|--------|
@@ -30,7 +31,23 @@
 |--------------|----------|
 | シナリオ一覧と合格条件 | この文書 §3 以降 |
 | 用語（E2E・ガーキンなど） | [test-spec.md 用語集](./test-spec.md#1-用語集この文書で使う言葉) |
-| 実行コマンド・動画の見方 | [ops/testing.md](./ops/testing.md) |
+| 実行コマンド・動画・pre-push | [ops/testing.md](./ops/testing.md) |
+| 要件の受け入れとの対応 | この文書 §1 · [requirements.md §7](./requirements.md) |
+
+### 0.1 関係資材マップ
+
+| 種類 | パス | 役割 |
+|------|------|------|
+| この仕様書 | `docs/scenario-spec.md` | SC-* の合格条件（正） |
+| ガーキン（シナリオ文） | `e2e/features/*.feature` | 日本語の物語 |
+| ステップ実装 | `e2e/steps/app.steps.ts` | 「もし〜」の実際の操作 |
+| 共通準備 | `e2e/fixtures.ts` | Playwright-BDD の土台 |
+| Playwright 設定 | `playwright.config.ts` | ポート 3100・動画録画など |
+| ローカル動画 | `test-results/**/*.webm` | 実行後の録画（Git 管理外） |
+| HTML レポート | `playwright-report/` | `npm run test:e2e:report` |
+| CI Artifact | GitHub Actions の `e2e-videos` | CI 上の録画＋レポート |
+| 全体方針 | `docs/test-spec.md` §8 | L2b の位置づけ |
+| 実行手順 | `docs/ops/testing.md` | コマンド・トラブルシュート |
 
 ---
 
