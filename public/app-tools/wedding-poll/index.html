@@ -600,11 +600,6 @@
                 </div>
             </div>
 
-            <div class="howto-note">
-                <strong>使い方の要点</strong>
-                必ず Host が先に入室してください。ゲスト用URL（<code>?room=XXXX</code>）以外で開くと司会モードになることがあります。質問の変更は「質問・選択肢を編集」から（保存すると票はリセットされます）。
-            </div>
-
             <div class="mode-grid">
                 <button type="button" class="mode-btn selected" data-mode="host" id="mode-host">
                     <strong>Host</strong>
@@ -622,7 +617,11 @@
             </div>
 
             <button class="btn-main" id="btn-enter">入室する (ENTER)</button>
-            <button type="button" class="btn-ghost" id="btn-edit-questions-start" style="margin-top:10px; width:100%;">質問・選択肢を編集</button>
+            <button type="button" class="btn-ghost host-only-start" id="btn-edit-questions-start" style="margin-top:10px; width:100%;">質問・選択肢を編集</button>
+            <div class="howto-note host-only-start" id="host-howto-start" style="margin-top:1em;">
+                <strong>使い方の要点（司会向け）</strong>
+                必ず Host が先に入室してください。入室後のゲスト用URL（<code>?room=XXXX</code>）を配ります。質問の変更は「質問・選択肢を編集」から（保存すると票はリセットされます）。
+            </div>
             <p class="status-msg" id="start-status"></p>
         </div>
 
@@ -650,6 +649,10 @@
             </div>
 
             <div id="host-controls" style="width:100%;">
+                <div class="howto-note">
+                    <strong>使い方の要点（司会向け）</strong>
+                    下のゲスト用URLを配り、会場スクリーンで結果表示・質問切替を行います。質問を変えるときは「質問・選択肢を編集」（保存すると票はリセットされます）。
+                </div>
                 <div class="invite-box">
                     <label for="guest-url">ゲスト用URL（これを渡せばすぐ投票できます）</label>
                     <div class="invite-row">
@@ -687,9 +690,10 @@
 
     <div id="admin-panel">
         <h2 style="font-family:'Playfair Display',serif;">質問の編集</h2>
-        <p style="font-size:0.85em; color:var(--color-text-light); line-height:1.6;">
-            質問文と選択肢（A〜D）を編集できます。入室前でも編集でき、Host 入室後に保存するとルーム全体へ反映されます（票はリセットされます）。
-        </p>
+        <div class="howto-note">
+            <strong>使い方の要点（司会向け）</strong>
+            質問文と選択肢（A〜D）を編集できます。Host 入室後に保存するとルーム全体へ反映され、票はリセットされます。
+        </div>
         <div id="admin-form"></div>
         <button class="btn-main" id="admin-save" style="margin-top:12px;">保存して閉じる</button>
         <button class="btn-reset-trigger" id="admin-close" style="width:100%; margin-top:8px;">閉じる</button>
@@ -747,6 +751,11 @@
             state.mode = mode;
             document.querySelectorAll(".mode-btn").forEach((b) => {
                 b.classList.toggle("selected", b.dataset.mode === mode);
+            });
+            // 使い方・編集は Host（管理者）向け。Guest 選択時は隠す
+            const hostOnly = mode === "host";
+            document.querySelectorAll(".host-only-start").forEach((el) => {
+                el.style.display = hostOnly ? "" : "none";
             });
         }
 

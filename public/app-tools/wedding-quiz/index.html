@@ -502,11 +502,6 @@
                 </div>
             </div>
 
-            <div class="howto-note">
-                <strong>使い方の要点</strong>
-                共有URLを開いたゲストは、幹事が作った同じ問題セットで挑戦できます（DB不要）。問題は端末にも保存されるので、編集後は共有URLの再配布がおすすめです。
-            </div>
-
             <button class="btn-main" id="btn-start">はじめる (START)</button>
             <button class="btn-share" id="open-editor" type="button">問題を編集・共有URL作成</button>
         </div>
@@ -555,8 +550,12 @@
 
     <div id="admin-panel">
         <h2 style="font-family:'Playfair Display',serif;">Quiz Settings</h2>
+        <div class="howto-note">
+            <strong>使い方の要点（幹事向け）</strong>
+            問題と正解を編集し「共有URLをコピー」でゲストに配ります（DB不要）。問題は端末にも保存されるので、編集後は共有URLの再配布がおすすめです。
+        </div>
         <p style="font-size:0.85em; color:var(--color-text-light); line-height:1.6;">
-            問題を自由に作成できます。「共有URLをコピー」でゲストに同じ問題セットを届けられます（内容はURLに圧縮して埋め込み。DB不要）。
+            問題を自由に作成できます。
         </p>
         <div id="admin-form"></div>
         <button class="btn-share" id="admin-add-q" type="button" style="margin-top:8px;">＋ 問題を追加</button>

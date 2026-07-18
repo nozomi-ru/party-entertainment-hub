@@ -84,16 +84,28 @@ Given("アンケート開始画面を開いている", async ({ page }) => {
 });
 
 Then("アンケートの使い方の要点が表示される", async ({ page }) => {
-  await expect(page.locator("#view-start .howto-note")).toContainText(
-    "使い方の要点",
-  );
-  await expect(page.locator("#view-start .howto-note")).toContainText("Host");
+  await expect(page.locator("#host-howto-start")).toBeVisible();
+  await expect(page.locator("#host-howto-start")).toContainText("使い方の要点");
+  await expect(page.locator("#host-howto-start")).toContainText("Host");
+});
+
+Then("司会向けの使い方の要点が表示される", async ({ page }) => {
+  await expect(page.locator("#host-howto-start")).toBeVisible();
+  await expect(page.locator("#host-howto-start")).toContainText("司会向け");
+});
+
+When("Hostモードを選ぶ", async ({ page }) => {
+  await page.locator("#mode-host").click();
+  await expect(page.locator("#mode-host")).toHaveClass(/selected/);
 });
 
 Then("Hostに質問編集ボタンがある", async ({ page }) => {
   await expect(page.locator("#btn-edit-questions")).toBeVisible();
   await expect(page.locator("#btn-edit-questions")).toHaveText(
     /質問・選択肢を編集/,
+  );
+  await expect(page.locator("#host-controls .howto-note")).toContainText(
+    "司会向け",
   );
 });
 
@@ -266,8 +278,23 @@ Given("ビンゴ画面を開いている", async ({ page }) => {
 });
 
 Then("ビンゴの使い方の要点が表示される", async ({ page }) => {
-  await expect(page.locator(".howto-note")).toContainText("使い方の要点");
-  await expect(page.locator(".howto-note")).toContainText("共有URL");
+  await expect(page.locator("#admin-panel .howto-note")).toBeVisible();
+  await expect(page.locator("#admin-panel .howto-note")).toContainText(
+    "使い方の要点",
+  );
+  await expect(page.locator("#admin-panel .howto-note")).toContainText(
+    "共有URL",
+  );
+});
+
+When("幹事用の編集画面を開く", async ({ page }) => {
+  await page.locator("#open-editor").click();
+  await expect(page.locator("#admin-panel")).toBeVisible();
+});
+
+When("編集画面を閉じる", async ({ page }) => {
+  await page.locator("#admin-close").click();
+  await expect(page.locator("#admin-panel")).toBeHidden();
 });
 
 When(
@@ -297,10 +324,11 @@ Given("クイズ画面を開いている", async ({ page }) => {
 });
 
 Then("クイズの使い方の要点が表示される", async ({ page }) => {
-  await expect(page.locator("#view-start .howto-note")).toContainText(
+  await expect(page.locator("#admin-panel .howto-note")).toBeVisible();
+  await expect(page.locator("#admin-panel .howto-note")).toContainText(
     "使い方の要点",
   );
-  await expect(page.locator("#view-start .howto-note")).toContainText(
+  await expect(page.locator("#admin-panel .howto-note")).toContainText(
     "共有URL",
   );
 });
@@ -309,8 +337,11 @@ When(
   "問題に目印 {string} を付けて共有URLを作る",
   async ({ page, world }, marker: string) => {
     world.marker = marker;
-    await page.locator("#open-editor").click();
-    await expect(page.locator("#admin-panel")).toBeVisible();
+    const panel = page.locator("#admin-panel");
+    if (!(await panel.isVisible())) {
+      await page.locator("#open-editor").click();
+      await expect(panel).toBeVisible();
+    }
     await page.locator("#admin-form .admin-q").first().fill(marker);
     await page.locator("#admin-copy-url").click();
     await expect(page.locator("#share-box")).toBeVisible();

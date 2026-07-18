@@ -418,11 +418,6 @@
             </div>
         </div>
 
-        <div class="howto-note">
-            <strong>使い方の要点</strong>
-            ゲストは共有URLを開くと同じマスで遊べます（名前は端末内のみ保存）。同じ端末で続きから再開もできます。最初からやり直すときは「リセットする」を使ってください。
-        </div>
-
         <div class="grid" id="bingo-board"></div>
 
         <div id="bingo-msg">
@@ -459,8 +454,12 @@
 
     <div id="admin-panel">
         <h2>Bingo Settings</h2>
+        <div class="howto-note">
+            <strong>使い方の要点（幹事向け）</strong>
+            マス文言を編集し「共有URLをコピー」でゲストに配ります（内容はURLに圧縮。DB不要）。ゲストの名前は各端末内のみ保存されます。最初からやり直すときは盤面の「リセットする」を使ってください。
+        </div>
         <p class="hint">
-            8マスの内容を自由に編集できます。「共有URLをコピー」でゲストに同じマス構成を届けられます（内容はURLに圧縮して埋め込み。DB不要）。
+            8マスの内容を自由に編集できます。
         </p>
         <div id="admin-form"></div>
         <button class="btn-main" id="admin-save" style="margin-top:16px;">保存する</button>
