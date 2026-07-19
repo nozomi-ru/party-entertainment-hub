@@ -89,7 +89,7 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Invalid vote" }, { status: 400 });
     }
 
-    // 読み取り→加算→書き込み（同時投票で稀に取りこぼす可能性あり。二次会規模では実用十分）
+    // 読み取り→加算→書き込み（同時投票で稀に取りこぼす可能性あり。会場規模では実用十分）
     current.votes[questionIndex][choiceIndex] += 1;
     if (action === "tally") current.showResults = true;
     current.updatedAt = Date.now();

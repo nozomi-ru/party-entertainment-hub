@@ -5,14 +5,18 @@ import { appLinks, siteConfig } from "@/config/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+/** 自前配信のヒーロー（Workers では next/image 最適化が使えないため圧縮済み静的ファイル） */
+const HERO_SRC = "/hero.webp";
+
 export function Hero() {
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden">
       <Image
-        src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1600&q=70"
+        src={HERO_SRC}
         alt="祝福に満ちたパーティー会場の様子"
         fill
         priority
+        fetchPriority="high"
         className="object-cover object-center"
         sizes="100vw"
       />

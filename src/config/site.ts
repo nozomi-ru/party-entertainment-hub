@@ -14,7 +14,7 @@ export const siteConfig = {
   tagline: "幹事の負担を減らし、会場の一体感を最大化する",
   /** LP 用（検索・OGP。おおよそ100〜120文字） */
   description:
-    "結婚式二次会の余興を支えるWebアプリ。人間ビンゴ・新郎新婦クイズ・リアルタイムアンケートで、幹事の負担を減らし会場の一体感をつくります。",
+    "結婚式・パーティーの余興を支えるWebアプリ。人間ビンゴ・クイズ・リアルタイムアンケートで、幹事の負担を減らし会場の一体感をつくります。",
   copyrightYear: 2026,
   author: "Kotohogi",
   /** SNS共有カード用画像（public/og.jpg） */
@@ -24,13 +24,13 @@ export const siteConfig = {
 /** ページ／静的アプリごとの title・description（SEO・OGP） */
 export const pageSeo = {
   home: {
-    title: "ことほぎ | 結婚式二次会の余興アプリ",
+    title: "ことほぎ | 結婚式・パーティーの余興アプリ",
     description: siteConfig.description,
   },
   bingo: {
     title: "人間ビンゴ | ことほぎ",
     description:
-      "ゲスト同士が声をかけ合いマスを埋める交流ビンゴ。共有URLで同じマスを配れ、二次会のアイスブレイクに使えます。",
+      "ゲスト同士が声をかけ合いマスを埋める交流ビンゴ。共有URLで同じマスを配れ、結婚式やパーティーのアイスブレイクに使えます。",
   },
   quiz: {
     title: "新郎新婦クイズ | ことほぎ",
@@ -107,7 +107,7 @@ export const features: FeatureItem[] = [
     id: "human-bingo",
     title: "人間ビンゴ",
     description:
-      "ゲスト同士が声をかけ合い、マスを埋めていく交流ビンゴ。二次会のアイスブレイクにぴったりです。",
+      "ゲスト同士が声をかけ合い、マスを埋めていく交流ビンゴ。結婚式やパーティーのアイスブレイクにぴったりです。",
     howto:
       "幹事がマスを編集して共有URLを配布 → ゲストはマスをタップして名前を入力 → 縦横斜めが揃うとビンゴ。",
     icon: "grid",
@@ -117,7 +117,7 @@ export const features: FeatureItem[] = [
     id: "quiz",
     title: "新郎新婦クイズ",
     description:
-      "二人のエピソードを題材にしたクイズで、ゲストの笑顔と会場の声が重なります。",
+      "二人のエピソードを題材にしたクイズ。結婚式向けの定番として使いつつ、問題は編集できるのでパーティーでも楽しめます。",
     howto:
       "幹事が問題・正解を編集して共有URLを配布 → ゲストは「はじめる」で4択に回答 → 最後にスコアと正解を確認。",
     icon: "help-circle",
@@ -165,7 +165,7 @@ export type AffiliateItem = {
 export const affiliateItems: AffiliateItem[] = [
   {
     id: "prize-shop",
-    title: "二次会向け景品セレクト",
+    title: "パーティー向け景品セレクト",
     description:
       "ゲストが喜ぶ定番から、ちょっと特別な一品まで。予算別に探しやすいショップです。",
     href: "https://example.com/affiliate/prizes",

@@ -71,7 +71,7 @@ export async function writePollSession(session: PollSession): Promise<void> {
   const value = JSON.stringify(session);
   const kv = await getKv();
   if (kv) {
-    // 二次会用途想定: 24時間で自動削除
+    // イベント用途想定: 24時間で自動削除
     await kv.put(key, value, { expirationTtl: 60 * 60 * 24 });
     return;
   }

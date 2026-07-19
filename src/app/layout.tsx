@@ -5,7 +5,7 @@ import "./globals.css";
 
 const display = Cormorant_Garamond({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600"],
   variable: "--font-display",
   display: "swap",
 });
@@ -32,6 +32,7 @@ export const metadata: Metadata = {
     "ことほぎ",
     "Kotohogi",
     "結婚式",
+    "パーティー",
     "二次会",
     "余興",
     "ビンゴ",
@@ -50,7 +51,7 @@ export const metadata: Metadata = {
     description: pageSeo.home.description,
     images: [
       {
-        url: siteConfig.ogImagePath,
+        url: ogImageUrl,
         width: 1200,
         height: 630,
         alt: `${siteConfig.name}（${siteConfig.nameEn}）`,
@@ -76,6 +77,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/hero.webp"
+          type="image/webp"
+          fetchPriority="high"
+        />
+      </head>
       <body className={`${display.variable} ${body.variable} antialiased`}>
         {children}
       </body>

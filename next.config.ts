@@ -1,15 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Cloudflare Workers では画像最適化なしでも外部画像を表示できるようオフ
+  // Cloudflare Workers では画像最適化なしでも表示できるようオフ。
+  // ヒーロー等は public/ に圧縮済み WebP/JPEG を置く（docs/ops/seo.md）。
   images: {
     unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
   },
 };
 
