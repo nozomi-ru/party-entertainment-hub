@@ -18,6 +18,7 @@
 | 利用者ストーリー（SC-*）の合格条件 | [scenario-spec.md](./scenario-spec.md) |
 | テストがいつ走るか・コマンド・pre-push | [ops/testing.md](./ops/testing.md) |
 | 本番を壊さず Cloudflare で確認する | [ops/preview.md](./ops/preview.md) |
+| SEO・Search Console・OGP | [ops/seo.md](./ops/seo.md) |
 | 次に何をやるか | [roadmap.md](./roadmap.md) |
 | まだ着手しないアプリ案 | [ideas.md](./ideas.md) |
 | Qiita など外部向け下書き | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) |
@@ -70,7 +71,8 @@ docs/
 ├── ideas.md           ← アプリ／機能のアイディアメモ（未着手）
 ├── ops/               ← 運用手順
 │   ├── preview.md     ← 非本番（Cloudflare preview）の手順
-│   └── testing.md     ← テストの実行・仕組み・関係資材マップ
+│   ├── testing.md     ← テストの実行・仕組み・関係資材マップ
+│   └── seo.md         ← Search Console・sitemap・OGP・CWV
 └── drafts/            ← 外部公開用の下書き（記事など）
     └── qiita-*.md
 ```

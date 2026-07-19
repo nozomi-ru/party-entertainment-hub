@@ -46,6 +46,7 @@
 | 1 | 自動テストを CI/CD に組み込む | 壊れたまま本番へ出さない | **基盤は完了**（残りは強化） |
 | 2 | ビンゴ／クイズ結果を KV 経由で管理者へ送る | 幹事・管理者が結果を後から確認できる | 未着手 |
 | 3 | 指示文を AI エージェント数人でディスカッションしてから着手 | 曖昧な指示を先に揉み、手戻りを減らす | 未着手（進め方） |
+| 4 | SEO・検索登録・OGP・CWV | 発見性と共有体験を上げる | **実装着手**（Search Console は手作業） |
 
 ---
 
@@ -234,5 +235,6 @@
 | [scenario-spec.md](./scenario-spec.md) | シナリオテスト仕様 |
 | [ops/preview.md](./ops/preview.md) | 非本番での確認手順 |
 | [ops/testing.md](./ops/testing.md) | テストの実行・仕組み・関係ファイル |
+| [ops/seo.md](./ops/seo.md) | Search Console・sitemap・OGP・Lighthouse |
 | [ideas.md](./ideas.md) | 未着手のアプリ／機能アイディアメモ |
 | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) | 外部向け下書き（仕様の正ではない） |

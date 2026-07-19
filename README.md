@@ -23,6 +23,7 @@
 | [シナリオテスト仕様](./docs/scenario-spec.md) | 利用者ストーリー（E2E / SC-*） |
 | [テスト実行手順](./docs/ops/testing.md) | 仕組み・pre-push・関係ファイル・コマンド |
 | [プレビュー手順](./docs/ops/preview.md) | 非本番ブランチでの確認・KV 注意 |
+| [SEO・OGP](./docs/ops/seo.md) | Search Console・sitemap・共有カード |
 | [ロードマップ](./docs/roadmap.md) | 次にやること |
 
 ## ディレクトリ構成（何をデプロイするか）

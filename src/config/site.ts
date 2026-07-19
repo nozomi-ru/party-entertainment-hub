@@ -3,14 +3,45 @@
  * アプリURL・アフィリエイトリンクはここだけ編集すれば反映されます。
  */
 
+/** 本番の公開オリジン（末尾スラッシュなし）。カスタムドメイン時は環境変数かここを更新 */
+export const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://kotohogi.nozoisfun.workers.dev"
+).replace(/\/$/, "");
+
 export const siteConfig = {
   name: "ことほぎ",
   nameEn: "Kotohogi",
   tagline: "幹事の負担を減らし、会場の一体感を最大化する",
+  /** LP 用（検索・OGP。おおよそ100〜120文字） */
   description:
-    "エンジニアが実際の結婚式二次会を経験してつくった、余興支援Webアプリ。進行・クイズ・アンケートで幹事さんを支えます。",
+    "結婚式二次会の余興を支えるWebアプリ。人間ビンゴ・新郎新婦クイズ・リアルタイムアンケートで、幹事の負担を減らし会場の一体感をつくります。",
   copyrightYear: 2026,
   author: "Kotohogi",
+  /** SNS共有カード用画像（public/og.jpg） */
+  ogImagePath: "/og.jpg",
+} as const;
+
+/** ページ／静的アプリごとの title・description（SEO・OGP） */
+export const pageSeo = {
+  home: {
+    title: "ことほぎ | 結婚式二次会の余興アプリ",
+    description: siteConfig.description,
+  },
+  bingo: {
+    title: "人間ビンゴ | ことほぎ",
+    description:
+      "ゲスト同士が声をかけ合いマスを埋める交流ビンゴ。共有URLで同じマスを配れ、二次会のアイスブレイクに使えます。",
+  },
+  quiz: {
+    title: "新郎新婦クイズ | ことほぎ",
+    description:
+      "二人のエピソードを4択クイズに。問題を編集してURL共有でき、ゲストはその場で正解とスコアを確認できます。",
+  },
+  poll: {
+    title: "リアルタイムアンケート | ことほぎ",
+    description:
+      "司会がルームを開き、ゲストはスマホから投票。結果表示のタイミングも司会がコントロールできるライブアンケートです。",
+  },
 } as const;
 
 /** アプリ・セクションへの遷移先 */

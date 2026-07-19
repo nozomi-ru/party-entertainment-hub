@@ -25,6 +25,7 @@ description: >-
 | 次の施策 | [docs/roadmap.md](../../../docs/roadmap.md) |
 | プレビュー手順 | [docs/ops/preview.md](../../../docs/ops/preview.md) |
 | テストの実行・pre-push・関係ファイル | [docs/ops/testing.md](../../../docs/ops/testing.md) |
+| SEO・Search Console・OGP | [docs/ops/seo.md](../../../docs/ops/seo.md) |
 | Agent 用の短い補足 | [reference.md](reference.md) |
 
 ## アーキテクチャ（要約のみ）
