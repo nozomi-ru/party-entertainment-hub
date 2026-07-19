@@ -9,12 +9,16 @@
   --muted: #6a6d78;
   --line: #d5d8e0;
   --champagne: #a89b7c;
-  --champagne-deep: #8a7d5f;
+  /* 白背景上で WCAG AA（通常テキスト 4.5:1）を満たすよう一段濃く */
+  --champagne-deep: #5f5640;
   --champagne-soft: #ddd4c0;
   --champagne-glow: rgba(168, 155, 124, 0.18);
   --surface: #ffffff;
   --background: var(--paper);
   --foreground: var(--ink);
+  --font-body:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic",
+    "Meiryo", sans-serif;
 }
 
 @theme inline {
@@ -31,7 +35,7 @@ html {
 body {
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-body), "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -55,12 +59,11 @@ body {
 }
 
 @keyframes fade-up {
+  /* opacity は触らない（LCP 要素が透明のまま計測されるのを防ぐ） */
   from {
-    opacity: 0;
     transform: translateY(14px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }

@@ -27,6 +27,7 @@ Git に含めない: `node_modules/`, `.next/`, `.open-next/`, `.wrangler/`, `.d
 | CF ダッシュボード（本番例） | Build: `npx opennextjs-cloudflare build` → Deploy: `npx wrangler deploy` |
 | CF ダッシュボード（非本番例） | Deploy: `npx wrangler versions upload` |
 | 品質ゲート | `.github/workflows/quality.yml`（unit + e2e）。Test / Deploy から呼び出し |
+| ローカル pre-push | `.husky/pre-push` → `npm test`。`--no-verify` で飛ばさない（ユーザー明示時のみ例外） |
 
 本番 URL 例: `https://kotohogi.nozoisfun.workers.dev/`（環境により異なる場合あり）  
 プレビュー手順: [docs/ops/preview.md](../../../docs/ops/preview.md)

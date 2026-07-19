@@ -242,30 +242,29 @@ https://kotohogi.nozoisfun.workers.dev/sitemap.xml
 
 **計測のコツ:** 拡張機能が点数を落とすことがあります。警告が出たら **シークレットウィンドウ**で再計測してください。
 
-### 3.3 実測メモ（2026-07-19・改善前）
+特に **LastPass**（拡張 ID `hdokiejnpimakedhajhdlcegeplioahd`）は、未使用 JS が約 1MB・メインスレッド 1.5 秒超を食いやすく、Performance が 40 台のままに見えます。**サイト側の問題ではありません。**
+
+### 3.3 実測メモ（2026-07-19）
 
 本番 `https://kotohogi.nozoisfun.workers.dev/` のモバイル Lighthouse 例:
 
 | カテゴリ | 点数 | コメント |
 |----------|------|----------|
-| Performance | **48** | 要改善 |
-| Accessibility | 96 | 良好 |
+| Performance | **48** | 拡張機能ありの計測では信用しない |
+| Accessibility | 96 | コントラスト指摘あり → 色トークン調整 |
 | Best Practices | 100 | 良好 |
 | SEO | 100 | 良好 |
 
-| 指標 | 値（改善前） | 読み方 |
+| 指標 | 拡張ありの例 | 読み方 |
 |------|--------------|--------|
-| FCP | 1.5 s | まずまず |
-| **LCP** | **18.2 s** | 致命的。ヒーロー画像が遅い |
-| **TBT** | **1,640 ms** | JS がメインスレッドを占有 |
+| FCP | 1.4 s | まずまず |
+| **LCP** | **18.2 s** | 拡張の長いタスクと重なりやすく、数値が跳ねる |
+| **TBT** | **1,610 ms** | レポート上、大半が LastPass の content script |
 | CLS | 0 | 良好 |
-| 転送量 | 約 3.5 MB | 「Enormous network payloads」 |
+| 1st party 転送 | 約 330 KiB | `hero.webp` 約 62 KiB まで縮小済み |
+| 全体転送（拡張込み） | 約 3.4 MB | うち拡張 JS が約 1 MB |
 
-主な原因（改善前）:
-
-1. **LCP 要素が Unsplash の外部画像**（別オリジン + `images.unoptimized` で圧縮されない）
-2. **初回 JS が大きい**（Below-the-fold もまとめて読み込み）
-3. 計測時の **Chrome 拡張機能**（警告あり）
+再計測は必ず **シークレット（拡張オフ）** で。サイト側の残り改善はフォント数とコントラストが中心です。
 
 ### 3.4 いま入れた対策（コード側）
 
@@ -273,11 +272,13 @@ https://kotohogi.nozoisfun.workers.dev/sitemap.xml
 |------|------|
 | ヒーロー自前配信 | `public/hero.webp`（約 60KB）を同一オリジンで配信。Unsplash 依存をやめた |
 | preload | `layout.tsx` で `/hero.webp` を preload |
-| フォント軽量化 | Google Fonts のウェイト数を減らした |
+| フォント削減 | 本文の Zen Kaku（本番で **font preload が約 240 本**）をやめ、OS 日本語ゴシックへ。欧文は Cormorant のみ |
+| ヒーロー img | `next/image` ではなく素の `<img decoding="sync" fetchPriority="high">`（LCP 向け） |
+| 入場アニメ | `fade-up` から opacity 変化を外し、LCP が透明待ちにならないようにした |
+| コントラスト | `--champagne-deep` を濃くし、白背景上の AA を満たしやすくした |
 | コード分割 | LP の Features など下部セクションを `dynamic()` で分割 |
-| 画像方針 | Workers では引き続き `images.unoptimized: true`。大きい画像は **手元で圧縮して `public/` に置く** |
 
-デプロイ後、シークレットで Lighthouse を再計測し、**LCP が数秒台に落ちているか**を確認してください。Performance 90 台を最初から狙わなくて大丈夫です（まず LCP・転送量）。
+**LCP 18.2s の正体（この計測時点の本番）:** HTML 先頭で Zen Kaku 系の **font preload が約 240 本**あり、Slow 4G では `hero.webp` よりフォントが帯域を奪う。フォント削減のデプロイ後に LCP が大きく下がる想定です。
 
 ### 3.5 画像配信（方針）
 

@@ -1,2 +1,3 @@
-# Force L1 unit tests before push. E2E runs on GitHub Actions.
+# Force L1 unit tests before every push. E2E runs on GitHub Actions.
+# Agents must not bypass this with --no-verify unless the user explicitly asks.
 npm test

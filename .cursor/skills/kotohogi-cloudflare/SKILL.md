@@ -79,6 +79,18 @@ description: >-
 4. Cloudflare 自動デプロイを待つ  
 5. 本番 URL で確認  
 
+### push 前の自動テスト（必須）
+
+| 項目 | 内容 |
+|------|------|
+| フック | `.husky/pre-push` → **`npm test`（Vitest 単体）** |
+| 有効化 | `package.json` の `"prepare": "husky"`（`npm install` 後） |
+| E2E | ローカル pre-push では走らない。GitHub Actions Quality で強制 |
+| Agent の約束 | **`git push` 時に `--no-verify` / `--no-gpg-sign` でフックを飛ばさない**（ユーザーが明示したときだけ例外） |
+| 失敗時 | push は送られない。`npm test` を直してから再度 push |
+
+詳細・用語: [docs/ops/testing.md](../../../docs/ops/testing.md)
+
 秘密情報（`.dev.vars` / `.env` / API Token）はコミットしない。
 
 ## ドキュメント / Qiita

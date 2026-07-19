@@ -1,24 +1,24 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { appLinks, siteConfig } from "@/config/site";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/** 自前配信のヒーロー（Workers では next/image 最適化が使えないため圧縮済み静的ファイル） */
+/** 自前配信（Workers では next/image 最適化不可。LCP 用に decoding=sync の素の img） */
 const HERO_SRC = "/hero.webp";
 
 export function Hero() {
   return (
     <section className="relative isolate min-h-[100svh] overflow-hidden">
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element -- LCP: unoptimized next/image は decoding=async になりやすい */}
+      <img
         src={HERO_SRC}
         alt="祝福に満ちたパーティー会場の様子"
-        fill
-        priority
+        width={1280}
+        height={854}
         fetchPriority="high"
-        className="object-cover object-center"
-        sizes="100vw"
+        decoding="sync"
+        className="absolute inset-0 h-full w-full object-cover object-center"
       />
       <div
         className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/70 via-[var(--ink)]/45 to-[var(--ink)]/80"

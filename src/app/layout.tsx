@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Zen_Kaku_Gothic_New } from "next/font/google";
+import { Cormorant_Garamond } from "next/font/google";
 import { pageSeo, siteConfig, siteUrl } from "@/config/site";
 import "./globals.css";
 
+/** 欧文ディスプレイのみ Google Fonts。本文は OS の日本語ゴシック（多数の woff2 分割を避ける） */
 const display = Cormorant_Garamond({
   subsets: ["latin"],
   weight: ["600"],
   variable: "--font-display",
-  display: "swap",
-});
-
-const body = Zen_Kaku_Gothic_New({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  variable: "--font-body",
   display: "swap",
 });
 
@@ -86,9 +80,7 @@ export default function RootLayout({
           fetchPriority="high"
         />
       </head>
-      <body className={`${display.variable} ${body.variable} antialiased`}>
-        {children}
-      </body>
+      <body className={`${display.variable} antialiased`}>{children}</body>
     </html>
   );
 }
