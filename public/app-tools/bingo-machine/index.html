@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ビンゴ数字抽選機（無料・アプリ不要） | ことほぎ</title>
+    <meta name="description" content="1〜75の数字をランダムに抽選するビンゴマシン。結婚式・二次会・パーティーのビンゴ大会に。出た数字は自動で記録、大画面表示OK、インストール不要で今すぐ使えます。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/bingo-machine/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="ビンゴ数字抽選機（無料・アプリ不要） | ことほぎ">
+    <meta property="og:description" content="1〜75の数字をランダム抽選。出た数字は自動記録、大画面表示OK。結婚式・二次会・パーティーのビンゴ大会に。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/bingo-machine/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ビンゴ数字抽選機 | ことほぎ">
+    <meta name="twitter:description" content="1〜75の数字をランダム抽選。出た数字は自動記録、大画面表示OK。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <style>
+        .draw-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 190px;
+            height: 190px;
+            margin: 0.6em auto 1em;
+            border: 3px solid var(--color-gold);
+            border-radius: 50%;
+            background: var(--color-surface);
+        }
+        .draw-letter {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            letter-spacing: 0.2em;
+            color: var(--color-gold);
+            min-height: 1.4rem;
+        }
+        .draw-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.6rem;
+            font-weight: 700;
+            line-height: 1;
+            color: var(--color-text);
+        }
+        .draw-number.spin { opacity: 0.35; }
+        .count-line { font-size: 0.82rem; color: var(--color-text-light); font-weight: 600; }
+        #history {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+            gap: 6px;
+            margin-top: 1.4em;
+        }
+        .hist-cell {
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid var(--color-border);
+            background: var(--color-panel);
+            color: var(--color-text-light);
+        }
+        .hist-cell.latest { border-color: var(--color-gold); color: var(--color-gold); background: #fff; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Bingo Machine</h1>
+        <p class="app-subtitle">ビンゴ数字抽選機</p>
+        <p class="app-lead">ボタンを押すたびに、まだ出ていない数字を1つ抽選します。景品ビンゴ大会の進行に。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>「抽選する」を押すと、まだ出ていない数字が1つ出ます。</li>
+                <li>出た数字は下の履歴に記録され、リロードしても残ります。</li>
+                <li>会場の大画面につないで表示すると盛り上がります。</li>
+            </ol>
+        </div>
+
+        <div class="draw-display">
+            <div class="draw-letter" id="current-letter">READY</div>
+            <div class="draw-number" id="current-number">–</div>
+        </div>
+        <p class="count-line"><span id="drawn-count">0</span> / <span id="max-count">75</span> 個抽選済み</p>
+
+        <div class="stack">
+            <button class="btn-gold" id="draw-btn" type="button">抽選する</button>
+            <button class="btn-link" id="reset-btn" type="button">リセット（最初から）</button>
+        </div>
+
+        <div id="history" aria-label="抽選履歴"></div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const MAX = 75;
+        const KEY = "bingoMachineDrawn";
+        const state = { drawn: [] };
+
+        function load() {
+            try { state.drawn = JSON.parse(localStorage.getItem(KEY)) || []; }
+            catch { state.drawn = []; }
+            if (!Array.isArray(state.drawn)) state.drawn = [];
+        }
+        function save() { localStorage.setItem(KEY, JSON.stringify(state.drawn)); }
+
+        function remaining() {
+            const set = new Set(state.drawn);
+            return P.bingoNumbers(MAX).filter((n) => !set.has(n));
+        }
+
+        function render(latest) {
+            document.getElementById("drawn-count").textContent = String(state.drawn.length);
+            const numEl = document.getElementById("current-number");
+            const letterEl = document.getElementById("current-letter");
+            if (latest != null) {
+                numEl.textContent = String(latest);
+                letterEl.textContent = P.bingoLetter(latest);
+            } else if (state.drawn.length) {
+                const last = state.drawn[state.drawn.length - 1];
+                numEl.textContent = String(last);
+                letterEl.textContent = P.bingoLetter(last);
+            } else {
+                numEl.textContent = "–";
+                letterEl.textContent = "READY";
+            }
+            const hist = document.getElementById("history");
+            hist.innerHTML = state.drawn.map((n, i) => {
+                const cls = i === state.drawn.length - 1 ? "hist-cell latest" : "hist-cell";
+                return `<div class="${cls}">${n}</div>`;
+            }).join("");
+            document.getElementById("draw-btn").disabled = remaining().length === 0;
+        }
+
+        function draw() {
+            const pool = remaining();
+            if (pool.length === 0) return;
+            const numEl = document.getElementById("current-number");
+            numEl.classList.add("spin");
+            let ticks = 0;
+            const timer = setInterval(() => {
+                const preview = pool[Math.floor(Math.random() * pool.length)];
+                numEl.textContent = String(preview);
+                if (++ticks >= 10) {
+                    clearInterval(timer);
+                    numEl.classList.remove("spin");
+                    const { value } = P.drawOne(pool);
+                    state.drawn.push(value);
+                    save();
+                    render(value);
+                }
+            }, 55);
+        }
+
+        function reset() {
+            state.drawn = [];
+            save();
+            render(null);
+        }
+
+        document.getElementById("draw-btn").addEventListener("click", draw);
+        document.getElementById("reset-btn").addEventListener("click", () => {
+            if (state.drawn.length === 0 || confirm("抽選履歴をすべて消して最初からにしますか？")) reset();
+        });
+        document.getElementById("year").textContent = new Date().getFullYear();
+        load();
+        render(null);
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

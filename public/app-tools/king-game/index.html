@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>王様ゲーム（番号カード＋指令） | ことほぎ</title>
+    <meta name="description" content="スマホ1台でできる王様ゲーム。人数分の番号をランダムに配り、王様と指令をその場で決定。カードをタップして自分の番号を確認できます。二次会・パーティー・合コン・飲み会の盛り上げに。無料・登録不要。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/king-game/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="王様ゲーム | ことほぎ">
+    <meta property="og:description" content="スマホ1台でできる王様ゲーム。番号をランダムに配り、王様と指令をその場で決定。無料・登録不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/king-game/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="王様ゲーム | ことほぎ">
+    <meta name="twitter:description" content="スマホ1台でできる王様ゲーム。番号をランダムに配り、王様と指令をその場で決定。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <style>
+        #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; margin-top: 1.4em; }
+        .king-card {
+            aspect-ratio: 3/4; border: 1px solid var(--color-gold); background: var(--color-text);
+            color: var(--color-gold-soft); display: flex; flex-direction: column; align-items: center;
+            justify-content: center; cursor: pointer; font-weight: 700; position: relative; user-select: none;
+        }
+        .king-card .back { font-family: 'Playfair Display', serif; font-size: 1.4rem; letter-spacing: 0.05em; }
+        .king-card.revealed { background: var(--color-surface); color: var(--color-text); border-color: var(--color-gold); }
+        .king-card .seat { font-size: 0.62rem; color: var(--color-text-light); position: absolute; top: 6px; }
+        .king-card .num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; display: none; }
+        .king-card.revealed .num { display: block; }
+        .king-card.revealed .back { display: none; }
+        .king-card.is-king.revealed { background: var(--color-gold); color: #fff; }
+        .king-card .crown { display: none; font-size: 0.7rem; position: absolute; bottom: 6px; }
+        .king-card.is-king.revealed .crown { display: block; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">King Game</h1>
+        <p class="app-subtitle">王様ゲーム</p>
+        <p class="app-lead">スマホ1台で番号を配り、王様と指令をその場で決定。回して自分の番号を確認。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>人数を入れて「番号を配る」を押します。</li>
+                <li>スマホを回して、各自カードをタップし自分の番号だけ確認します。</li>
+                <li>「王様と指令を決める」で王様の番号と指令を発表します。</li>
+            </ol>
+        </div>
+
+        <div class="row">
+            <div class="field">
+                <label for="count-input">人数</label>
+                <input type="number" id="count-input" min="2" max="30" value="6" inputmode="numeric">
+            </div>
+            <div class="field" style="display:flex;align-items:flex-end;">
+                <button class="btn-gold" id="deal-btn" type="button">番号を配る</button>
+            </div>
+        </div>
+
+        <div id="cards" aria-label="番号カード"></div>
+
+        <div class="stack">
+            <button class="btn-ghost" id="king-btn" type="button">王様と指令を決める</button>
+        </div>
+
+        <div id="king-result" aria-live="polite"></div>
+
+        <details style="margin-top:1.4em; text-align:left;">
+            <summary class="muted" style="cursor:pointer;">指令リストを編集</summary>
+            <textarea id="orders-input" style="margin-top:8px;" rows="6"></textarea>
+        </details>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const ORDERS_KEY = "kingGameOrders";
+        const DEFAULT_ORDERS = [
+            "みんなで乾杯！",
+            "隣の人と握手する",
+            "一発ギャグを披露する",
+            "好きな食べ物を発表する",
+            "王様の物マネをする",
+            "最近うれしかったことを話す",
+            "全員で記念写真を撮る",
+            "新郎新婦へお祝いのひと言",
+        ];
+        let deal = null; // { numbers:[], king }
+
+        function renderCards() {
+            const box = document.getElementById("cards");
+            if (!deal) { box.innerHTML = ""; return; }
+            box.innerHTML = deal.numbers.map((num, seat) => `
+                <div class="king-card${num === deal.king ? " is-king" : ""}" data-seat="${seat}">
+                    <span class="seat">席${seat + 1}</span>
+                    <span class="back">?</span>
+                    <span class="num">${num}</span>
+                    <span class="crown">KING</span>
+                </div>
+            `).join("");
+            box.querySelectorAll(".king-card").forEach((el) => {
+                el.addEventListener("click", () => el.classList.toggle("revealed"));
+            });
+        }
+
+        function dealCards() {
+            const count = Math.max(2, Math.min(30, parseInt(document.getElementById("count-input").value, 10) || 2));
+            deal = P.kingGame(count);
+            document.getElementById("king-result").innerHTML = "";
+            renderCards();
+        }
+
+        function orders() {
+            return document.getElementById("orders-input").value.split("\n").map((s) => s.trim()).filter(Boolean);
+        }
+
+        function decideKing() {
+            if (!deal) { dealCards(); }
+            const list = orders();
+            const { value: order } = P.drawOne(list.length ? list : DEFAULT_ORDERS);
+            document.getElementById("king-result").innerHTML = `
+                <div class="result-box">
+                    <p class="tag">王様は</p>
+                    <p class="result-big">${deal.king} 番！</p>
+                    <p class="muted" style="margin-top:10px;">指令：${order}</p>
+                </div>
+            `;
+            document.querySelectorAll(".king-card.is-king").forEach((el) => el.classList.add("revealed"));
+        }
+
+        document.getElementById("deal-btn").addEventListener("click", dealCards);
+        document.getElementById("king-btn").addEventListener("click", decideKing);
+        document.getElementById("orders-input").addEventListener("input", () =>
+            localStorage.setItem(ORDERS_KEY, document.getElementById("orders-input").value));
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        const savedOrders = localStorage.getItem(ORDERS_KEY);
+        document.getElementById("orders-input").value = savedOrders != null ? savedOrders : DEFAULT_ORDERS.join("\n");
+        dealCards();
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

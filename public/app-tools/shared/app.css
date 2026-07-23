@@ -1,0 +1,394 @@
+/*
+ * ことほぎ 余興アプリ共通スタイル。
+ * 既存アプリ（ビンゴ・クイズ・アンケート）と同じ紙×金のトーンを踏襲。
+ * 各アプリは <link rel="stylesheet" href="../shared/app.css"> で読み込み、
+ * 固有の見た目だけを個別 <style> で足す。
+ */
+
+:root {
+  --color-bg: #fcfbf9;
+  --color-surface: #ffffff;
+  --color-text: #1a1a1a;
+  --color-text-light: #4a4a4a;
+  --color-gold: #b4975a;
+  --color-gold-soft: #ede4d2;
+  --color-border: #dcd7d0;
+  --color-panel: #f8f7f5;
+  --radius: 4px;
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  font-family: "Noto Serif JP", "Yu Mincho", "游明朝", serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  padding: 20px 12px 48px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+.app-nav {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.app-nav a {
+  color: var(--color-text-light);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+
+.app-nav a:hover {
+  color: var(--color-gold);
+}
+
+.app-nav .brand {
+  font-family: "Playfair Display", serif;
+  letter-spacing: 0.12em;
+  color: var(--color-gold);
+  text-transform: uppercase;
+}
+
+.card {
+  max-width: 520px;
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+  padding: 3em 1.5em 2em;
+  text-align: center;
+  position: relative;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid #ebe7e0;
+  pointer-events: none;
+}
+
+.card > * {
+  position: relative;
+}
+
+.ornament {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ornament::before,
+.ornament::after {
+  content: "";
+  width: 30px;
+  height: 1.5px;
+  background-color: var(--color-gold);
+  margin: 0 15px;
+}
+
+.ornament svg {
+  width: 13px;
+  height: 13px;
+  fill: var(--color-gold);
+}
+
+h1.app-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(1.9rem, 7vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.app-subtitle {
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--color-gold);
+  margin: 0 0 4px;
+}
+
+.app-lead {
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin: 0.5em auto 1.8em;
+  max-width: 34em;
+}
+
+.field {
+  text-align: left;
+  margin-bottom: 1em;
+}
+
+.field > label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-light);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.85em 1em;
+  border: 1px solid var(--color-border);
+  background: #faf9f7;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 6em;
+  line-height: 1.7;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-gold);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.row > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-main {
+  background-color: var(--color-text);
+  color: #fff;
+  border: none;
+  padding: 1.1em 1.2em;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s ease;
+}
+
+.btn-main:hover {
+  opacity: 0.88;
+}
+
+.btn-main:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.85em 1.1em;
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btn-ghost:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #888;
+  text-decoration: underline;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px;
+}
+
+.btn-gold {
+  background: var(--color-gold);
+  color: #fff;
+  border: none;
+  padding: 1.1em 1.2em;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1.4em;
+}
+
+.howto-note {
+  width: 100%;
+  margin: 0 0 1.4em;
+  padding: 0.9em 1em;
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  text-align: left;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  color: var(--color-text-light);
+  font-weight: 600;
+}
+
+.howto-note strong {
+  display: block;
+  color: var(--color-text);
+  margin-bottom: 0.35em;
+  font-size: 0.9rem;
+}
+
+.howto-note ol,
+.howto-note ul {
+  margin: 0.2em 0 0;
+  padding-left: 1.2em;
+}
+
+.result-box {
+  margin-top: 1.6em;
+  padding: 1.4em 1.2em;
+  border: 2px solid var(--color-gold);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.result-big {
+  font-family: "Playfair Display", serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  margin: 0;
+  letter-spacing: 0.04em;
+  word-break: break-word;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-gold);
+  border: 1px solid var(--color-gold);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.muted {
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+}
+
+.app-footer {
+  margin-top: 26px;
+  font-size: 0.72rem;
+  color: #9a948b;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.app-footer a {
+  color: var(--color-gold);
+  text-decoration: none;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.chip {
+  border: 1px solid var(--color-border);
+  background: var(--color-panel);
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* モーダル */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(252, 251, 249, 0.92);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal.show {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--color-surface);
+  padding: 2.2em 1.6em;
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid var(--color-border);
+  position: relative;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 2.4em 1.1em 1.6em;
+  }
+}

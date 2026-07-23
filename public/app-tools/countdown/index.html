@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カウントダウンタイマー（大画面・全画面） | ことほぎ</title>
+    <meta name="description" content="残り時間を大きく表示するカウントダウンタイマー。入場・開演・余興の持ち時間・スピーチの時間管理に。全画面表示、終了時のアラート付き、分秒をワンタップ設定。無料・登録不要・スマホ／PC対応。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/countdown/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="カウントダウンタイマー | ことほぎ">
+    <meta property="og:description" content="残り時間を大きく表示するカウントダウンタイマー。入場・開演・スピーチの時間管理に。全画面OK。無料・登録不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/countdown/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="カウントダウンタイマー | ことほぎ">
+    <meta name="twitter:description" content="残り時間を大きく表示するカウントダウンタイマー。入場・開演・スピーチの時間管理に。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <style>
+        #timer-display {
+            font-family: 'Playfair Display', serif; font-size: clamp(3.8rem, 20vw, 7rem); font-weight: 700;
+            line-height: 1; margin: 0.3em 0; letter-spacing: 0.02em; font-variant-numeric: tabular-nums;
+        }
+        #timer-display.warn { color: #b4523a; }
+        #timer-display.done { color: var(--color-gold); animation: blink 0.7s steps(2) infinite; }
+        @keyframes blink { 50% { opacity: 0.25; } }
+        .presets { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 1em; }
+        .presets button {
+            border: 1px solid var(--color-border); background: var(--color-panel); padding: 8px 14px;
+            font-family: inherit; font-weight: 600; cursor: pointer; font-size: 0.85rem;
+        }
+        .presets button:hover { border-color: var(--color-gold); color: var(--color-gold); }
+        body.fs { padding: 0; }
+        body.fs .app-nav, body.fs .app-footer, body.fs .howto-note,
+        body.fs .presets, body.fs .time-inputs, body.fs #fullscreen-btn { display: none; }
+        body.fs .card { max-width: none; min-height: 100vh; border: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; }
+        body.fs .card::before { display: none; }
+        body.fs #timer-display { font-size: clamp(5rem, 28vw, 16rem); }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Countdown</h1>
+        <p class="app-subtitle">カウントダウンタイマー</p>
+        <p class="app-lead">残り時間を大きく表示。入場・開演・スピーチの持ち時間管理に。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>プリセットか分・秒でカウントダウン時間を決めます。</li>
+                <li>「スタート」で開始、「全画面」で会場の大画面に映せます。</li>
+                <li>残り10秒で色が変わり、0秒で点滅＋音でお知らせします。</li>
+            </ol>
+        </div>
+
+        <div class="presets" id="presets">
+            <button type="button" data-sec="60">1分</button>
+            <button type="button" data-sec="180">3分</button>
+            <button type="button" data-sec="300">5分</button>
+            <button type="button" data-sec="600">10分</button>
+        </div>
+
+        <div id="timer-display">05:00</div>
+
+        <div class="row time-inputs">
+            <div class="field">
+                <label for="minutes-input">分</label>
+                <input type="number" id="minutes-input" min="0" max="180" value="5" inputmode="numeric">
+            </div>
+            <div class="field">
+                <label for="seconds-input">秒</label>
+                <input type="number" id="seconds-input" min="0" max="59" value="0" inputmode="numeric">
+            </div>
+        </div>
+
+        <div class="stack">
+            <button class="btn-gold" id="start-btn" type="button">スタート</button>
+            <div class="row">
+                <button class="btn-ghost" id="reset-btn" type="button">リセット</button>
+                <button class="btn-ghost" id="fullscreen-btn" type="button">全画面</button>
+            </div>
+        </div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const display = document.getElementById("timer-display");
+        const minIn = document.getElementById("minutes-input");
+        const secIn = document.getElementById("seconds-input");
+        let remaining = 300;
+        let timer = null;
+        let running = false;
+
+        function fmt(total) {
+            const m = Math.floor(total / 60);
+            const s = total % 60;
+            return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        }
+
+        function paint() {
+            display.textContent = fmt(remaining);
+            display.classList.toggle("warn", remaining <= 10 && remaining > 0);
+            display.classList.toggle("done", remaining === 0);
+        }
+
+        function setFromInputs() {
+            const m = Math.max(0, parseInt(minIn.value, 10) || 0);
+            const s = Math.max(0, Math.min(59, parseInt(secIn.value, 10) || 0));
+            remaining = m * 60 + s;
+            paint();
+        }
+
+        function beep() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                const ac = new Ctx();
+                const osc = ac.createOscillator();
+                const gain = ac.createGain();
+                osc.connect(gain); gain.connect(ac.destination);
+                osc.type = "sine"; osc.frequency.value = 880;
+                gain.gain.setValueAtTime(0.25, ac.currentTime);
+                osc.start();
+                gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 1.1);
+                osc.stop(ac.currentTime + 1.1);
+            } catch { /* 無音でも動作継続 */ }
+        }
+
+        function tick() {
+            if (remaining > 0) {
+                remaining--;
+                paint();
+                if (remaining === 0) { stop(); beep(); }
+            }
+        }
+
+        function start() {
+            if (running) { stop(); return; }
+            if (remaining === 0) setFromInputs();
+            if (remaining === 0) return;
+            running = true;
+            document.getElementById("start-btn").textContent = "一時停止";
+            timer = setInterval(tick, 1000);
+        }
+
+        function stop() {
+            running = false;
+            document.getElementById("start-btn").textContent = "スタート";
+            if (timer) { clearInterval(timer); timer = null; }
+        }
+
+        function reset() {
+            stop();
+            setFromInputs();
+        }
+
+        document.getElementById("presets").addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-sec]");
+            if (!btn) return;
+            const sec = parseInt(btn.dataset.sec, 10);
+            minIn.value = Math.floor(sec / 60);
+            secIn.value = sec % 60;
+            reset();
+        });
+        minIn.addEventListener("input", () => { if (!running) setFromInputs(); });
+        secIn.addEventListener("input", () => { if (!running) setFromInputs(); });
+        document.getElementById("start-btn").addEventListener("click", start);
+        document.getElementById("reset-btn").addEventListener("click", reset);
+        document.getElementById("fullscreen-btn").addEventListener("click", () => {
+            document.body.classList.toggle("fs");
+            if (document.body.classList.contains("fs") && document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
+        document.getElementById("year").textContent = new Date().getFullYear();
+        setFromInputs();
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

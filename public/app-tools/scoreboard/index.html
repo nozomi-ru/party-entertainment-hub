@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>得点板・スコアボード（チーム対抗） | ことほぎ</title>
+    <meta name="description" content="チーム対抗ゲームの得点をその場で加算・減算できるスコアボード。クイズ大会・ビンゴ・ゲーム大会の点数管理に。チーム名の編集・並び順の自動表示・自動保存つき。無料・登録不要・スマホ／大画面対応。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/scoreboard/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="得点板・スコアボード | ことほぎ">
+    <meta property="og:description" content="チーム対抗ゲームの得点をその場で加減算できるスコアボード。クイズ・ゲーム大会の点数管理に。無料・登録不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/scoreboard/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="得点板・スコアボード | ことほぎ">
+    <meta name="twitter:description" content="チーム対抗ゲームの得点をその場で加減算できるスコアボード。クイズ・ゲーム大会の点数管理に。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <style>
+        #scoreboard { display: flex; flex-direction: column; gap: 10px; margin-top: 1.2em; }
+        .team-row {
+            display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 10px;
+            border: 1px solid var(--color-border); background: var(--color-panel); padding: 10px 12px;
+        }
+        .team-row.leader { border-color: var(--color-gold); background: #fff; }
+        .rank { font-family: 'Playfair Display', serif; color: var(--color-gold); font-weight: 700; text-align: center; }
+        .team-name { border: none; background: transparent; font-weight: 700; font-size: 1rem; padding: 4px; }
+        .team-name:focus { background: #fff; border-bottom: 1px solid var(--color-gold); }
+        .score-ctrl { display: flex; align-items: center; gap: 6px; }
+        .score-val { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; min-width: 2.2ch; text-align: center; }
+        .score-btn {
+            width: 34px; height: 34px; border: 1px solid var(--color-border); background: #fff;
+            font-size: 1.2rem; font-weight: 700; cursor: pointer; line-height: 1; font-family: inherit;
+        }
+        .score-btn.plus { border-color: var(--color-gold); color: var(--color-gold); }
+        .del-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; }
+        .step-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 1em; font-size: 0.85rem; color: var(--color-text-light); }
+        .step-row input { width: 70px; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Scoreboard</h1>
+        <p class="app-subtitle">得点板・スコアボード</p>
+        <p class="app-lead">チーム対抗ゲームの点数をその場で加減算。自動で保存され、順位も表示します。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>チーム名をタップして書き換えられます。</li>
+                <li>＋／−で得点を動かします（1回の増減点は下で変更可）。</li>
+                <li>点数は自動保存。トップのチームは金枠で強調されます。</li>
+            </ol>
+        </div>
+
+        <div id="scoreboard" aria-live="polite"></div>
+
+        <div class="step-row">
+            <label for="step-input">1回の増減点</label>
+            <input type="number" id="step-input" min="1" value="1" inputmode="numeric">
+        </div>
+
+        <div class="stack">
+            <button class="btn-gold" id="add-team-btn" type="button">チームを追加</button>
+            <button class="btn-link" id="reset-btn" type="button">全チームを0点に戻す</button>
+        </div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const KEY = "scoreboardTeams";
+        const stepIn = document.getElementById("step-input");
+        let teams = [];
+
+        function load() {
+            try { teams = JSON.parse(localStorage.getItem(KEY)); } catch { teams = null; }
+            if (!Array.isArray(teams) || teams.length === 0) {
+                teams = [
+                    { name: "赤チーム", score: 0 },
+                    { name: "青チーム", score: 0 },
+                ];
+            }
+        }
+        function save() { localStorage.setItem(KEY, JSON.stringify(teams)); }
+
+        function step() { return Math.max(1, parseInt(stepIn.value, 10) || 1); }
+
+        function render() {
+            const max = Math.max(...teams.map((t) => t.score), 0);
+            const box = document.getElementById("scoreboard");
+            box.innerHTML = "";
+            teams.forEach((team, i) => {
+                const row = document.createElement("div");
+                const isLeader = team.score === max && max > 0;
+                row.className = "team-row" + (isLeader ? " leader" : "");
+                row.innerHTML = `
+                    <span class="rank">${isLeader ? "★" : i + 1}</span>
+                    <input class="team-name" value="${team.name.replace(/"/g, "&quot;")}" data-i="${i}" maxlength="16" aria-label="チーム名">
+                    <div class="score-ctrl">
+                        <button class="score-btn minus" data-i="${i}" data-d="-1" aria-label="減点">−</button>
+                        <span class="score-val">${team.score}</span>
+                        <button class="score-btn plus" data-i="${i}" data-d="1" aria-label="加点">＋</button>
+                        <button class="del-btn" data-del="${i}" aria-label="削除">✕</button>
+                    </div>
+                `;
+                box.appendChild(row);
+            });
+
+            box.querySelectorAll(".score-btn").forEach((btn) =>
+                btn.addEventListener("click", () => {
+                    const i = +btn.dataset.i;
+                    teams[i].score += (+btn.dataset.d) * step();
+                    save(); render();
+                }));
+            box.querySelectorAll(".team-name").forEach((inp) =>
+                inp.addEventListener("change", () => { teams[+inp.dataset.i].name = inp.value.trim() || "チーム"; save(); }));
+            box.querySelectorAll(".del-btn").forEach((btn) =>
+                btn.addEventListener("click", () => {
+                    if (teams.length <= 1) return;
+                    teams.splice(+btn.dataset.del, 1); save(); render();
+                }));
+        }
+
+        document.getElementById("add-team-btn").addEventListener("click", () => {
+            teams.push({ name: "チーム" + (teams.length + 1), score: 0 });
+            save(); render();
+        });
+        document.getElementById("reset-btn").addEventListener("click", () => {
+            if (confirm("全チームを0点に戻しますか？")) { teams.forEach((t) => (t.score = 0)); save(); render(); }
+        });
+        document.getElementById("year").textContent = new Date().getFullYear();
+        load(); render();
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

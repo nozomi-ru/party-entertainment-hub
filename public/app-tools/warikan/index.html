@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>割り勘計算機（端数もキレイに） | ことほぎ</title>
+    <meta name="description" content="合計金額と人数を入れるだけで、一人当たりの金額を自動計算。100円・500円単位で切り上げて端数もキレイに調整、幹事の集金がラクになります。二次会・飲み会・パーティーの割り勘に。無料・登録不要。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/warikan/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="割り勘計算機 | ことほぎ">
+    <meta property="og:description" content="合計と人数を入れるだけで一人当たりを自動計算。100円・500円単位で切り上げて端数もキレイに。無料・登録不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/warikan/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="割り勘計算機 | ことほぎ">
+    <meta name="twitter:description" content="合計と人数を入れるだけで一人当たりを自動計算。端数もキレイに調整。無料・登録不要。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <style>
+        .yen { font-family: 'Playfair Display', serif; }
+        #warikan-result { margin-top: 1.4em; }
+        .split-detail { display: flex; flex-direction: column; gap: 8px; margin-top: 1em; text-align: left; }
+        .split-row { display: flex; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--color-border); background: var(--color-panel); font-weight: 700; }
+        .split-row .amount { color: var(--color-gold); }
+        .note-small { font-size: 0.78rem; color: var(--color-text-light); margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Warikan</h1>
+        <p class="app-subtitle">割り勘計算機</p>
+        <p class="app-lead">合計金額と人数から、一人当たりの金額と端数の負担をすぐ計算します。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>合計金額と人数を入力します。</li>
+                <li>集めやすい「切り上げ単位」（100円など）を選びます。</li>
+                <li>多く払う人／少なく払う人の内訳と、余り（幹事プール）が出ます。</li>
+            </ol>
+        </div>
+
+        <div class="field">
+            <label for="total-input">合計金額（円）</label>
+            <input type="number" id="total-input" min="0" step="100" value="30000" inputmode="numeric">
+        </div>
+        <div class="row">
+            <div class="field">
+                <label for="people-input">人数</label>
+                <input type="number" id="people-input" min="1" value="7" inputmode="numeric">
+            </div>
+            <div class="field">
+                <label for="unit-select">切り上げ単位</label>
+                <select id="unit-select">
+                    <option value="100">100円</option>
+                    <option value="500">500円</option>
+                    <option value="1000">1000円</option>
+                    <option value="1">1円（きっちり）</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-gold" id="calc-btn" type="button">計算する</button>
+
+        <div id="warikan-result" aria-live="polite"></div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const yen = (n) => "¥" + n.toLocaleString("ja-JP");
+
+        function calc() {
+            const total = parseInt(document.getElementById("total-input").value, 10) || 0;
+            const people = parseInt(document.getElementById("people-input").value, 10) || 1;
+            const unit = parseInt(document.getElementById("unit-select").value, 10) || 1;
+            const r = P.splitBill(total, people, unit);
+            const box = document.getElementById("warikan-result");
+
+            let rows = "";
+            if (r.cheaperCount > 0 && r.base !== r.baseUp) {
+                rows += `<div class="split-row"><span>${r.payingUp}名</span><span class="amount">${yen(r.baseUp)} / 人</span></div>`;
+                rows += `<div class="split-row"><span>${r.cheaperCount}名</span><span class="amount">${yen(r.base)} / 人</span></div>`;
+            } else {
+                rows += `<div class="split-row"><span>${r.people}名 全員</span><span class="amount">${yen(r.baseUp)} / 人</span></div>`;
+            }
+
+            box.innerHTML = `
+                <div class="result-box">
+                    <p class="tag">一人当たり（多い人）</p>
+                    <p class="result-big yen">${yen(r.baseUp)}</p>
+                </div>
+                <div class="split-detail">
+                    ${rows}
+                    <div class="split-row"><span>集金合計</span><span class="amount">${yen(r.totalCollected)}</span></div>
+                    <div class="split-row"><span>お店の合計</span><span>${yen(r.total)}</span></div>
+                    <div class="split-row"><span>余り（プール）</span><span class="amount">${yen(r.change)}</span></div>
+                </div>
+                <p class="note-small">${r.change > 0
+                    ? "余りは幹事プールやチップ、二次会の足しにできます。"
+                    : "ぴったり割り切れました。"}</p>
+            `;
+        }
+
+        ["total-input", "people-input", "unit-select"].forEach((id) =>
+            document.getElementById(id).addEventListener("input", calc));
+        document.getElementById("calc-btn").addEventListener("click", calc);
+        document.getElementById("year").textContent = new Date().getFullYear();
+        calc();
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

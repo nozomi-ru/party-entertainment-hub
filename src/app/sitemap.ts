@@ -5,6 +5,24 @@ import { siteUrl } from "@/config/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
 
+  /** 静的余興アプリのパス（priority 0.8）と一覧ページ（0.9） */
+  const toolPaths = [
+    "/app-tools/index.html",
+    "/app-tools/wedding-bingo/index.html",
+    "/app-tools/wedding-quiz/index.html",
+    "/app-tools/wedding-poll/index.html",
+    "/app-tools/bingo-machine/index.html",
+    "/app-tools/roulette/index.html",
+    "/app-tools/amidakuji/index.html",
+    "/app-tools/group-maker/index.html",
+    "/app-tools/order-picker/index.html",
+    "/app-tools/warikan/index.html",
+    "/app-tools/king-game/index.html",
+    "/app-tools/talk-theme/index.html",
+    "/app-tools/countdown/index.html",
+    "/app-tools/scoreboard/index.html",
+  ];
+
   return [
     {
       url: `${siteUrl}/`,
@@ -12,23 +30,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
     },
-    {
-      url: `${siteUrl}/app-tools/wedding-bingo/index.html`,
+    ...toolPaths.map((path) => ({
+      url: `${siteUrl}${path}`,
       lastModified,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${siteUrl}/app-tools/wedding-quiz/index.html`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${siteUrl}/app-tools/wedding-poll/index.html`,
-      lastModified,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
+      changeFrequency: "monthly" as const,
+      priority: path === "/app-tools/index.html" ? 0.9 : 0.8,
+    })),
   ];
 }

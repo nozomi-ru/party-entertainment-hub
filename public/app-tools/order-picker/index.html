@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>順番決めルーレット・くじ引き（並び替え） | ことほぎ</title>
+    <meta name="description" content="名前を入れてボタンを押すだけで、発表・スピーチ・出し物の順番をランダムに決められます。くじ引き代わりに公平な順番決めを。結婚式・二次会・パーティー・会議に。無料・登録不要・スマホ対応。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/order-picker/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="順番決め・くじ引き | ことほぎ">
+    <meta property="og:description" content="名前を入れて押すだけで発表・スピーチ・出し物の順番をランダムに決定。公平な順番決めに。無料・登録不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/order-picker/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="順番決め・くじ引き | ことほぎ">
+    <meta name="twitter:description" content="名前を入れて押すだけで順番をランダム決定。公平な順番決めに。無料・登録不要。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <style>
+        #order-list { margin-top: 1.4em; text-align: left; display: flex; flex-direction: column; gap: 8px; }
+        .order-item {
+            display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+            border: 1px solid var(--color-border); background: var(--color-panel);
+            opacity: 0; transform: translateY(8px); animation: rise 0.5s ease forwards;
+        }
+        @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+        .order-num {
+            font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--color-gold);
+            font-weight: 700; min-width: 40px; text-align: center;
+        }
+        .order-name { font-weight: 700; font-size: 1.05rem; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Order Picker</h1>
+        <p class="app-subtitle">順番決め・くじ引き</p>
+        <p class="app-lead">スピーチや出し物の順番を、その場で公平にシャッフルして決めます。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>順番を決めたい人・出し物を1行に1つ入力します。</li>
+                <li>「順番を決める」を押すと、ランダムに並び替えて上から発表します。</li>
+                <li>やり直したいときはもう一度押せば再抽選できます。</li>
+            </ol>
+        </div>
+
+        <div class="field">
+            <label for="names-input">候補（1行に1つ）</label>
+            <textarea id="names-input" placeholder="新郎友人代表&#10;新婦友人代表&#10;同僚チーム&#10;サプライズ動画"></textarea>
+        </div>
+
+        <button class="btn-gold" id="shuffle-btn" type="button">順番を決める</button>
+
+        <div id="order-list" aria-live="polite"></div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const KEY = "orderPickerNames";
+        const ta = document.getElementById("names-input");
+
+        function names() { return ta.value.split("\n").map((s) => s.trim()).filter(Boolean); }
+
+        function run() {
+            const list = names();
+            if (list.length < 2) { alert("候補を2つ以上入力してください。"); return; }
+            localStorage.setItem(KEY, ta.value);
+            const ordered = P.shuffle(list);
+            const box = document.getElementById("order-list");
+            box.innerHTML = "";
+            ordered.forEach((name, i) => {
+                const el = document.createElement("div");
+                el.className = "order-item";
+                el.style.animationDelay = (i * 0.12) + "s";
+                el.innerHTML = `<span class="order-num">${i + 1}</span><span class="order-name">${name}</span>`;
+                box.appendChild(el);
+            });
+        }
+
+        document.getElementById("shuffle-btn").addEventListener("click", run);
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        const saved = localStorage.getItem(KEY);
+        ta.value = saved != null ? saved : "新郎友人代表\n新婦友人代表\n同僚チーム\nサプライズ動画";
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

@@ -42,6 +42,9 @@
 | クイズ | `public/app-tools/wedding-quiz/` | design §7 | SC-QUIZ-01 |
 | アンケート UI | `public/app-tools/wedding-poll/` | design §8 | SC-POLL-* |
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
+| 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html` | design §8b | UT-PARTY-* / SC-TOOLS-* |
+| 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
+| 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.1 | （目視） |
 | Cloudflare / KV | `wrangler.jsonc` | design §9 | 手動 L3・preview |
 | URL 圧縮共有 | `public/app-tools/shared/pack.js` | design §5.2 | （将来 UT-PACK） |
 
@@ -84,6 +87,10 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | BINGO | 人間ビンゴ | 静的 HTML | 3×3 交流ビンゴ | `public/app-tools/wedding-bingo/` |
 | QUIZ | 新郎新婦クイズ | 静的 HTML | 4択クイズ | `public/app-tools/wedding-quiz/` |
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
+| HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ | `public/app-tools/index.html` |
+| TOOL-* | 幹事・進行ツール群（10種） | 静的 HTML | 抽選・くじ・進行などの単機能アプリ | `public/app-tools/{slug}/` |
+
+**TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・あみだくじ・グループ分け・順番決め・割り勘計算機・王様ゲーム・トークテーマガチャ・カウントダウンタイマー・得点板。
 
 対象外（将来候補。詳細は [roadmap.md](./roadmap.md)）:
 
@@ -159,13 +166,42 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 - `mode=host` だけでは自動入室しない（ボタン操作が必要）。設計書 §8.3 参照
 - 同期は約 **2秒** 間隔のポーリング（N-02）。WebSocket は使わない
 
+### 4.6 幹事・進行ツール群（TOOL-\*）
+
+集客（検索流入）と当日運用の両面を狙った、単機能の静的アプリ群。**すべて DB 不要・端末内で完結**し、ロジックは共通モジュール `public/app-tools/shared/party-logic.js`（単体テスト対象）に集約する。
+
+| ID | 名称 | パス（slug） | 概要 |
+|----|------|--------------|------|
+| T-BINGOM | ビンゴ数字抽選機 | `bingo-machine` | 1〜75 をランダム抽選し出目を記録 |
+| T-ROUL | 抽選ルーレット | `roulette` | 名前・景品から当選を1つ選ぶ（回転演出） |
+| T-AMIDA | あみだくじ | `amidakuji` | 参加者と結果からあみだを生成し結果をたどる |
+| T-GROUP | グループ分け | `group-maker` | 人数／グループ数で均等ランダム配分 |
+| T-ORDER | 順番決め | `order-picker` | 候補をシャッフルして順番を決定 |
+| T-WARI | 割り勘計算機 | `warikan` | 合計・人数・切り上げ単位から一人当たり算出 |
+| T-KING | 王様ゲーム | `king-game` | 番号配布・王様・指令を決定 |
+| T-TALK | トークテーマガチャ | `talk-theme` | 会話ネタ／質問をランダム表示 |
+| T-CD | カウントダウンタイマー | `countdown` | 残り時間の大画面表示・全画面・アラート |
+| T-SCORE | 得点板 | `scoreboard` | チーム得点の加減算・順位・自動保存 |
+
+| ID | 要件 | 優先度 |
+|----|------|--------|
+| T-01 | 各ツールは静的 HTML でインストール不要・スマホで完結する | 必須 |
+| T-02 | 乱数を使う処理は共通ロジック `party-logic.js` に集約し、単体テスト可能にする | 必須 |
+| T-03 | 各ツールは幹事・司会向けの「使い方の要点」を画面に表示する | 必須 |
+| T-04 | 各ツールは固有の title・description・canonical・OGP を持ち、sitemap に載せる | 必須 |
+| T-05 | 一覧ページ（`app-tools/index.html`）と LP から各ツールへ導線を持つ | 必須 |
+| T-06 | 入力内容は必要に応じて localStorage に保存し、再訪時に復元する | 推奨 |
+
+**補足:** 個人情報や共有同期は扱わない（端末内のみ）。集客の観点から、検索意図の広いツール（ルーレット・あみだくじ・割り勘・グループ分けなど）を優先的に用意している。
+
 ### 4.5 共通
 
 | ID | 要件 | 優先度 |
 |----|------|--------|
 | C-01 | スマートフォン中心の操作に耐える UI とする | 必須 |
-| C-02 | ビンゴ／クイズは DB なしで URL 共有により完結する | 必須 |
+| C-02 | ビンゴ／クイズ・TOOL-\* は DB なしで完結する（URL 共有 or 端末内） | 必須 |
 | C-03 | アンケートのみサーバー側同期（本番は Cloudflare KV）を用いる | 必須 |
+| C-04 | 余興アプリの共通デザインは `public/app-tools/shared/app.css` に集約する | 推奨 |
 
 ---
 

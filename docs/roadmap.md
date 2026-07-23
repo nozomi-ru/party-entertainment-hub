@@ -2,7 +2,7 @@
 
 | 項目 | 内容 |
 |------|------|
-| 最終更新 | 2026-07-19 |
+| 最終更新 | 2026-07-21 |
 | この文書の役割 | **これから着手する施策**の優先度と方針メモ（実装前の地図） |
 | 現行の仕様の正 | [requirements.md](./requirements.md) · [design.md](./design.md) |
 
@@ -36,6 +36,7 @@
 | ビンゴ／クイズ結果 → KV | 新規 API、`public/app-tools/wedding-*` | requirements · design · test-spec · scenario-spec |
 | 管理者一覧 UI | `src/` または `public/app-tools/`（方針決定後） | requirements · design |
 | 複数 AI で指示を揉む | Cursor（Task / 複数エージェント）、必要なら skill・ルール | このロードマップ §3 · 必要なら `.cursor/` |
+| アクセス分析 | `CloudflareAnalytics`, `public/cf-web-analytics.js` | ops/analytics |
 
 ---
 
@@ -46,7 +47,9 @@
 | 1 | 自動テストを CI/CD に組み込む | 壊れたまま本番へ出さない | **基盤は完了**（残りは強化） |
 | 2 | ビンゴ／クイズ結果を KV 経由で管理者へ送る | 幹事・管理者が結果を後から確認できる | 未着手 |
 | 3 | 指示文を AI エージェント数人でディスカッションしてから着手 | 曖昧な指示を先に揉み、手戻りを減らす | 未着手（進め方） |
-| 4 | SEO・検索登録・OGP・CWV | 発見性と共有体験を上げる | **実装着手**（Search Console は手作業） |
+| 4 | SEO・検索登録・OGP・CWV | 発見性と共有体験を上げる | **実装済み**（Search Console は手作業） |
+| 5 | アクセス分析（CF Web Analytics） | PV・人気 URL・参照元を把握する | **コード用意済み**（トークン設定は手作業） |
+| 6 | 幹事・進行ツール群（TOOL-\*）で集客の間口を広げる | 検索意図の広い単機能アプリで流入を増やす | **実装済み**（10種＋一覧。2026-07-23） |
 
 ---
 
@@ -73,6 +76,8 @@
 | 中 | プレビュー専用 KV（`preview_id` 分離）+ 任意スモーク Secret | `wrangler.jsonc`, [ops/preview.md](./ops/preview.md) |
 | 中 | ビンゴ判定・UrlPack の単体化（UT-BINGO / UT-PACK） | `wedding-bingo/`, `shared/pack.js` |
 | 低 | 追加シナリオ（ゲスト待機、票クリアなど） | `e2e/`, scenario-spec |
+
+**進捗メモ（2026-07-23）:** 幹事・進行ツール群（TOOL-\*）の追加に合わせ、乱数系ロジックを `public/app-tools/shared/party-logic.js` に集約して **UT-PARTY-\***（`src/lib/party-logic.test.ts`）を新設。純粋関数を種固定で単体テストする形は、今後 UT-BINGO / UT-PACK を足すときの手本になる。E2E は代表 5 ツールを **SC-TOOLS-\***（`e2e/features/tools.feature`）で自動化済み。
 
 詳細なケース予約は [test-spec.md §12](./test-spec.md)（あれば）または test-spec 末尾の拡張予定を参照。
 
@@ -235,6 +240,8 @@
 | [scenario-spec.md](./scenario-spec.md) | シナリオテスト仕様 |
 | [ops/preview.md](./ops/preview.md) | 非本番での確認手順 |
 | [ops/testing.md](./ops/testing.md) | テストの実行・仕組み・関係ファイル |
+| [ops/seo.md](./ops/seo.md) | SEO・Search Console・OGP |
+| [ops/analytics.md](./ops/analytics.md) | Cloudflare Web Analytics |
 | [ops/seo.md](./ops/seo.md) | Search Console・sitemap・OGP・Lighthouse |
 | [ideas.md](./ideas.md) | 未着手のアプリ／機能アイディアメモ |
 | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) | 外部向け下書き（仕様の正ではない） |

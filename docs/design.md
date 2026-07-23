@@ -43,6 +43,9 @@
 | ビンゴ | `public/app-tools/wedding-bingo/index.html` | §6 |
 | クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
 | アンケート UI | `public/app-tools/wedding-poll/index.html` | §8 |
+| 幹事・進行ツール群 | `public/app-tools/{slug}/`, `public/app-tools/index.html` | §8b |
+| 余興共通ロジック | `public/app-tools/shared/party-logic.js` | §5.3 |
+| 余興共通スタイル | `public/app-tools/shared/app.css` | §5.4 |
 | URL 圧縮 | `public/app-tools/shared/pack.js` | §5.2 |
 | Workers / KV 設定 | `wrangler.jsonc` | §9.1 |
 | OpenNext | `open-next.config.ts`, `next.config.ts` | §9 |
@@ -130,10 +133,23 @@ party-entertainment-hub/
 ├── public/
 │   ├── _headers
 │   └── app-tools/
+│       ├── index.html         # 余興アプリ一覧（ハブ）
 │       ├── shared/pack.js     # URL 圧縮共有
-│       ├── wedding-bingo/
-│       ├── wedding-quiz/
-│       └── wedding-poll/
+│       ├── shared/party-logic.js  # 余興共通ロジック（単体テスト対象）
+│       ├── shared/app.css     # 余興共通スタイル
+│       ├── wedding-bingo/     # 人間ビンゴ
+│       ├── wedding-quiz/      # 新郎新婦クイズ
+│       ├── wedding-poll/      # リアルタイムアンケート
+│       ├── bingo-machine/     # ビンゴ数字抽選機
+│       ├── roulette/          # 抽選ルーレット
+│       ├── amidakuji/         # あみだくじ
+│       ├── group-maker/       # グループ分け
+│       ├── order-picker/      # 順番決め
+│       ├── warikan/           # 割り勘計算機
+│       ├── king-game/         # 王様ゲーム
+│       ├── talk-theme/        # トークテーマガチャ
+│       ├── countdown/         # カウントダウンタイマー
+│       └── scoreboard/        # 得点板
 ├── wrangler.jsonc             # Workers / KV バインディング
 ├── open-next.config.ts
 ├── next.config.ts
@@ -213,6 +229,19 @@ Next / OpenNext の静的アセットとして `public/` 以下を配信。パ�
 **クイズ payload:** `{ v: 1, q: [ [question, choices[], answerIndex], ... ] }`
 
 読み込み優先度（クイズ）: URL `?c=` → localStorage → デフォルト問題
+
+### 5.3 共通ロジック（party-logic.js）
+
+TOOL-\*（§8b）で使う乱数系の純粋関数を `public/app-tools/shared/party-logic.js` に集約する。DOM に触れず、乱数の種を外から渡せるため**単体テスト可能**（UT-PARTY-\*）。
+
+- 形式: UMD 風。ブラウザでは `window.PartyLogic`、Node（Vitest）では `import` できる
+- 型: 同ディレクトリの `party-logic.d.ts`
+- 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`
+- テスト: `src/lib/party-logic.test.ts`（[test-spec.md §6](./test-spec.md)）
+
+### 5.4 共通スタイル（app.css）
+
+余興アプリの見た目（紙×金トーン・カード・ボタン・モーダル・使い方ノート）は `public/app-tools/shared/app.css` に集約し、各アプリは固有分のみ個別 `<style>` で足す。favicon も `shared/favicon.svg` を共有。
 
 ---
 
@@ -349,6 +378,35 @@ TTL: 24 時間（KV `expirationTtl`）
 | POST | `clearVotes` | 現在質問の票をゼロ |
 
 **整合性:** 読み取り→加算→書き込み。高並行時に稀に取りこぼしうるが、会場規模では許容（要件 N-03）。
+
+---
+
+## 8b. 幹事・進行ツール群（TOOL-\*）設計
+
+**要件:** T-01〜T-06 / **一覧:** `public/app-tools/index.html`
+
+集客と当日運用を狙った単機能の静的アプリ群。共通ロジック（§5.3）と共通スタイル（§5.4）の上に構築し、**サーバー同期・DB は使わない**（端末内で完結）。
+
+| slug | 主な要素 ID（E2E 目印） | 使うロジック |
+|------|--------------------------|--------------|
+| `bingo-machine` | `#draw-btn` `#current-number` `#drawn-count` | `bingoNumbers` `bingoLetter` `drawOne` |
+| `roulette` | `#names-input` `#spin-btn` `#winner` | Canvas 描画（乱数は当選 index） |
+| `amidakuji` | `#names-input` `#reveal-btn` `#result-list` | `generateLadder` `resolveLadder` |
+| `group-maker` | `#names-input` `#split-btn` `#groups` | `splitIntoGroups` `splitBySize` |
+| `order-picker` | `#names-input` `#shuffle-btn` `#order-list` | `shuffle` |
+| `warikan` | `#total-input` `#people-input` `#calc-btn` `#warikan-result` | `splitBill` |
+| `king-game` | `#count-input` `#deal-btn` `#king-btn` | `kingGame` `drawOne` |
+| `talk-theme` | `#category-select` `#draw-btn` `#theme-display` | `drawOne` |
+| `countdown` | `#minutes-input` `#start-btn` `#timer-display` | （タイマー） |
+| `scoreboard` | `#scoreboard` `#add-team-btn` | （得点加減算） |
+
+共通事項:
+
+- 画面上部に「使い方の要点」（`#app-howto`）を表示（要件 T-03）
+- 各ページに固有の `title` / `description` / `canonical` / OGP を持ち、**sitemap（`src/app/sitemap.ts`）に登録**（要件 T-04）
+- LP（`src/config/site.ts` の `features`）と一覧ページから導線（要件 T-05）
+- 入力は必要に応じて localStorage 保存（要件 T-06）
+- 分析ビーコン `/cf-web-analytics.js` を各ページに読み込む
 
 ---
 

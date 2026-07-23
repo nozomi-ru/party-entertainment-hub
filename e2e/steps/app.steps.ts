@@ -379,3 +379,93 @@ Then("問題文に {string} と表示される", async ({ world }, marker: strin
   expect(world.quizMarkerOk).toBe(true);
   expect(world.marker).toBe(marker);
 });
+
+/* ------------------------------------------------------------------ *
+ * 追加ツール（SC-TOOLS-*）
+ * ------------------------------------------------------------------ */
+
+Given("余興アプリ一覧を開いている", async ({ page }) => {
+  await page.goto("/app-tools/index.html");
+  await expect(page.locator("h1.app-title")).toHaveText(/Party Tools/i);
+});
+
+Then("一覧に {string} のリンクがある", async ({ page }, name: string) => {
+  await expect(
+    page.getByRole("link", { name: new RegExp(name) }).first(),
+  ).toBeVisible();
+});
+
+When("一覧から {string} を開く", async ({ page }, name: string) => {
+  await page.getByRole("link", { name: new RegExp(name) }).first().click();
+});
+
+Then("ビンゴ数字抽選機の画面が表示される", async ({ page }) => {
+  await expect(page.locator("#draw-btn")).toBeVisible();
+  await expect(page.locator("#current-number")).toBeVisible();
+});
+
+Given("ビンゴ数字抽選機を開いている", async ({ page }) => {
+  await page.goto("/app-tools/bingo-machine/index.html");
+  await page.evaluate(() => localStorage.removeItem("bingoMachineDrawn"));
+  await page.reload();
+  await expect(page.locator("#draw-btn")).toBeVisible();
+});
+
+Then("ツールの使い方の要点が表示される", async ({ page }) => {
+  await expect(page.locator("#app-howto")).toBeVisible();
+  await expect(page.locator("#app-howto")).toContainText("使い方の要点");
+});
+
+When("抽選ボタンを押す", async ({ page }) => {
+  await page.locator("#draw-btn").click();
+});
+
+Then("数字が1つ抽選される", async ({ page }) => {
+  await expect(page.locator("#current-number")).toHaveText(/^\d+$/, {
+    timeout: 15_000,
+  });
+  await expect(page.locator("#drawn-count")).toHaveText("1", {
+    timeout: 15_000,
+  });
+});
+
+Given("割り勘計算機を開いている", async ({ page }) => {
+  await page.goto("/app-tools/warikan/index.html");
+  await expect(page.locator("#calc-btn")).toBeVisible();
+});
+
+Then("一人当たりの金額が表示される", async ({ page }) => {
+  await expect(page.locator("#warikan-result")).toContainText("¥");
+  await expect(page.locator("#warikan-result .result-big")).toBeVisible();
+});
+
+Given("グループ分けを開いている", async ({ page }) => {
+  await page.goto("/app-tools/group-maker/index.html");
+  await expect(page.locator("#split-btn")).toBeVisible();
+});
+
+When("チーム分けを実行する", async ({ page }) => {
+  await page.locator("#split-btn").click();
+});
+
+Then("チームが2つ以上作られる", async ({ page }) => {
+  await expect(page.locator("#groups .group-card").nth(1)).toBeVisible({
+    timeout: 15_000,
+  });
+});
+
+Given("あみだくじを開いている", async ({ page }) => {
+  await page.goto("/app-tools/amidakuji/index.html");
+  await expect(page.locator("#reveal-btn")).toBeVisible();
+});
+
+When("あみだの結果を見る", async ({ page }) => {
+  await page.locator("#reveal-btn").click();
+});
+
+Then("あみだの結果一覧が表示される", async ({ page }) => {
+  await expect(page.locator("#result-list")).toHaveClass(/show/, {
+    timeout: 15_000,
+  });
+  await expect(page.locator("#result-list .result-row").first()).toBeVisible();
+});

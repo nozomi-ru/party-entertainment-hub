@@ -3,8 +3,8 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.3 |
-| 最終更新 | 2026-07-18 |
+| 文書バージョン | 1.4 |
+| 最終更新 | 2026-07-23 |
 | この文書の役割 | **「何を・どの基準で自動テストするか」の正本** |
 | 実行の仕方 | コマンドや push 時の動き・関係ファイルは [ops/testing.md](./ops/testing.md) |
 
@@ -31,7 +31,7 @@
 
 | 層 | 仕様 | 実装・設定 | 手順 |
 |----|------|------------|------|
-| L1 単体 | この文書 §6 | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
+| L1 単体 | この文書 §6（poll）・§6.3b（party-logic） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
 | L2 スモーク | この文書 §7 | `scripts/smoke.mjs` | `npm run smoke` |
 | L2b E2E | [scenario-spec.md](./scenario-spec.md) | `e2e/`, `playwright.config.ts` | [ops/testing.md](./ops/testing.md) |
 | CI | この文書 §9 | `.github/workflows/quality.yml` ほか | [ops/testing.md](./ops/testing.md) |
@@ -192,6 +192,23 @@ L4   本番                会場用。上を通ってからだけ
 
 実装されたテスト: `src/lib/poll.test.ts`
 
+### 6.3b 余興共通ロジック `party-logic`（UT-PARTY-\*）
+
+幹事・進行ツール群（TOOL-\*）が使う乱数系の純粋関数を、**種を固定して決定的に**検証する。対象は `public/app-tools/shared/party-logic.js`、テストは `src/lib/party-logic.test.ts`。
+
+| ID | 対象 | 期待 |
+|----|------|------|
+| UT-PARTY-SHUFFLE-01〜03 | `shuffle` | 要素を保つ／元配列を壊さない／同じ種で再現 |
+| UT-PARTY-DRAW-01〜02 | `drawOne` | 1つ選び残りが減る／空なら null |
+| UT-PARTY-GROUP-01〜03 | `splitIntoGroups` | 全員配分／人数差は最大1／空でも指定数の空グループ |
+| UT-PARTY-SIZE-01 | `splitBySize` | 各グループが最大 size 人 |
+| UT-PARTY-BINGO-01〜02 | `bingoNumbers` / `bingoLetter` | 1〜75 連番／列頭文字 B I N G O |
+| UT-PARTY-BILL-01〜03 | `splitBill` | 割り切れれば同額／単位切り上げで集金は合計以上／差は unit 以内 |
+| UT-PARTY-AMIDA-01〜04 | `generateLadder` / `resolveLadder` | 解は全単射／横線なしは恒等／1本は隣を入替／生成線は非隣接 |
+| UT-PARTY-KING-01 | `kingGame` | 1..N を1つずつ配り王様番号は範囲内 |
+
+これらは種を渡すため乱数に依存せず、CI でも安定して PASS する。
+
 ### 6.4 保存 `poll-store`（メモリ）
 
 本物の Cloudflare KV ではなく、**プロセス内の一時メモ**に書いたり読んだりできるかを見ます。
@@ -265,6 +282,11 @@ L4   本番                会場用。上を通ってからだけ
 | SC-POLL-04 | `poll.feature` | Host が質問編集→Guest 反映 | 要件 P-10 |
 | SC-BINGO-01 | `bingo.feature` | ビンゴ達成＋日時（使い方表示あり） | 受け入れ2 |
 | SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題（使い方表示あり） | 受け入れ3 |
+| SC-TOOLS-01 | `tools.feature` | 一覧から各ツールへ遷移 | TOOL-* 導線 |
+| SC-TOOLS-02 | `tools.feature` | ビンゴ数字抽選機で1つ抽選（使い方表示あり） | T-BINGOM |
+| SC-TOOLS-03 | `tools.feature` | 割り勘計算機が一人当たりを計算 | T-WARI |
+| SC-TOOLS-04 | `tools.feature` | グループ分けがチームを作る | T-GROUP |
+| SC-TOOLS-05 | `tools.feature` | あみだくじが結果を出す | T-AMIDA |
 
 ### 8.3 動画の見方
 

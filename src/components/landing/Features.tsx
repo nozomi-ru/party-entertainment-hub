@@ -1,10 +1,21 @@
 import {
   ArrowUpRight,
   BarChart3,
+  Calculator,
+  CircleDot,
+  Crown,
   Grid3x3,
   HelpCircle,
+  LayoutGrid,
+  ListOrdered,
+  MessageCircle,
+  Route,
   Smartphone,
   Sparkles,
+  Target,
+  Timer,
+  Trophy,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 import { features, type FeatureItem } from "@/config/site";
@@ -15,6 +26,17 @@ const iconMap: Record<FeatureItem["icon"], LucideIcon> = {
   smartphone: Smartphone,
   sparkles: Sparkles,
   grid: Grid3x3,
+  "circle-dot": CircleDot,
+  target: Target,
+  route: Route,
+  users: Users,
+  "list-ordered": ListOrdered,
+  calculator: Calculator,
+  crown: Crown,
+  "message-circle": MessageCircle,
+  timer: Timer,
+  trophy: Trophy,
+  "layout-grid": LayoutGrid,
 };
 
 export function Features() {

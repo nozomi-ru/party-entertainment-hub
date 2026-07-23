@@ -19,6 +19,7 @@
 | テストがいつ走るか・コマンド・pre-push | [ops/testing.md](./ops/testing.md) |
 | 本番を壊さず Cloudflare で確認する | [ops/preview.md](./ops/preview.md) |
 | SEO・Search Console・OGP | [ops/seo.md](./ops/seo.md) |
+| アクセス分析（Cloudflare Web Analytics） | [ops/analytics.md](./ops/analytics.md) |
 | 次に何をやるか | [roadmap.md](./roadmap.md) |
 | まだ着手しないアプリ案 | [ideas.md](./ideas.md) |
 | Qiita など外部向け下書き | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) |
@@ -34,6 +35,8 @@
 
 - テスト実行: `ops/testing.md`
 - 非本番確認: `ops/preview.md`
+- SEO: `ops/seo.md`
+- アクセス分析: `ops/analytics.md`
 
 ---
 
@@ -90,6 +93,9 @@ docs/
 | ビンゴ | `public/app-tools/wedding-bingo/` | requirements §4.2 · design §6 |
 | クイズ | `public/app-tools/wedding-quiz/` | requirements §4.3 · design §7 |
 | アンケート UI | `public/app-tools/wedding-poll/` | requirements §4.4 · design §8 |
+| 幹事・進行ツール群（10種）・一覧 | `public/app-tools/{slug}/`, `public/app-tools/index.html` | requirements §4.6 · design §8b |
+| 余興共通ロジック（単体テスト対象） | `public/app-tools/shared/party-logic.js` | design §5.3 · test-spec §6.3b |
+| 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 |
 | アンケート API | `src/app/api/poll/[room]/route.ts` | design §8.6 |
 | 正規化・ストア | `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 · test-spec |
 | URL 圧縮共有 | `public/app-tools/shared/pack.js` | design §5.2 |
