@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond } from "next/font/google";
+import { CloudflareAnalytics } from "@/components/CloudflareAnalytics";
 import { pageSeo, siteConfig, siteUrl } from "@/config/site";
 import "./globals.css";
 
@@ -80,7 +81,10 @@ export default function RootLayout({
           fetchPriority="high"
         />
       </head>
-      <body className={`${display.variable} antialiased`}>{children}</body>
+      <body className={`${display.variable} antialiased`}>
+        {children}
+        <CloudflareAnalytics />
+      </body>
     </html>
   );
 }

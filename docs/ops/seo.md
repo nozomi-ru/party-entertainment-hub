@@ -246,25 +246,35 @@ https://kotohogi.nozoisfun.workers.dev/sitemap.xml
 
 ### 3.3 実測メモ（2026-07-19）
 
-本番 `https://kotohogi.nozoisfun.workers.dev/` のモバイル Lighthouse 例:
+本番 `https://kotohogi.nozoisfun.workers.dev/` のモバイル Lighthouse。
 
-| カテゴリ | 点数 | コメント |
-|----------|------|----------|
-| Performance | **48** | 拡張機能ありの計測では信用しない |
-| Accessibility | 96 | コントラスト指摘あり → 色トークン調整 |
-| Best Practices | 100 | 良好 |
-| SEO | 100 | 良好 |
+#### 改善後・シークレット（信頼できる結果）
 
-| 指標 | 拡張ありの例 | 読み方 |
-|------|--------------|--------|
-| FCP | 1.4 s | まずまず |
-| **LCP** | **18.2 s** | 拡張の長いタスクと重なりやすく、数値が跳ねる |
-| **TBT** | **1,610 ms** | レポート上、大半が LastPass の content script |
+| カテゴリ | 点数 |
+|----------|------|
+| **Performance** | **96** |
+| Accessibility | 100 |
+| Best Practices | 100 |
+| SEO | 100 |
+
+| 指標 | 値 | コメント |
+|------|-----|----------|
+| FCP | 1.0 s | 良好 |
+| LCP | 2.5 s | 18.2s → 改善。合格圏 |
+| TBT | 130 ms | 良好（拡張なし） |
 | CLS | 0 | 良好 |
-| 1st party 転送 | 約 330 KiB | `hero.webp` 約 62 KiB まで縮小済み |
-| 全体転送（拡張込み） | 約 3.4 MB | うち拡張 JS が約 1 MB |
+| Speed Index | 1.5 s | 良好 |
 
-再計測は必ず **シークレット（拡張オフ）** で。サイト側の残り改善はフォント数とコントラストが中心です。
+#### 参考：拡張あり / 改善前との差
+
+| 指標 | LastPass あり等 | シークレット・改善後 |
+|------|-----------------|----------------------|
+| Performance | 48〜68 | **96** |
+| LCP | 18.2 s（font preload 約240本） | **2.5 s** |
+| TBT | 1,580 ms 前後 | **130 ms** |
+
+**計測のコツ:** LastPass 等の拡張は TBT を壊す。必ずシークレットで測る。サイト側の LCP 主因（大量 font preload）は解消済み。残り（unused JS 約40KB 等）は任意の微調整。
+
 
 ### 3.4 いま入れた対策（コード側）
 
