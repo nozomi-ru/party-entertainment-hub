@@ -34,6 +34,8 @@ export interface PartyLogicApi {
   mulberry32(seed: number): Rng;
   shuffle<T>(array: T[], rng?: Rng): T[];
   drawOne<T>(pool: T[], rng?: Rng): DrawResult<T>;
+  drawDifferent<T>(pool: T[], previous: T | null, rng?: Rng): DrawResult<T>;
+  rankScores(scores: number[]): number[];
   splitIntoGroups<T>(items: T[], groupCount: number, rng?: Rng): T[][];
   splitBySize<T>(items: T[], size: number, rng?: Rng): T[][];
   bingoNumbers(max?: number): number[];

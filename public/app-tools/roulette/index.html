@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         .wheel-wrap { position: relative; width: 280px; max-width: 82vw; margin: 0.6em auto 1em; }
         #wheel { width: 100%; height: auto; display: block; }
@@ -37,6 +38,13 @@
             width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface);
             border: 2px solid var(--color-gold); z-index: 2;
         }
+        #winner-history { margin-top: 1.2em; text-align: left; }
+        #winner-history h2 {
+            font-family: 'Playfair Display', serif; font-size: 0.85rem; color: var(--color-gold);
+            letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;
+        }
+        #winner-history ol { margin: 0; padding-left: 1.4em; font-size: 0.9rem; font-weight: 600; }
+        #winner-history li { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -57,12 +65,15 @@
                 <li>1行に1つずつ、名前や景品名を入力します。</li>
                 <li>「回す」でルーレットが回転し、当選を1つ選びます。</li>
                 <li>当選者を外して続けたいときは「当選を除いて続ける」を押します。</li>
+                <li>当選の並びは下に残るので、複数本の抽選でも読み上げ直せます。</li>
             </ol>
         </div>
 
         <div class="field">
             <label for="names-input">候補（1行に1つ）</label>
             <textarea id="names-input" placeholder="たろう&#10;はなこ&#10;じろう&#10;さくら"></textarea>
+            <p class="count-hint" id="names-count"></p>
+            <p class="inline-error" id="names-error" role="alert" hidden></p>
         </div>
 
         <div class="wheel-wrap">
@@ -80,6 +91,15 @@
             <button class="btn-gold" id="spin-btn" type="button">回す</button>
             <button class="btn-ghost" id="remove-btn" type="button" style="display:none;">当選を除いて続ける</button>
         </div>
+
+        <div id="winner-history" aria-live="polite" hidden>
+            <h2>当選の記録</h2>
+            <ol id="winner-history-list"></ol>
+            <div class="result-actions">
+                <button class="btn-ghost" id="copy-btn" type="button">記録をコピー</button>
+                <button class="btn-ghost" id="clear-history-btn" type="button">記録を消す</button>
+            </div>
+        </div>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
@@ -87,17 +107,37 @@
     <script>
         "use strict";
         const P = window.PartyLogic;
+        const U = window.PartyUI;
         const KEY = "rouletteNames";
+        const MIN = 2;
         const COLORS = ["#B4975A", "#1A1A1A", "#C9B37E", "#4A4A4A", "#E0D3AE", "#7A6A44"];
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
         const ta = document.getElementById("names-input");
+        const spinBtn = document.getElementById("spin-btn");
+        const removeBtn = document.getElementById("remove-btn");
         let angle = 0;
         let spinning = false;
-        let lastWinnerIdx = -1;
+        // 抽選後にリストを編集されても取り違えないよう、位置ではなく当選した値を覚える
+        let lastWinner = null;
+        let history = [];
 
-        function items() {
-            return ta.value.split("\n").map((s) => s.trim()).filter(Boolean);
+        function items() { return U.parseLines(ta.value).items; }
+
+        function syncInputState() {
+            const { count, duplicates } = U.parseLines(ta.value);
+            const parts = ["候補 " + U.formatCount(count, "件")];
+            if (duplicates.length) parts.push("同じ名前が複数あります: " + duplicates.join("、"));
+            U.setHint("names-count", parts.join(" ／ "));
+            spinBtn.disabled = spinning || count < MIN;
+            if (count >= MIN) U.clearError("names-error");
+        }
+
+        function renderHistory() {
+            const box = document.getElementById("winner-history");
+            box.hidden = history.length === 0;
+            document.getElementById("winner-history-list").innerHTML =
+                history.map((name) => `<li>${U.escapeHtml(name)}</li>`).join("");
         }
 
         function draw() {
@@ -135,14 +175,31 @@
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
         }
 
+        function finishSpin(list, winnerIdx) {
+            spinning = false;
+            lastWinner = list[winnerIdx];
+            history.push(lastWinner);
+            document.getElementById("winner").textContent = lastWinner;
+            document.getElementById("winner-box").style.display = "block";
+            removeBtn.style.display = "block";
+            renderHistory();
+            syncInputState();
+        }
+
         function spin() {
             if (spinning) return;
             const list = items();
-            if (list.length < 2) { alert("候補を2つ以上入力してください。"); return; }
+            if (list.length < MIN) {
+                U.setError("names-error", "候補を" + MIN + "つ以上入力してください。いまは " + list.length + "件です。");
+                ta.focus();
+                return;
+            }
+            U.clearError("names-error");
             localStorage.setItem(KEY, ta.value);
             spinning = true;
+            spinBtn.disabled = true;
             document.getElementById("winner-box").style.display = "none";
-            document.getElementById("remove-btn").style.display = "none";
+            removeBtn.style.display = "none";
 
             const seg = (Math.PI * 2) / list.length;
             const winnerIdx = Math.floor(Math.random() * list.length);
@@ -151,7 +208,7 @@
             const turns = 5 + Math.floor(Math.random() * 3);
             const finalAngle = target - turns * Math.PI * 2;
             const startAngle = angle;
-            const duration = 4200;
+            const duration = U.prefersReducedMotion() ? 400 : 4200;
             const t0 = performance.now();
 
             function frame(now) {
@@ -162,37 +219,53 @@
                 if (p < 1) {
                     requestAnimationFrame(frame);
                 } else {
-                    spinning = false;
-                    lastWinnerIdx = winnerIdx;
-                    document.getElementById("winner").textContent = list[winnerIdx];
-                    document.getElementById("winner-box").style.display = "block";
-                    document.getElementById("remove-btn").style.display = "block";
+                    finishSpin(list, winnerIdx);
                 }
             }
             requestAnimationFrame(frame);
         }
 
         function removeWinner() {
-            if (lastWinnerIdx < 0) return;
+            if (lastWinner == null) return;
             const list = items();
-            list.splice(lastWinnerIdx, 1);
-            ta.value = list.join("\n");
-            localStorage.setItem(KEY, ta.value);
-            lastWinnerIdx = -1;
+            const idx = list.indexOf(lastWinner);
+            if (idx < 0) {
+                U.toast("その候補はもうリストにありません");
+            } else {
+                list.splice(idx, 1);
+                ta.value = list.join("\n");
+                localStorage.setItem(KEY, ta.value);
+            }
+            lastWinner = null;
             angle = 0;
             document.getElementById("winner-box").style.display = "none";
-            document.getElementById("remove-btn").style.display = "none";
+            removeBtn.style.display = "none";
             draw();
+            syncInputState();
         }
 
-        ta.addEventListener("input", () => { if (!spinning) draw(); });
-        document.getElementById("spin-btn").addEventListener("click", spin);
-        document.getElementById("remove-btn").addEventListener("click", removeWinner);
-        document.getElementById("year").textContent = new Date().getFullYear();
+        ta.addEventListener("input", () => {
+            if (!spinning) draw();
+            syncInputState();
+            localStorage.setItem(KEY, ta.value);
+        });
+        spinBtn.addEventListener("click", spin);
+        removeBtn.addEventListener("click", removeWinner);
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!history.length) return;
+            U.copyWithToast(U.formatNumberedList(history), "当選の記録をコピーしました");
+        });
+        document.getElementById("clear-history-btn").addEventListener("click", () => {
+            history = [];
+            renderHistory();
+            U.toast("当選の記録を消しました");
+        });
+        U.initFooterYear();
 
         const saved = localStorage.getItem(KEY);
         ta.value = saved != null ? saved : "たろう\nはなこ\nじろう\nさくら";
         draw();
+        syncInputState();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>

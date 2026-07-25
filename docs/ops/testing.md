@@ -50,6 +50,10 @@
 | `src/lib/poll.ts` | ルームコード・票の正規化など（テストしやすい部品） |
 | `src/lib/poll.test.ts` | 正規化の単体テスト（UT-ROOM / UT-VOTE） |
 | `src/lib/poll-store.test.ts` | メモリ上の poll-store の単体（UT-STORE） |
+| `public/app-tools/shared/party-logic.js` | 余興ツールの乱数系ロジック（テスト対象の本体） |
+| `src/lib/party-logic.test.ts` | 上記の単体テスト（UT-PARTY） |
+| `public/app-tools/shared/ui.js` | 余興ツールの共通 UI 部品（純粋関数がテスト対象） |
+| `src/lib/app-ui.test.ts` | 上記の単体テスト（UT-UI） |
 | `src/app/api/poll/[room]/route.ts` | アンケート API（単体の対象外寄り。正規化は `poll.ts` 側） |
 
 ### 1.3 E2E（L2b・ブラウザ自動操作）
@@ -237,8 +241,8 @@ npm test
 | 項目 | 内容 |
 |------|------|
 | 何が走る | Vitest（`vitest run`） |
-| 主なファイル | `src/lib/poll.test.ts`, `src/lib/poll-store.test.ts` |
-| 成功の目安 | ターミナルに Tests passed。いまはおおよそ 9 件前後 |
+| 主なファイル | `src/lib/poll.test.ts`, `src/lib/poll-store.test.ts`, `src/lib/party-logic.test.ts`, `src/lib/app-ui.test.ts` |
+| 成功の目安 | ターミナルに Tests passed。いまはおおよそ 50 件前後 |
 | 失敗したら | 表示された `UT-...` 名を手がかりに、対応する `*.test.ts` と本体（多くは `src/lib/poll.ts`）を直す |
 | push との関係 | 同じ `npm test` が pre-push でも走る |
 

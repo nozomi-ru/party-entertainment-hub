@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 10px; margin-top: 1.4em; }
         .king-card {
@@ -60,6 +61,7 @@
                 <li>人数を入れて「番号を配る」を押します。</li>
                 <li>スマホを回して、各自カードをタップし自分の番号だけ確認します。</li>
                 <li>「王様と指令を決める」で王様の番号と指令を発表します。</li>
+                <li>次の回に移るときは「すべて隠す」→「番号を配る」で仕切り直せます。</li>
             </ol>
         </div>
 
@@ -72,11 +74,18 @@
                 <button class="btn-gold" id="deal-btn" type="button">番号を配る</button>
             </div>
         </div>
+        <p class="count-hint" id="count-hint"></p>
 
         <div id="cards" aria-label="番号カード"></div>
 
+        <div class="row" style="margin-top:10px;">
+            <button class="btn-ghost" id="reveal-all-btn" type="button">すべて表示</button>
+            <button class="btn-ghost" id="hide-all-btn" type="button">すべて隠す</button>
+        </div>
+
         <div class="stack">
             <button class="btn-ghost" id="king-btn" type="button">王様と指令を決める</button>
+            <button class="btn-ghost" id="reorder-btn" type="button" hidden>指令だけ引き直す</button>
         </div>
 
         <div id="king-result" aria-live="polite"></div>
@@ -84,6 +93,7 @@
         <details style="margin-top:1.4em; text-align:left;">
             <summary class="muted" style="cursor:pointer;">指令リストを編集</summary>
             <textarea id="orders-input" style="margin-top:8px;" rows="6"></textarea>
+            <p class="count-hint" id="orders-count"></p>
         </details>
     </main>
 
@@ -103,7 +113,9 @@
             "全員で記念写真を撮る",
             "新郎新婦へお祝いのひと言",
         ];
+        const U = window.PartyUI;
         let deal = null; // { numbers:[], king }
+        let lastOrder = null;
 
         function renderCards() {
             const box = document.getElementById("cards");
@@ -122,35 +134,66 @@
         }
 
         function dealCards() {
-            const count = Math.max(2, Math.min(30, parseInt(document.getElementById("count-input").value, 10) || 2));
+            const raw = parseInt(document.getElementById("count-input").value, 10) || 2;
+            const count = Math.max(2, Math.min(30, raw));
+            if (raw !== count) U.toast("人数は 2〜30 名の範囲にしました");
             deal = P.kingGame(count);
+            lastOrder = null;
             document.getElementById("king-result").innerHTML = "";
+            document.getElementById("reorder-btn").hidden = true;
             renderCards();
+            syncHints();
         }
 
         function orders() {
-            return document.getElementById("orders-input").value.split("\n").map((s) => s.trim()).filter(Boolean);
+            const list = U.parseLines(document.getElementById("orders-input").value).items;
+            return list.length ? list : DEFAULT_ORDERS;
         }
 
-        function decideKing() {
-            if (!deal) { dealCards(); }
-            const list = orders();
-            const { value: order } = P.drawOne(list.length ? list : DEFAULT_ORDERS);
+        function syncHints() {
+            U.setHint("count-hint", deal ? deal.numbers.length + "名にカードを配りました" : "");
+            U.setHint("orders-count", "指令 " + U.formatCount(orders().length, "件"));
+        }
+
+        function showKing(order) {
+            lastOrder = order;
             document.getElementById("king-result").innerHTML = `
                 <div class="result-box">
                     <p class="tag">王様は</p>
                     <p class="result-big">${deal.king} 番！</p>
-                    <p class="muted" style="margin-top:10px;">指令：${order}</p>
+                    <p class="muted" style="margin-top:10px;">指令：${U.escapeHtml(order)}</p>
                 </div>
             `;
+            document.getElementById("reorder-btn").hidden = false;
             document.querySelectorAll(".king-card.is-king").forEach((el) => el.classList.add("revealed"));
+        }
+
+        function decideKing() {
+            if (!deal) dealCards();
+            const { value } = P.drawOne(orders());
+            showKing(value);
+        }
+
+        function setAllRevealed(revealed) {
+            document.querySelectorAll(".king-card").forEach((el) =>
+                el.classList.toggle("revealed", revealed));
         }
 
         document.getElementById("deal-btn").addEventListener("click", dealCards);
         document.getElementById("king-btn").addEventListener("click", decideKing);
-        document.getElementById("orders-input").addEventListener("input", () =>
-            localStorage.setItem(ORDERS_KEY, document.getElementById("orders-input").value));
-        document.getElementById("year").textContent = new Date().getFullYear();
+        document.getElementById("reorder-btn").addEventListener("click", () => {
+            // 王様はそのままに、指令だけ引き直す（同じ指令の連続は避ける）
+            const { value } = P.drawDifferent(orders(), lastOrder);
+            showKing(value);
+        });
+        document.getElementById("reveal-all-btn").addEventListener("click", () => setAllRevealed(true));
+        document.getElementById("hide-all-btn").addEventListener("click", () => setAllRevealed(false));
+        document.getElementById("count-input").addEventListener("input", syncHints);
+        document.getElementById("orders-input").addEventListener("input", () => {
+            localStorage.setItem(ORDERS_KEY, document.getElementById("orders-input").value);
+            syncHints();
+        });
+        U.initFooterYear();
 
         const savedOrders = localStorage.getItem(ORDERS_KEY);
         document.getElementById("orders-input").value = savedOrders != null ? savedOrders : DEFAULT_ORDERS.join("\n");

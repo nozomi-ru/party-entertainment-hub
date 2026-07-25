@@ -66,6 +66,23 @@
   }
 
   /**
+   * drawOne と同じだが、previous と同じ値を避けて選ぶ。
+   * 「同じお題が2回続く」ような、ランダムでも体験として困る結果を防ぐ。
+   * previous 以外に候補が無いときだけ previous を返す。
+   */
+  function drawDifferent(pool, previous, rng) {
+    if (!Array.isArray(pool) || pool.length === 0) {
+      return { value: null, rest: [] };
+    }
+    const candidates = pool.filter((item) => item !== previous);
+    if (candidates.length === 0) return drawOne(pool, rng);
+    const { value } = drawOne(candidates, rng);
+    const rest = pool.slice();
+    rest.splice(rest.indexOf(value), 1);
+    return { value, rest };
+  }
+
+  /**
    * items を groupCount 個のグループへ、できるだけ均等にランダム配分する。
    * 余りは先頭グループから1人ずつ多くなる。
    */
@@ -221,6 +238,17 @@
   }
 
   /**
+   * 得点配列から順位（1始まり）を求める。同点は同じ順位で、その分だけ次が飛ぶ
+   * （10, 10, 5 なら 1, 1, 3）。得点板の表示に使う。
+   */
+  function rankScores(scores) {
+    const list = (Array.isArray(scores) ? scores : []).map(
+      (s) => Number(s) || 0,
+    );
+    return list.map((score) => list.filter((other) => other > score).length + 1);
+  }
+
+  /**
    * 均等配分の検証などに使う: グループの人数配列。
    */
   function groupSizes(groups) {
@@ -231,6 +259,8 @@
     mulberry32,
     shuffle,
     drawOne,
+    drawDifferent,
+    rankScores,
     splitIntoGroups,
     splitBySize,
     bingoNumbers,

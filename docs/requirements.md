@@ -44,7 +44,8 @@
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
 | 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html` | design §8b | UT-PARTY-* / SC-TOOLS-* |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
-| 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.1 | （目視） |
+| 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-06〜10 |
+| 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 | （目視） |
 | Cloudflare / KV | `wrangler.jsonc` | design §9 | 手動 L3・preview |
 | URL 圧縮共有 | `public/app-tools/shared/pack.js` | design §5.2 | （将来 UT-PACK） |
 
@@ -191,8 +192,15 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | T-04 | 各ツールは固有の title・description・canonical・OGP を持ち、sitemap に載せる | 必須 |
 | T-05 | 一覧ページ（`app-tools/index.html`）と LP から各ツールへ導線を持つ | 必須 |
 | T-06 | 入力内容は必要に応じて localStorage に保存し、再訪時に復元する | 推奨 |
+| T-07 | 入力の不足は `alert` / `confirm` ではなく画面上で理由を示し、実行できないボタンは無効にする | 必須 |
+| T-08 | 結果を出すツールは、その結果をコピーして共有できる | 必須 |
+| T-09 | 取り返しのつかない操作（抽選・加点・全消し）は、取り消しか2回押しの確認を用意する | 必須 |
+| T-10 | 参加者名などの入力は、表示時にエスケープして画面が壊れないようにする | 必須 |
+| T-11 | 会場で映すツール（抽選機・タイマー）は表示中に画面を消さず、キーボードでも操作できる | 推奨 |
 
 **補足:** 個人情報や共有同期は扱わない（端末内のみ）。集客の観点から、検索意図の広いツール（ルーレット・あみだくじ・割り勘・グループ分けなど）を優先的に用意している。
+
+**T-07〜T-11 の背景:** 当日の使い手は「片手にマイク、片手にスマホ」の幹事・司会である。モーダルダイアログは進行を止め、押し間違いはやり直しが効かず、会場の大画面はスリープで暗くなる。共通の実装は `public/app-tools/shared/ui.js`（design §5.3b）に置く。
 
 ### 4.5 共通
 
@@ -202,6 +210,8 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | C-02 | ビンゴ／クイズ・TOOL-\* は DB なしで完結する（URL 共有 or 端末内） | 必須 |
 | C-03 | アンケートのみサーバー側同期（本番は Cloudflare KV）を用いる | 必須 |
 | C-04 | 余興アプリの共通デザインは `public/app-tools/shared/app.css` に集約する | 推奨 |
+| C-05 | キーボード操作時にフォーカス位置が見え、主要なボタンは 44px 以上のタップ領域を持つ | 推奨 |
+| C-06 | `prefers-reduced-motion` が有効な端末では演出を短縮する（結果は同じ） | 推奨 |
 
 ---
 

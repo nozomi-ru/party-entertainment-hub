@@ -469,3 +469,96 @@ Then("あみだの結果一覧が表示される", async ({ page }) => {
   });
   await expect(page.locator("#result-list .result-row").first()).toBeVisible();
 });
+
+Given("順番決めを開いている", async ({ page }) => {
+  await page.goto("/app-tools/order-picker/index.html");
+  await page.evaluate(() => localStorage.removeItem("orderPickerNames"));
+  await page.reload();
+  await expect(page.locator("#shuffle-btn")).toBeVisible();
+});
+
+When("候補を {string} だけにする", async ({ page }, name: string) => {
+  await page.locator("#names-input").fill(name);
+});
+
+Then("順番を決めるボタンは押せない", async ({ page }) => {
+  await expect(page.locator("#shuffle-btn")).toBeDisabled();
+});
+
+Then("入力欄に {string} と表示される", async ({ page }, text: string) => {
+  await expect(page.locator("#names-count")).toContainText(text);
+});
+
+When("順番を決める", async ({ page }) => {
+  await page.locator("#shuffle-btn").click();
+});
+
+Then("順番の一覧が表示される", async ({ page }) => {
+  await expect(page.locator("#order-list .order-item").first()).toBeVisible({
+    timeout: 15_000,
+  });
+});
+
+When("結果をコピーする", async ({ page }) => {
+  await page
+    .context()
+    .grantPermissions(["clipboard-read", "clipboard-write"])
+    .catch(() => {
+      /* 権限を扱えないブラウザでは execCommand へ落ちる */
+    });
+  await page.locator("#copy-btn").click();
+});
+
+Then("{string} の通知が表示される", async ({ page }, message: string) => {
+  await expect(page.locator("#party-toast")).toHaveText(message, {
+    timeout: 15_000,
+  });
+  await expect(page.locator("#party-toast")).toHaveClass(/show/);
+});
+
+When("一覧を {string} で絞り込む", async ({ page }, keyword: string) => {
+  await page.locator("#tool-filter").fill(keyword);
+});
+
+Then("一覧から {string} のリンクが隠れる", async ({ page }, name: string) => {
+  await expect(page.locator(".tool-link", { hasText: name })).toBeHidden({
+    timeout: 15_000,
+  });
+});
+
+Given("得点板を開いている", async ({ page }) => {
+  await page.goto("/app-tools/scoreboard/index.html");
+  await page.evaluate(() => localStorage.removeItem("scoreboardTeams"));
+  await page.reload();
+  await expect(page.locator("#scoreboard .team-row").first()).toBeVisible();
+});
+
+When("先頭チームに加点する", async ({ page }) => {
+  await page.locator("#scoreboard .team-row").first().locator(".score-btn.plus")
+    .click();
+});
+
+Then(
+  "先頭チームの得点が {string} になる",
+  async ({ page }, score: string) => {
+    await expect(
+      page.locator("#scoreboard .team-row").first().locator(".score-val"),
+    ).toHaveText(score, { timeout: 15_000 });
+  },
+);
+
+When("直前の操作を取り消す", async ({ page }) => {
+  await page.locator("#undo-btn").click();
+});
+
+When("直前の抽選を取り消す", async ({ page }) => {
+  await expect(page.locator("#undo-btn")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("#undo-btn").click();
+});
+
+Then("抽選済みが0個に戻る", async ({ page }) => {
+  await expect(page.locator("#drawn-count")).toHaveText("0", {
+    timeout: 15_000,
+  });
+  await expect(page.locator("#current-number")).not.toHaveText(/\d/);
+});

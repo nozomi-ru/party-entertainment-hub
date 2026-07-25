@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #groups { margin-top: 1.4em; display: grid; gap: 12px; text-align: left; }
         .group-card { border: 1px solid var(--color-border); background: var(--color-panel); padding: 12px 14px; }
@@ -53,13 +54,16 @@
             <ol>
                 <li>参加者を1行に1名ずつ入力します。</li>
                 <li>「グループ数」か「1組の人数」のどちらで分けるか選びます。</li>
-                <li>「チーム分けする」で、均等に近い形でランダム配分します。</li>
+                <li>「チーム分けする」で、均等に近い形でランダム配分します（Ctrl+Enter でも実行）。</li>
+                <li>できたチームは「結果をコピー」でそのまま共有できます。</li>
             </ol>
         </div>
 
         <div class="field">
             <label for="names-input">参加者（1行に1名）</label>
             <textarea id="names-input" placeholder="たろう&#10;はなこ&#10;じろう&#10;さくら&#10;けんた&#10;ゆい"></textarea>
+            <p class="count-hint" id="names-count"></p>
+            <p class="inline-error" id="names-error" role="alert" hidden></p>
         </div>
 
         <div class="row">
@@ -79,6 +83,10 @@
         <button class="btn-gold" id="split-btn" type="button">チーム分けする</button>
 
         <div id="groups" aria-live="polite"></div>
+
+        <div class="result-actions" id="group-actions" hidden>
+            <button class="btn-ghost" id="copy-btn" type="button">結果をコピー</button>
+        </div>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
@@ -86,27 +94,54 @@
     <script>
         "use strict";
         const P = window.PartyLogic;
+        const U = window.PartyUI;
         const KEY = "groupMakerNames";
+        const MIN = 2;
         const namesTa = document.getElementById("names-input");
         const modeSel = document.getElementById("mode-select");
         const countIn = document.getElementById("count-input");
+        const splitBtn = document.getElementById("split-btn");
+        const actions = document.getElementById("group-actions");
+        let lastGroups = [];
 
-        function names() { return namesTa.value.split("\n").map((s) => s.trim()).filter(Boolean); }
+        function parsed() { return U.parseLines(namesTa.value); }
 
         function updateLabel() {
-            document.getElementById("count-label").textContent =
-                modeSel.value === "groups" ? "グループ数" : "1組の人数";
+            const byGroups = modeSel.value === "groups";
+            document.getElementById("count-label").textContent = byGroups ? "グループ数" : "1組の人数";
+            countIn.max = byGroups ? Math.max(1, parsed().count) : 99;
+        }
+
+        function syncInputState() {
+            const { count, duplicates } = parsed();
+            const parts = ["参加者 " + U.formatCount(count, "名")];
+            if (count >= MIN) {
+                const n = Math.max(1, parseInt(countIn.value, 10) || 1);
+                parts.push(modeSel.value === "groups"
+                    ? "→ " + Math.min(n, count) + "チーム"
+                    : "→ " + Math.ceil(count / n) + "チーム");
+            }
+            if (duplicates.length) parts.push("同じ名前が複数あります: " + duplicates.join("、"));
+            U.setHint("names-count", parts.join(" ／ "));
+            splitBtn.disabled = count < MIN;
+            if (count >= MIN) U.clearError("names-error");
         }
 
         function split() {
-            const list = names();
-            if (list.length < 2) { alert("参加者を2名以上入力してください。"); return; }
+            const { items, count } = parsed();
+            if (count < MIN) {
+                U.setError("names-error", "参加者を" + MIN + "名以上入力してください。いまは " + count + "名です。");
+                namesTa.focus();
+                return;
+            }
+            U.clearError("names-error");
             localStorage.setItem(KEY, namesTa.value);
             const n = Math.max(1, parseInt(countIn.value, 10) || 1);
-            const groups = modeSel.value === "groups"
-                ? P.splitIntoGroups(list, n)
-                : P.splitBySize(list, n);
-            render(groups);
+            lastGroups = modeSel.value === "groups"
+                ? P.splitIntoGroups(items, n)
+                : P.splitBySize(items, n);
+            render(lastGroups);
+            actions.hidden = false;
         }
 
         function render(groups) {
@@ -114,18 +149,32 @@
             box.innerHTML = groups.map((g, i) => `
                 <div class="group-card">
                     <h3>チーム ${i + 1} <small>${g.length}名</small></h3>
-                    <div class="member-tags">${g.map((m) => `<span>${m}</span>`).join("")}</div>
+                    <div class="member-tags">${g.map((m) => `<span>${U.escapeHtml(m)}</span>`).join("")}</div>
                 </div>
             `).join("");
         }
 
-        modeSel.addEventListener("change", updateLabel);
-        document.getElementById("split-btn").addEventListener("click", split);
-        document.getElementById("year").textContent = new Date().getFullYear();
+        modeSel.addEventListener("change", () => { updateLabel(); syncInputState(); });
+        countIn.addEventListener("input", syncInputState);
+        namesTa.addEventListener("input", () => {
+            updateLabel();
+            syncInputState();
+            localStorage.setItem(KEY, namesTa.value);
+        });
+        namesTa.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); split(); }
+        });
+        splitBtn.addEventListener("click", split);
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!lastGroups.length) return;
+            U.copyWithToast(U.formatGroups(lastGroups), "チーム分けをコピーしました");
+        });
+        U.initFooterYear();
 
         const saved = localStorage.getItem(KEY);
         namesTa.value = saved != null ? saved : "たろう\nはなこ\nじろう\nさくら\nけんた\nゆい";
         updateLabel();
+        syncInputState();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>

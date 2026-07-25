@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #order-list { margin-top: 1.4em; text-align: left; display: flex; flex-direction: column; gap: 8px; }
         .order-item {
@@ -56,18 +57,25 @@
             <ol>
                 <li>順番を決めたい人・出し物を1行に1つ入力します。</li>
                 <li>「順番を決める」を押すと、ランダムに並び替えて上から発表します。</li>
-                <li>やり直したいときはもう一度押せば再抽選できます。</li>
+                <li>やり直したいときはもう一度押せば再抽選できます（Ctrl+Enter でも実行）。</li>
+                <li>決まった順番は「結果をコピー」で LINE などにそのまま貼れます。</li>
             </ol>
         </div>
 
         <div class="field">
             <label for="names-input">候補（1行に1つ）</label>
             <textarea id="names-input" placeholder="新郎友人代表&#10;新婦友人代表&#10;同僚チーム&#10;サプライズ動画"></textarea>
+            <p class="count-hint" id="names-count"></p>
+            <p class="inline-error" id="names-error" role="alert" hidden></p>
         </div>
 
         <button class="btn-gold" id="shuffle-btn" type="button">順番を決める</button>
 
         <div id="order-list" aria-live="polite"></div>
+
+        <div class="result-actions" id="order-actions" hidden>
+            <button class="btn-ghost" id="copy-btn" type="button">結果をコピー</button>
+        </div>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
@@ -75,32 +83,62 @@
     <script>
         "use strict";
         const P = window.PartyLogic;
+        const U = window.PartyUI;
         const KEY = "orderPickerNames";
+        const MIN = 2;
         const ta = document.getElementById("names-input");
+        const runBtn = document.getElementById("shuffle-btn");
+        const actions = document.getElementById("order-actions");
+        let ordered = [];
 
-        function names() { return ta.value.split("\n").map((s) => s.trim()).filter(Boolean); }
+        function parsed() { return U.parseLines(ta.value); }
+
+        function syncInputState() {
+            const { count, duplicates } = parsed();
+            const parts = ["候補 " + U.formatCount(count, "件")];
+            if (duplicates.length) parts.push("同じ名前が複数あります: " + duplicates.join("、"));
+            U.setHint("names-count", parts.join(" ／ "));
+            runBtn.disabled = count < MIN;
+            if (count >= MIN) U.clearError("names-error");
+        }
 
         function run() {
-            const list = names();
-            if (list.length < 2) { alert("候補を2つ以上入力してください。"); return; }
+            const { items, count } = parsed();
+            if (count < MIN) {
+                U.setError("names-error", "候補を" + MIN + "つ以上入力してください。いまは " + count + "件です。");
+                ta.focus();
+                return;
+            }
+            U.clearError("names-error");
             localStorage.setItem(KEY, ta.value);
-            const ordered = P.shuffle(list);
+            ordered = P.shuffle(items);
+            const stagger = U.prefersReducedMotion() ? 0 : 0.12;
             const box = document.getElementById("order-list");
             box.innerHTML = "";
             ordered.forEach((name, i) => {
                 const el = document.createElement("div");
                 el.className = "order-item";
-                el.style.animationDelay = (i * 0.12) + "s";
-                el.innerHTML = `<span class="order-num">${i + 1}</span><span class="order-name">${name}</span>`;
+                el.style.animationDelay = (i * stagger) + "s";
+                el.innerHTML = `<span class="order-num">${i + 1}</span><span class="order-name">${U.escapeHtml(name)}</span>`;
                 box.appendChild(el);
             });
+            actions.hidden = false;
         }
 
-        document.getElementById("shuffle-btn").addEventListener("click", run);
-        document.getElementById("year").textContent = new Date().getFullYear();
+        runBtn.addEventListener("click", run);
+        ta.addEventListener("input", () => { syncInputState(); localStorage.setItem(KEY, ta.value); });
+        ta.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+        });
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!ordered.length) return;
+            U.copyWithToast(U.formatNumberedList(ordered), "順番をコピーしました");
+        });
+        U.initFooterYear();
 
         const saved = localStorage.getItem(KEY);
         ta.value = saved != null ? saved : "新郎友人代表\n新婦友人代表\n同僚チーム\nサプライズ動画";
+        syncInputState();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>

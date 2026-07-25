@@ -236,12 +236,44 @@ TOOL-\*（§8b）で使う乱数系の純粋関数を `public/app-tools/shared/p
 
 - 形式: UMD 風。ブラウザでは `window.PartyLogic`、Node（Vitest）では `import` できる
 - 型: 同ディレクトリの `party-logic.d.ts`
-- 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`
+- 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `drawDifferent`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`, `rankScores`
 - テスト: `src/lib/party-logic.test.ts`（[test-spec.md §6](./test-spec.md)）
+
+`drawDifferent` は「直前と同じものを引かない」抽選（トークテーマ・王様の指令）、`rankScores` は同点を同順位にする順位付け（得点板）に使う。
+
+### 5.3b 共通 UI 部品（ui.js）
+
+TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` に集約する。party-logic が「ゲームのルール」なのに対し、こちらは「入力の見せ方・結果の伝え方・会場での操作性」を担当する。
+
+- 形式: party-logic と同じ UMD 風。ブラウザでは `window.PartyUI`、Node（Vitest）では `import`
+- 型: 同ディレクトリの `ui.d.ts`
+- テスト: `src/lib/app-ui.test.ts`（純粋関数のみ。UT-UI-\*）
+
+| 区分 | 関数 | 役割 |
+|------|------|------|
+| 純粋（テスト対象） | `escapeHtml` | 参加者名をそのまま `innerHTML` に流しても表示が壊れない・スクリプトが動かない |
+| 純粋（テスト対象） | `parseLines` | 複数行入力 →「1行1件」。件数と重複名も返す |
+| 純粋（テスト対象） | `formatCount` | 「3名」「未入力（0名）」の件数ラベル |
+| 純粋（テスト対象） | `formatNumberedList` / `formatGroups` / `formatPairs` | コピー用テキストの書式 |
+| DOM | `setError` / `clearError` / `setHint` | `alert` を使わず、その場に理由を出す |
+| DOM | `toast` / `copyText` / `copyWithToast` | 結果のコピーと、操作を止めない通知 |
+| DOM | `createWakeLock` | 表示中に画面を消させない（Screen Wake Lock。非対応環境では無視） |
+| DOM | `bindShortcuts` | 入力欄にいないときだけ効くキーボード操作 |
+| DOM | `prefersReducedMotion` / `initFooterYear` | 演出短縮の判定・フッター年号 |
 
 ### 5.4 共通スタイル（app.css）
 
 余興アプリの見た目（紙×金トーン・カード・ボタン・モーダル・使い方ノート）は `public/app-tools/shared/app.css` に集約し、各アプリは固有分のみ個別 `<style>` で足す。favicon も `shared/favicon.svg` を共有。
+
+操作性に関わる共通ルールもここに置く。ビンゴ・クイズ・アンケートを含む **`app.css` を読む全ページに一律で効く**。
+
+| 規約 | 内容 |
+|------|------|
+| フォーカス可視化 | `:focus-visible` に金色のリング。入力欄の `outline: none` を打ち消す |
+| タップ領域 | ボタン類は `min-height: 44px` |
+| 入力の状態 | `.count-hint`（件数などの補助行）・`.inline-error`（`role="alert"` の理由表示） |
+| 結果の持ち帰り | `.result-actions`（結果直下のコピー等）・`.party-toast`（画面下の通知） |
+| 動きの配慮 | `prefers-reduced-motion: reduce` でアニメーションを実質停止 |
 
 ---
 
@@ -387,18 +419,19 @@ TTL: 24 時間（KV `expirationTtl`）
 
 集客と当日運用を狙った単機能の静的アプリ群。共通ロジック（§5.3）と共通スタイル（§5.4）の上に構築し、**サーバー同期・DB は使わない**（端末内で完結）。
 
-| slug | 主な要素 ID（E2E 目印） | 使うロジック |
-|------|--------------------------|--------------|
-| `bingo-machine` | `#draw-btn` `#current-number` `#drawn-count` | `bingoNumbers` `bingoLetter` `drawOne` |
-| `roulette` | `#names-input` `#spin-btn` `#winner` | Canvas 描画（乱数は当選 index） |
-| `amidakuji` | `#names-input` `#reveal-btn` `#result-list` | `generateLadder` `resolveLadder` |
-| `group-maker` | `#names-input` `#split-btn` `#groups` | `splitIntoGroups` `splitBySize` |
-| `order-picker` | `#names-input` `#shuffle-btn` `#order-list` | `shuffle` |
-| `warikan` | `#total-input` `#people-input` `#calc-btn` `#warikan-result` | `splitBill` |
-| `king-game` | `#count-input` `#deal-btn` `#king-btn` | `kingGame` `drawOne` |
-| `talk-theme` | `#category-select` `#draw-btn` `#theme-display` | `drawOne` |
-| `countdown` | `#minutes-input` `#start-btn` `#timer-display` | （タイマー） |
-| `scoreboard` | `#scoreboard` `#add-team-btn` | （得点加減算） |
+| slug | 主な要素 ID（E2E 目印） | 使うロジック | 固有の操作性 |
+|------|--------------------------|--------------|--------------|
+| `bingo-machine` | `#draw-btn` `#undo-btn` `#current-number` `#drawn-count` `#remaining-count` | `bingoNumbers` `bingoLetter` `drawOne` | 1つ取り消す・残数表示・Wake Lock・スペース/U キー |
+| `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` | Canvas 描画（乱数は当選 index） | 当選を**値**で保持（回転後の編集で取り違えない）・当選履歴 |
+| `amidakuji` | `#names-input` `#reveal-btn` `#result-list` `#amida-error` | `generateLadder` `resolveLadder` | 参加者数と結果数の不一致を警告・人数が変わったときだけ引き直す |
+| `group-maker` | `#names-input` `#split-btn` `#groups` `#names-count` | `splitIntoGroups` `splitBySize` | 分けた後のチーム数を押す前に予告・結果コピー |
+| `order-picker` | `#names-input` `#shuffle-btn` `#order-list` `#names-count` | `shuffle` | 候補が足りなければボタン無効＋理由表示・結果コピー |
+| `warikan` | `#total-input` `#people-input` `#calc-btn` `#warikan-result` | `splitBill` | きっちり割った額の併記・集金メモのコピー |
+| `king-game` | `#count-input` `#deal-btn` `#king-btn` `#reorder-btn` | `kingGame` `drawOne` `drawDifferent` | すべて表示／隠す・指令だけ引き直す |
+| `talk-theme` | `#category-select` `#draw-btn` `#theme-display` | `drawDifferent` | 直前と同じテーマを出さない・直近3件の履歴 |
+| `countdown` | `#minutes-input` `#start-btn` `#timer-display` `#exit-fs-btn` | （タイマー） | Wake Lock・タブ見出しに残り時間・全画面の離脱手段・終了音3回 |
+| `scoreboard` | `#scoreboard` `#add-team-btn` `#undo-btn` | `rankScores` | 同点は同順位・1つ元に戻す・44px のタップ領域 |
+| 一覧 `index.html` | `#tool-filter` `#no-match` | — | キーワードでの絞り込み（`data-keywords` に同義語） |
 
 共通事項:
 
@@ -406,6 +439,10 @@ TTL: 24 時間（KV `expirationTtl`）
 - 各ページに固有の `title` / `description` / `canonical` / OGP を持ち、**sitemap（`src/app/sitemap.ts`）に登録**（要件 T-04）
 - LP（`src/config/site.ts` の `features`）と一覧ページから導線（要件 T-05）
 - 入力は必要に応じて localStorage 保存（要件 T-06）
+- 共通 UI 部品 `shared/ui.js`（§5.3b）を読み込み、次を守る
+  - **`alert` / `confirm` を使わない**（要件 T-07）。不足は `.inline-error`、取り返しのつく形は「2回押し」
+  - 参加者名の表示は `escapeHtml` を通す（要件 T-10）
+  - 結果を出すツールは「結果をコピー」を用意する（要件 T-08）
 - 分析ビーコン `/cf-web-analytics.js` を各ページに読み込む
 
 ---

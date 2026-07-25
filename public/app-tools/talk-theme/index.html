@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #theme-display {
             min-height: 120px; display: flex; align-items: center; justify-content: center;
@@ -31,6 +32,13 @@
             font-size: 1.25rem; font-weight: 700; line-height: 1.7;
         }
         #theme-display.flash { opacity: 0.4; }
+        #theme-history { margin-top: 1.2em; text-align: left; }
+        #theme-history h2 {
+            font-family: 'Playfair Display', serif; font-size: 0.85rem; color: var(--color-gold);
+            letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;
+        }
+        #theme-history ul { margin: 0; padding-left: 1.2em; font-size: 0.85rem; color: var(--color-text-light); }
+        .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -49,7 +57,8 @@
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
                 <li>カテゴリを選ぶか、下の欄で自分のネタに差し替えます。</li>
-                <li>「テーマを引く」でランダムに1つ表示します。</li>
+                <li>「テーマを引く」でランダムに1つ表示します（スペースキーでも引けます）。</li>
+                <li>同じテーマが2回続けて出ないので、テーブルを回しながら使えます。</li>
                 <li>テーブルごとに順番に引いて話すと、自然と会話が続きます。</li>
             </ol>
         </div>
@@ -61,11 +70,23 @@
 
         <div id="theme-display" aria-live="polite">ボタンを押してテーマを引いてください</div>
 
-        <button class="btn-gold" id="draw-btn" type="button">テーマを引く</button>
+        <div class="stack">
+            <button class="btn-gold" id="draw-btn" type="button">テーマを引く</button>
+            <button class="btn-ghost" id="copy-btn" type="button" disabled>このテーマをコピー</button>
+        </div>
+
+        <p class="shortcut-hint">キーボード: スペース = テーマを引く</p>
+
+        <div id="theme-history" hidden>
+            <h2>さっき出たテーマ</h2>
+            <ul id="theme-history-list"></ul>
+        </div>
 
         <details style="margin-top:1.4em; text-align:left;">
             <summary class="muted" style="cursor:pointer;">この一覧を編集（1行に1つ）</summary>
             <textarea id="custom-input" style="margin-top:8px;" rows="7"></textarea>
+            <p class="count-hint" id="custom-count"></p>
+            <button class="btn-ghost" id="restore-btn" type="button" style="margin-top:8px;">カテゴリの初期リストに戻す</button>
         </details>
     </main>
 
@@ -110,45 +131,88 @@
             ],
         };
 
+        const U = window.PartyUI;
+        const HISTORY_LIMIT = 3;
         const sel = document.getElementById("category-select");
         const custom = document.getElementById("custom-input");
+        const copyBtn = document.getElementById("copy-btn");
+        let current = null;
+        let history = [];
         Object.keys(CATEGORIES).forEach((k) => {
             const opt = document.createElement("option");
             opt.value = k; opt.textContent = k; sel.appendChild(opt);
         });
 
         function currentList() {
-            const c = custom.value.split("\n").map((s) => s.trim()).filter(Boolean);
+            const c = U.parseLines(custom.value).items;
             return c.length ? c : CATEGORIES[sel.value];
         }
 
         function syncCustom() {
             custom.value = CATEGORIES[sel.value].join("\n");
+            syncCount();
+        }
+
+        function syncCount() {
+            U.setHint("custom-count", "テーマ " + U.formatCount(currentList().length, "件"));
+        }
+
+        function renderHistory() {
+            const box = document.getElementById("theme-history");
+            const past = history.slice(0, -1).slice(-HISTORY_LIMIT).reverse();
+            box.hidden = past.length === 0;
+            document.getElementById("theme-history-list").innerHTML =
+                past.map((t) => `<li>${U.escapeHtml(t)}</li>`).join("");
         }
 
         function draw() {
             const list = currentList();
+            if (!list.length) return;
             const display = document.getElementById("theme-display");
             display.classList.add("flash");
+            const totalTicks = U.prefersReducedMotion() ? 1 : 8;
             let ticks = 0;
             const timer = setInterval(() => {
                 display.textContent = list[Math.floor(Math.random() * list.length)];
-                if (++ticks >= 8) {
+                if (++ticks >= totalTicks) {
                     clearInterval(timer);
                     display.classList.remove("flash");
-                    const { value } = P.drawOne(list);
+                    // 直前と同じテーマは避ける（続けて引いても会話が止まらない）
+                    const { value } = P.drawDifferent(list, current);
+                    current = value;
                     display.textContent = value;
+                    history.push(value);
+                    copyBtn.disabled = false;
+                    renderHistory();
                 }
             }, 60);
         }
 
-        sel.addEventListener("change", () => { syncCustom(); localStorage.setItem(CUSTOM_KEY, custom.value); });
-        custom.addEventListener("input", () => localStorage.setItem(CUSTOM_KEY, custom.value));
+        sel.addEventListener("change", () => {
+            syncCustom();
+            localStorage.setItem(CUSTOM_KEY, custom.value);
+            U.toast("「" + sel.value + "」のリストに切り替えました");
+        });
+        custom.addEventListener("input", () => {
+            localStorage.setItem(CUSTOM_KEY, custom.value);
+            syncCount();
+        });
         document.getElementById("draw-btn").addEventListener("click", draw);
-        document.getElementById("year").textContent = new Date().getFullYear();
+        document.getElementById("restore-btn").addEventListener("click", () => {
+            syncCustom();
+            localStorage.setItem(CUSTOM_KEY, custom.value);
+            U.toast("初期リストに戻しました");
+        });
+        copyBtn.addEventListener("click", () => {
+            if (!current) return;
+            U.copyWithToast(current, "テーマをコピーしました");
+        });
+        U.bindShortcuts({ " ": draw });
+        U.initFooterYear();
 
         const savedCustom = localStorage.getItem(CUSTOM_KEY);
         if (savedCustom != null) custom.value = savedCustom; else syncCustom();
+        syncCount();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>

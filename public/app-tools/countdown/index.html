@@ -23,6 +23,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/ui.js"></script>
     <style>
         #timer-display {
             font-family: 'Playfair Display', serif; font-size: clamp(3.8rem, 20vw, 7rem); font-weight: 700;
@@ -37,11 +38,16 @@
             font-family: inherit; font-weight: 600; cursor: pointer; font-size: 0.85rem;
         }
         .presets button:hover { border-color: var(--color-gold); color: var(--color-gold); }
+        .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 12px; }
+        #exit-fs-btn { display: none; }
         body.fs { padding: 0; }
         body.fs .app-nav, body.fs .app-footer, body.fs .howto-note,
-        body.fs .presets, body.fs .time-inputs, body.fs #fullscreen-btn { display: none; }
+        body.fs .presets, body.fs .time-inputs, body.fs .shortcut-hint,
+        body.fs #fullscreen-btn, body.fs .ornament, body.fs .app-subtitle, body.fs .app-lead { display: none; }
+        body.fs #exit-fs-btn { display: block; }
         body.fs .card { max-width: none; min-height: 100vh; border: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; }
         body.fs .card::before { display: none; }
+        body.fs h1.app-title { font-size: 1rem; opacity: 0.5; }
         body.fs #timer-display { font-size: clamp(5rem, 28vw, 16rem); }
     </style>
 </head>
@@ -61,8 +67,9 @@
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
                 <li>プリセットか分・秒でカウントダウン時間を決めます。</li>
-                <li>「スタート」で開始、「全画面」で会場の大画面に映せます。</li>
+                <li>「スタート」で開始、「全画面」で会場の大画面に映せます（Esc で戻ります）。</li>
                 <li>残り10秒で色が変わり、0秒で点滅＋音でお知らせします。</li>
+                <li>動作中は画面が消えません。タブの見出しにも残り時間が出ます。</li>
             </ol>
         </div>
 
@@ -92,16 +99,22 @@
                 <button class="btn-ghost" id="reset-btn" type="button">リセット</button>
                 <button class="btn-ghost" id="fullscreen-btn" type="button">全画面</button>
             </div>
+            <button class="btn-ghost" id="exit-fs-btn" type="button">全画面をやめる（Esc）</button>
         </div>
+
+        <p class="shortcut-hint">キーボード: スペース = 開始／一時停止 / R = リセット / F = 全画面</p>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
 
     <script>
         "use strict";
+        const U = window.PartyUI;
+        const BASE_TITLE = document.title;
         const display = document.getElementById("timer-display");
         const minIn = document.getElementById("minutes-input");
         const secIn = document.getElementById("seconds-input");
+        const wakeLock = U.createWakeLock();
         let remaining = 300;
         let timer = null;
         let running = false;
@@ -116,6 +129,8 @@
             display.textContent = fmt(remaining);
             display.classList.toggle("warn", remaining <= 10 && remaining > 0);
             display.classList.toggle("done", remaining === 0);
+            // 別タブで進行を追えるようにタブ見出しにも出す
+            document.title = running ? fmt(remaining) + " | " + BASE_TITLE : BASE_TITLE;
         }
 
         function setFromInputs() {
@@ -125,19 +140,23 @@
             paint();
         }
 
+        // 会場のざわつきで1回だと聞き逃すため、少し間を空けて3回鳴らす
         function beep() {
             try {
                 const Ctx = window.AudioContext || window.webkitAudioContext;
                 if (!Ctx) return;
                 const ac = new Ctx();
-                const osc = ac.createOscillator();
-                const gain = ac.createGain();
-                osc.connect(gain); gain.connect(ac.destination);
-                osc.type = "sine"; osc.frequency.value = 880;
-                gain.gain.setValueAtTime(0.25, ac.currentTime);
-                osc.start();
-                gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 1.1);
-                osc.stop(ac.currentTime + 1.1);
+                for (let i = 0; i < 3; i++) {
+                    const at = ac.currentTime + i * 0.55;
+                    const osc = ac.createOscillator();
+                    const gain = ac.createGain();
+                    osc.connect(gain); gain.connect(ac.destination);
+                    osc.type = "sine"; osc.frequency.value = 880;
+                    gain.gain.setValueAtTime(0.25, at);
+                    osc.start(at);
+                    gain.gain.exponentialRampToValueAtTime(0.001, at + 0.5);
+                    osc.stop(at + 0.5);
+                }
             } catch { /* 無音でも動作継続 */ }
         }
 
@@ -145,28 +164,44 @@
             if (remaining > 0) {
                 remaining--;
                 paint();
-                if (remaining === 0) { stop(); beep(); }
+                if (remaining === 0) { stop(); beep(); U.toast("時間になりました"); }
             }
         }
 
         function start() {
             if (running) { stop(); return; }
             if (remaining === 0) setFromInputs();
-            if (remaining === 0) return;
+            if (remaining === 0) {
+                U.toast("時間を1秒以上に設定してください");
+                return;
+            }
             running = true;
             document.getElementById("start-btn").textContent = "一時停止";
             timer = setInterval(tick, 1000);
+            wakeLock.enable();
+            paint();
         }
 
         function stop() {
             running = false;
             document.getElementById("start-btn").textContent = "スタート";
             if (timer) { clearInterval(timer); timer = null; }
+            wakeLock.disable();
+            paint();
         }
 
         function reset() {
             stop();
             setFromInputs();
+        }
+
+        function setFullscreen(on) {
+            document.body.classList.toggle("fs", on);
+            if (on && document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else if (!on && document.fullscreenElement && document.exitFullscreen) {
+                document.exitFullscreen().catch(() => {});
+            }
         }
 
         document.getElementById("presets").addEventListener("click", (e) => {
@@ -181,15 +216,19 @@
         secIn.addEventListener("input", () => { if (!running) setFromInputs(); });
         document.getElementById("start-btn").addEventListener("click", start);
         document.getElementById("reset-btn").addEventListener("click", reset);
-        document.getElementById("fullscreen-btn").addEventListener("click", () => {
-            document.body.classList.toggle("fs");
-            if (document.body.classList.contains("fs") && document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else if (document.fullscreenElement && document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            }
+        document.getElementById("fullscreen-btn").addEventListener("click", () => setFullscreen(true));
+        document.getElementById("exit-fs-btn").addEventListener("click", () => setFullscreen(false));
+        // ブラウザ側の Esc で全画面が解けたときも、拡大表示から戻す
+        document.addEventListener("fullscreenchange", () => {
+            if (!document.fullscreenElement) document.body.classList.remove("fs");
         });
-        document.getElementById("year").textContent = new Date().getFullYear();
+        U.bindShortcuts({
+            " ": start,
+            r: reset,
+            f: () => setFullscreen(!document.body.classList.contains("fs")),
+            Escape: () => setFullscreen(false),
+        });
+        U.initFooterYear();
         setFromInputs();
     </script>
     <script src="/cf-web-analytics.js" defer></script>

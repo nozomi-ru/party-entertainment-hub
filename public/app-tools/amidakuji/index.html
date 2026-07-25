@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #amida-wrap { overflow-x: auto; margin: 1em -0.5em; }
         #amida-canvas { display: block; margin: 0 auto; }
@@ -52,9 +53,10 @@
         <div class="howto-note" id="app-howto">
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
-                <li>「参加者」と「結果」をそれぞれ1行に1つ入力します。</li>
+                <li>「参加者」と「結果」をそれぞれ1行に1つ、同じ数だけ入力します。</li>
                 <li>「あみだを作る」で横線がランダムに引かれます。</li>
                 <li>「結果を見る」で誰がどこに着くかを発表します。</li>
+                <li>割り当ては「結果をコピー」で共有できます。</li>
             </ol>
         </div>
 
@@ -68,6 +70,8 @@
                 <textarea id="results-input" placeholder="幹事&#10;乾杯&#10;受付&#10;写真"></textarea>
             </div>
         </div>
+        <p class="count-hint" id="amida-count"></p>
+        <p class="inline-error" id="amida-error" role="alert" hidden></p>
 
         <div id="amida-wrap">
             <canvas id="amida-canvas" width="320" height="360"></canvas>
@@ -79,6 +83,10 @@
         </div>
 
         <div id="result-list" aria-live="polite"></div>
+
+        <div class="result-actions" id="amida-actions" hidden>
+            <button class="btn-ghost" id="copy-btn" type="button">結果をコピー</button>
+        </div>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
@@ -86,22 +94,42 @@
     <script>
         "use strict";
         const P = window.PartyLogic;
+        const U = window.PartyUI;
+        const NAMES_KEY = "amidakujiNames";
+        const RESULTS_KEY = "amidakujiResults";
         const canvas = document.getElementById("amida-canvas");
         const ctx = canvas.getContext("2d");
         const namesTa = document.getElementById("names-input");
         const resultsTa = document.getElementById("results-input");
+        const revealBtn = document.getElementById("reveal-btn");
         const LINES = ["#B4975A", "#1A1A1A", "#7A6A44", "#4A4A4A", "#C9B37E", "#5A4A2A"];
         let rungs = [];
         let width = 0;
+        let pairs = [];
         const H = 8; // 段数
 
-        function lines(ta) { return ta.value.split("\n").map((s) => s.trim()).filter(Boolean); }
+        function lines(ta) { return U.parseLines(ta.value).items; }
+
+        function syncInputState() {
+            const nameCount = lines(namesTa).length;
+            const resultCount = lines(resultsTa).length;
+            U.setHint("amida-count", "参加者 " + U.formatCount(nameCount, "名") + " ／ 結果 " + U.formatCount(resultCount, "件"));
+            if (nameCount < 2) {
+                U.setError("amida-error", "参加者を2名以上入力してください。");
+            } else if (nameCount !== resultCount) {
+                U.setError("amida-error", "参加者 " + nameCount + "名 に対して結果が " + resultCount + "件 です。数を合わせると全員に割り当たります。");
+            } else {
+                U.clearError("amida-error");
+            }
+            revealBtn.disabled = nameCount < 2;
+        }
 
         function build() {
             const names = lines(namesTa);
             width = Math.max(2, names.length);
             rungs = P.generateLadder(width, H);
             document.getElementById("result-list").classList.remove("show");
+            document.getElementById("amida-actions").hidden = true;
             drawLadder();
         }
 
@@ -186,27 +214,56 @@
 
         function reveal() {
             const g = geometry();
-            if (rungs.length === 0 && g.names.length) build();
+            if (g.names.length < 2) {
+                syncInputState();
+                namesTa.focus();
+                return;
+            }
+            if (rungs.length === 0 || width !== Math.max(2, g.names.length)) build();
             const mapping = P.resolveLadder(Math.max(2, g.names.length), rungs);
             drawLadder(true);
-            const box = document.getElementById("result-list");
-            box.innerHTML = g.names.map((nm, i) => {
+            pairs = g.names.map((nm, i) => {
                 const dest = mapping[i];
-                const res = g.results[dest] || `${dest + 1}番目`;
-                return `<div class="result-row"><span>${nm || (i + 1) + "番"}</span><span class="to">→ ${res}</span></div>`;
-            }).join("");
+                return [nm || `${i + 1}番`, g.results[dest] || `${dest + 1}番目`];
+            });
+            const box = document.getElementById("result-list");
+            box.innerHTML = pairs.map(([from, to]) =>
+                `<div class="result-row"><span>${U.escapeHtml(from)}</span><span class="to">→ ${U.escapeHtml(to)}</span></div>`
+            ).join("");
             box.classList.add("show");
+            document.getElementById("amida-actions").hidden = false;
         }
 
-        namesTa.addEventListener("input", build);
-        resultsTa.addEventListener("input", () => drawLadder());
-        document.getElementById("start-btn").addEventListener("click", build);
-        document.getElementById("reveal-btn").addEventListener("click", reveal);
-        document.getElementById("year").textContent = new Date().getFullYear();
+        // 入力のたびに引き直すと当日その場で不信感が出るため、
+        // 人数が変わったときだけ横線を引き直し、名前の打ち直しでは保つ
+        namesTa.addEventListener("input", () => {
+            const next = Math.max(2, lines(namesTa).length);
+            if (next !== width) build(); else drawLadder();
+            localStorage.setItem(NAMES_KEY, namesTa.value);
+            syncInputState();
+        });
+        resultsTa.addEventListener("input", () => {
+            drawLadder();
+            localStorage.setItem(RESULTS_KEY, resultsTa.value);
+            syncInputState();
+        });
+        document.getElementById("start-btn").addEventListener("click", () => {
+            build();
+            U.toast("あみだを引き直しました");
+        });
+        revealBtn.addEventListener("click", reveal);
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!pairs.length) return;
+            U.copyWithToast(U.formatPairs(pairs), "あみだの結果をコピーしました");
+        });
+        U.initFooterYear();
 
-        namesTa.value = "A\nB\nC\nD";
-        resultsTa.value = "幹事\n乾杯\n受付\n写真";
+        const savedNames = localStorage.getItem(NAMES_KEY);
+        const savedResults = localStorage.getItem(RESULTS_KEY);
+        namesTa.value = savedNames != null ? savedNames : "A\nB\nC\nD";
+        resultsTa.value = savedResults != null ? savedResults : "幹事\n乾杯\n受付\n写真";
         build();
+        syncInputState();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>

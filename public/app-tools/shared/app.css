@@ -22,6 +22,21 @@
   box-sizing: border-box;
 }
 
+/*
+ * キーボードで操作している人に「いまどこにいるか」を必ず見せる。
+ * 入力欄は outline を切っているため、focus-visible 側で明示的に戻す。
+ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
 html,
 body {
   margin: 0;
@@ -153,6 +168,7 @@ h1.app-title {
 
 input[type="text"],
 input[type="number"],
+input[type="search"],
 textarea,
 select {
   width: 100%;
@@ -195,6 +211,7 @@ select:focus {
   border: none;
   padding: 1.1em 1.2em;
   width: 100%;
+  min-height: 44px;
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -218,6 +235,7 @@ select:focus {
   color: var(--color-text);
   padding: 0.85em 1.1em;
   width: 100%;
+  min-height: 44px;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -230,6 +248,11 @@ select:focus {
   color: var(--color-gold);
 }
 
+.btn-ghost:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .btn-link {
   background: none;
   border: none;
@@ -238,7 +261,8 @@ select:focus {
   font-size: 0.82rem;
   cursor: pointer;
   font-family: inherit;
-  padding: 8px;
+  padding: 12px 8px;
+  min-height: 44px;
 }
 
 .btn-gold {
@@ -247,11 +271,17 @@ select:focus {
   border: none;
   padding: 1.1em 1.2em;
   width: 100%;
+  min-height: 44px;
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   cursor: pointer;
   font-family: inherit;
+}
+
+.btn-gold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .stack {
@@ -285,6 +315,70 @@ select:focus {
 .howto-note ul {
   margin: 0.2em 0 0;
   padding-left: 1.2em;
+}
+
+/* 入力の状態を、押す前にその場で伝えるための小さな行 */
+.count-hint {
+  margin: 6px 0 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.inline-error {
+  margin: 8px 0 0;
+  padding: 0.6em 0.8em;
+  border-left: 3px solid #b4523a;
+  background: #fbf3f1;
+  color: #8f3d29;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.inline-error[hidden],
+.count-hint[hidden] {
+  display: none;
+}
+
+/* 結果のすぐ下に置く「持ち帰る」操作 */
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1em;
+}
+
+.result-actions > * {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* 操作したことを、画面を止めずに知らせる */
+.party-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 12px);
+  z-index: 3000;
+  max-width: min(92vw, 420px);
+  padding: 0.85em 1.4em;
+  background: var(--color-text);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.party-toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .result-box {
@@ -390,5 +484,16 @@ select:focus {
 @media (max-width: 480px) {
   .card {
     padding: 2.4em 1.1em 1.6em;
+  }
+}
+
+/* 動きに酔いやすい人向け。演出は消しても結果は同じところまで進む */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

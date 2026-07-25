@@ -23,6 +23,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         #scoreboard { display: flex; flex-direction: column; gap: 10px; margin-top: 1.2em; }
         .team-row {
@@ -31,16 +33,16 @@
         }
         .team-row.leader { border-color: var(--color-gold); background: #fff; }
         .rank { font-family: 'Playfair Display', serif; color: var(--color-gold); font-weight: 700; text-align: center; }
-        .team-name { border: none; background: transparent; font-weight: 700; font-size: 1rem; padding: 4px; }
+        .team-name { border: none; background: transparent; font-weight: 700; font-size: 1rem; padding: 4px; min-height: 44px; }
         .team-name:focus { background: #fff; border-bottom: 1px solid var(--color-gold); }
         .score-ctrl { display: flex; align-items: center; gap: 6px; }
         .score-val { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; min-width: 2.2ch; text-align: center; }
         .score-btn {
-            width: 34px; height: 34px; border: 1px solid var(--color-border); background: #fff;
-            font-size: 1.2rem; font-weight: 700; cursor: pointer; line-height: 1; font-family: inherit;
+            width: 44px; height: 44px; border: 1px solid var(--color-border); background: #fff;
+            font-size: 1.3rem; font-weight: 700; cursor: pointer; line-height: 1; font-family: inherit;
         }
         .score-btn.plus { border-color: var(--color-gold); color: var(--color-gold); }
-        .del-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; }
+        .del-btn { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; width: 32px; height: 44px; }
         .step-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 1em; font-size: 0.85rem; color: var(--color-text-light); }
         .step-row input { width: 70px; text-align: center; }
     </style>
@@ -62,7 +64,8 @@
             <ol>
                 <li>チーム名をタップして書き換えられます。</li>
                 <li>＋／−で得点を動かします（1回の増減点は下で変更可）。</li>
-                <li>点数は自動保存。トップのチームは金枠で強調されます。</li>
+                <li>点数は自動保存。同点のチームは同じ順位で表示され、首位は金枠になります。</li>
+                <li>押し間違えたら「1つ元に戻す」で直前の操作を取り消せます。</li>
             </ol>
         </div>
 
@@ -75,6 +78,10 @@
 
         <div class="stack">
             <button class="btn-gold" id="add-team-btn" type="button">チームを追加</button>
+            <div class="row">
+                <button class="btn-ghost" id="undo-btn" type="button">1つ元に戻す</button>
+                <button class="btn-ghost" id="copy-btn" type="button">得点をコピー</button>
+            </div>
             <button class="btn-link" id="reset-btn" type="button">全チームを0点に戻す</button>
         </div>
     </main>
@@ -83,9 +90,17 @@
 
     <script>
         "use strict";
+        const P = window.PartyLogic;
+        const U = window.PartyUI;
         const KEY = "scoreboardTeams";
+        const UNDO_LIMIT = 20;
         const stepIn = document.getElementById("step-input");
+        const undoBtn = document.getElementById("undo-btn");
+        const resetBtn = document.getElementById("reset-btn");
         let teams = [];
+        let undoStack = [];
+        let resetArmed = false;
+        let resetTimer = null;
 
         function load() {
             try { teams = JSON.parse(localStorage.getItem(KEY)); } catch { teams = null; }
@@ -100,22 +115,35 @@
 
         function step() { return Math.max(1, parseInt(stepIn.value, 10) || 1); }
 
+        /** 取り消せるように、変更する直前の状態を控えておく */
+        function pushUndo() {
+            undoStack.push(JSON.stringify(teams));
+            if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+        }
+
+        function disarmReset() {
+            resetArmed = false;
+            if (resetTimer) { clearTimeout(resetTimer); resetTimer = null; }
+            resetBtn.textContent = "全チームを0点に戻す";
+        }
+
         function render() {
-            const max = Math.max(...teams.map((t) => t.score), 0);
+            const ranks = P.rankScores(teams.map((t) => t.score));
+            const hasScore = teams.some((t) => t.score !== 0);
             const box = document.getElementById("scoreboard");
             box.innerHTML = "";
             teams.forEach((team, i) => {
                 const row = document.createElement("div");
-                const isLeader = team.score === max && max > 0;
+                const isLeader = hasScore && ranks[i] === 1;
                 row.className = "team-row" + (isLeader ? " leader" : "");
                 row.innerHTML = `
-                    <span class="rank">${isLeader ? "★" : i + 1}</span>
-                    <input class="team-name" value="${team.name.replace(/"/g, "&quot;")}" data-i="${i}" maxlength="16" aria-label="チーム名">
+                    <span class="rank">${isLeader ? "★" : ranks[i]}</span>
+                    <input class="team-name" value="${U.escapeHtml(team.name)}" data-i="${i}" maxlength="16" aria-label="チーム名">
                     <div class="score-ctrl">
-                        <button class="score-btn minus" data-i="${i}" data-d="-1" aria-label="減点">−</button>
+                        <button class="score-btn minus" data-i="${i}" data-d="-1" aria-label="${U.escapeHtml(team.name)}を減点">−</button>
                         <span class="score-val">${team.score}</span>
-                        <button class="score-btn plus" data-i="${i}" data-d="1" aria-label="加点">＋</button>
-                        <button class="del-btn" data-del="${i}" aria-label="削除">✕</button>
+                        <button class="score-btn plus" data-i="${i}" data-d="1" aria-label="${U.escapeHtml(team.name)}を加点">＋</button>
+                        <button class="del-btn" data-del="${i}" aria-label="${U.escapeHtml(team.name)}を削除">✕</button>
                     </div>
                 `;
                 box.appendChild(row);
@@ -123,27 +151,70 @@
 
             box.querySelectorAll(".score-btn").forEach((btn) =>
                 btn.addEventListener("click", () => {
+                    disarmReset();
+                    pushUndo();
                     const i = +btn.dataset.i;
                     teams[i].score += (+btn.dataset.d) * step();
                     save(); render();
                 }));
+            // 入力のたびに保存する。得点ボタンで再描画されても入力途中の名前が消えない
             box.querySelectorAll(".team-name").forEach((inp) =>
-                inp.addEventListener("change", () => { teams[+inp.dataset.i].name = inp.value.trim() || "チーム"; save(); }));
+                inp.addEventListener("input", () => {
+                    teams[+inp.dataset.i].name = inp.value.trim() || "チーム";
+                    save();
+                }));
             box.querySelectorAll(".del-btn").forEach((btn) =>
                 btn.addEventListener("click", () => {
-                    if (teams.length <= 1) return;
+                    if (teams.length <= 1) {
+                        U.toast("チームは1つ以上必要です");
+                        return;
+                    }
+                    disarmReset();
+                    pushUndo();
                     teams.splice(+btn.dataset.del, 1); save(); render();
                 }));
+
+            undoBtn.disabled = undoStack.length === 0;
+        }
+
+        function scoreText() {
+            const ranks = P.rankScores(teams.map((t) => t.score));
+            return teams
+                .map((t, i) => `${ranks[i]}位 ${t.name} ${t.score}点`)
+                .join("\n");
         }
 
         document.getElementById("add-team-btn").addEventListener("click", () => {
+            disarmReset();
+            pushUndo();
             teams.push({ name: "チーム" + (teams.length + 1), score: 0 });
             save(); render();
         });
-        document.getElementById("reset-btn").addEventListener("click", () => {
-            if (confirm("全チームを0点に戻しますか？")) { teams.forEach((t) => (t.score = 0)); save(); render(); }
+        undoBtn.addEventListener("click", () => {
+            const previous = undoStack.pop();
+            if (!previous) return;
+            teams = JSON.parse(previous);
+            save(); render();
+            U.toast("直前の操作を取り消しました");
         });
-        document.getElementById("year").textContent = new Date().getFullYear();
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            U.copyWithToast(scoreText(), "得点をコピーしました");
+        });
+        // 進行中に確認ダイアログで止めないよう、2回押しで戻す形にする
+        resetBtn.addEventListener("click", () => {
+            if (!resetArmed) {
+                resetArmed = true;
+                resetBtn.textContent = "もう一度押すと0点に戻ります";
+                resetTimer = setTimeout(disarmReset, 5000);
+                return;
+            }
+            disarmReset();
+            pushUndo();
+            teams.forEach((t) => (t.score = 0));
+            save(); render();
+            U.toast("全チームを0点に戻しました");
+        });
+        U.initFooterYear();
         load(); render();
     </script>
     <script src="/cf-web-analytics.js" defer></script>

@@ -23,9 +23,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./shared/app.css">
+    <script src="./shared/ui.js"></script>
     <style>
         .hub-card { max-width: 720px; }
+        .filter-field { margin: 0 auto 0.4em; max-width: 420px; text-align: left; }
         .tool-section { margin-top: 2em; text-align: left; }
+        .tool-section[hidden] { display: none; }
         .tool-section h2 {
             font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--color-gold);
             letter-spacing: 0.05em; border-bottom: 1px solid var(--color-border); padding-bottom: 8px; margin-bottom: 14px;
@@ -39,6 +42,9 @@
         .tool-link .name { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
         .tool-link .name .en { font-family: 'Playfair Display', serif; color: var(--color-gold); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
         .tool-link .desc { font-size: 0.8rem; color: var(--color-text-light); margin-top: 6px; line-height: 1.6; }
+        .tool-link[hidden] { display: none; }
+        #no-match { display: none; margin-top: 1.6em; font-size: 0.9rem; color: var(--color-text-light); }
+        #no-match.show { display: block; }
     </style>
 </head>
 <body>
@@ -53,26 +59,32 @@
         <p class="app-subtitle">余興アプリ一覧</p>
         <p class="app-lead">結婚式・二次会・パーティーで使える無料アプリ集。すべてインストール不要、スマホからそのまま使えます。</p>
 
+        <div class="field filter-field">
+            <label for="tool-filter">やりたいことで絞り込む</label>
+            <input type="search" id="tool-filter" placeholder="ビンゴ / 抽選 / 割り勘 / タイマー" autocomplete="off">
+            <p class="count-hint" id="filter-count"></p>
+        </div>
+
         <div class="tool-section">
             <h2>会場でみんなと</h2>
             <div class="tool-grid">
-                <a class="tool-link" href="./wedding-bingo/index.html">
+                <a class="tool-link" href="./wedding-bingo/index.html" data-keywords="ひとまちビンゴ 交流 アイスブレイク 結婚式 二次会">
                     <span class="name">人間ビンゴ <span class="en">Bingo</span></span>
                     <span class="desc">声をかけ合ってマスを埋める交流ビンゴ。アイスブレイクに。</span>
                 </a>
-                <a class="tool-link" href="./wedding-quiz/index.html">
+                <a class="tool-link" href="./wedding-quiz/index.html" data-keywords="クイズ 4択 新郎新婦 出題 共有">
                     <span class="name">新郎新婦クイズ <span class="en">Quiz</span></span>
                     <span class="desc">二人のエピソードを4択に。URL共有で別端末でも同じ問題。</span>
                 </a>
-                <a class="tool-link" href="./wedding-poll/index.html">
+                <a class="tool-link" href="./wedding-poll/index.html" data-keywords="投票 アンケート リアルタイム 集計 挙手">
                     <span class="name">リアルタイムアンケート <span class="en">Poll</span></span>
                     <span class="desc">司会がルームを開き、ゲストがスマホから投票・結果表示。</span>
                 </a>
-                <a class="tool-link" href="./talk-theme/index.html">
+                <a class="tool-link" href="./talk-theme/index.html" data-keywords="会話 ネタ 質問 アイスブレイク 沈黙 ガチャ">
                     <span class="name">トークテーマガチャ <span class="en">Talk</span></span>
                     <span class="desc">会話ネタをランダム表示。初対面の沈黙対策に。</span>
                 </a>
-                <a class="tool-link" href="./king-game/index.html">
+                <a class="tool-link" href="./king-game/index.html" data-keywords="王様 番号 指令 飲み会 合コン ゲーム">
                     <span class="name">王様ゲーム <span class="en">King</span></span>
                     <span class="desc">番号をランダムに配り、王様と指令をその場で決定。</span>
                 </a>
@@ -82,19 +94,19 @@
         <div class="tool-section">
             <h2>抽選・くじ引き</h2>
             <div class="tool-grid">
-                <a class="tool-link" href="./bingo-machine/index.html">
+                <a class="tool-link" href="./bingo-machine/index.html" data-keywords="ビンゴ 抽選 数字 マシン 景品 大画面">
                     <span class="name">ビンゴ数字抽選機 <span class="en">Machine</span></span>
                     <span class="desc">1〜75をランダム抽選。出た数字を自動記録、大画面OK。</span>
                 </a>
-                <a class="tool-link" href="./roulette/index.html">
+                <a class="tool-link" href="./roulette/index.html" data-keywords="抽選 ルーレット 景品 当選 プレゼント くじ">
                     <span class="name">抽選ルーレット <span class="en">Roulette</span></span>
                     <span class="desc">名前や景品を入れて回すだけ。当選者を1人選びます。</span>
                 </a>
-                <a class="tool-link" href="./amidakuji/index.html">
+                <a class="tool-link" href="./amidakuji/index.html" data-keywords="あみだ くじ 役割 席替え 景品 割り当て">
                     <span class="name">あみだくじ <span class="en">Amidakuji</span></span>
                     <span class="desc">参加者と結果を入れて作成。役割・景品・順番決めに。</span>
                 </a>
-                <a class="tool-link" href="./order-picker/index.html">
+                <a class="tool-link" href="./order-picker/index.html" data-keywords="順番 くじ シャッフル スピーチ 発表 並び替え">
                     <span class="name">順番決め・くじ引き <span class="en">Order</span></span>
                     <span class="desc">名前をシャッフルして発表・スピーチの順番を決定。</span>
                 </a>
@@ -104,28 +116,60 @@
         <div class="tool-section">
             <h2>幹事の準備・進行</h2>
             <div class="tool-grid">
-                <a class="tool-link" href="./group-maker/index.html">
+                <a class="tool-link" href="./group-maker/index.html" data-keywords="グループ チーム 分け 班 ランダム 席">
                     <span class="name">グループ分け <span class="en">Group</span></span>
                     <span class="desc">名前を入れて公平にランダムなチーム分け。人数指定OK。</span>
                 </a>
-                <a class="tool-link" href="./warikan/index.html">
+                <a class="tool-link" href="./warikan/index.html" data-keywords="割り勘 会計 集金 金額 精算 飲み会">
                     <span class="name">割り勘計算機 <span class="en">Warikan</span></span>
                     <span class="desc">合計と人数から一人当たりを計算。端数もキレイに。</span>
                 </a>
-                <a class="tool-link" href="./countdown/index.html">
+                <a class="tool-link" href="./countdown/index.html" data-keywords="タイマー 時間 カウントダウン 全画面 開演 スピーチ">
                     <span class="name">カウントダウンタイマー <span class="en">Countdown</span></span>
                     <span class="desc">残り時間を大きく表示。入場・開演・持ち時間管理に。</span>
                 </a>
-                <a class="tool-link" href="./scoreboard/index.html">
+                <a class="tool-link" href="./scoreboard/index.html" data-keywords="得点 点数 スコア 対抗戦 順位 集計">
                     <span class="name">得点板・スコアボード <span class="en">Score</span></span>
                     <span class="desc">チーム対抗ゲームの点数をその場で加減算・自動保存。</span>
                 </a>
             </div>
         </div>
+
+        <p id="no-match" role="status">該当するアプリがありません。別のことばで探すか、入力を消すとすべて表示されます。</p>
     </main>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
-    <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+    <script>
+        "use strict";
+        const U = window.PartyUI;
+        const filter = document.getElementById("tool-filter");
+        const links = Array.from(document.querySelectorAll(".tool-link"));
+        const sections = Array.from(document.querySelectorAll(".tool-section"));
+
+        function haystack(link) {
+            return (link.textContent + " " + (link.dataset.keywords || "")).toLowerCase();
+        }
+
+        function apply() {
+            const query = filter.value.trim().toLowerCase();
+            let shown = 0;
+            links.forEach((link) => {
+                const hit = !query || haystack(link).includes(query);
+                link.hidden = !hit;
+                if (hit) shown++;
+            });
+            // 中身が全部消えた見出しは、空の枠だけ残らないように隠す
+            sections.forEach((section) => {
+                section.hidden = !section.querySelector(".tool-link:not([hidden])");
+            });
+            document.getElementById("no-match").classList.toggle("show", shown === 0);
+            U.setHint("filter-count", query ? shown + "件が該当" : "全 " + links.length + "アプリ");
+        }
+
+        filter.addEventListener("input", apply);
+        U.initFooterYear();
+        apply();
+    </script>
     <script src="/cf-web-analytics.js" defer></script>
 </body>
 </html>

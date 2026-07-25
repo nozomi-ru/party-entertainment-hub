@@ -79,6 +79,8 @@
 
 **進捗メモ（2026-07-23）:** 幹事・進行ツール群（TOOL-\*）の追加に合わせ、乱数系ロジックを `public/app-tools/shared/party-logic.js` に集約して **UT-PARTY-\***（`src/lib/party-logic.test.ts`）を新設。純粋関数を種固定で単体テストする形は、今後 UT-BINGO / UT-PACK を足すときの手本になる。E2E は代表 5 ツールを **SC-TOOLS-\***（`e2e/features/tools.feature`）で自動化済み。
 
+**進捗メモ（2026-07-25）:** TOOL-\* の操作性を見直し、共通 UI 部品 `public/app-tools/shared/ui.js` を新設（design §5.3b）。`alert` / `confirm` を全廃してインラインの理由表示と2回押しに置き換え、結果コピー・取り消し・画面スリープ防止・キーボード操作・一覧の絞り込みを追加した（要件 T-07〜T-11 / C-05〜C-06）。純粋関数は **UT-UI-\***（`src/lib/app-ui.test.ts`）、当日の操作性は **SC-TOOLS-06〜10** で固定している。ui.js も party-logic と同じ UMD 形にしたので、DOM を触る部分は E2E、触らない部分は単体、という切り分けがそのまま使える。
+
 詳細なケース予約は [test-spec.md §12](./test-spec.md)（あれば）または test-spec 末尾の拡張予定を参照。
 
 ---

@@ -3,6 +3,7 @@ import PartyLogic from "../../public/app-tools/shared/party-logic.js";
 
 const { mulberry32, shuffle, drawOne, splitIntoGroups, splitBySize } =
   PartyLogic;
+const { drawDifferent, rankScores } = PartyLogic;
 const { bingoNumbers, bingoLetter, splitBill } = PartyLogic;
 const { generateLadder, resolveLadder, kingGame, groupSizes } = PartyLogic;
 
@@ -41,6 +42,47 @@ describe("drawOne", () => {
 
   it("UT-PARTY-DRAW-02: 空配列なら null", () => {
     expect(drawOne([], seeded())).toEqual({ value: null, rest: [] });
+  });
+});
+
+describe("drawDifferent", () => {
+  it("UT-PARTY-DRAW-03: 直前と同じ値は選ばない", () => {
+    const pool = ["A", "B", "C"];
+    for (let seed = 1; seed <= 30; seed++) {
+      const { value } = drawDifferent(pool, "A", mulberry32(seed));
+      expect(value).not.toBe("A");
+      expect(pool).toContain(value);
+    }
+  });
+
+  it("UT-PARTY-DRAW-04: 残りは選ばれた分だけ減る", () => {
+    const { value, rest } = drawDifferent(["A", "B", "C"], "A", seeded());
+    expect(rest).toHaveLength(2);
+    expect(rest).not.toContain(value);
+    expect(rest).toContain("A");
+  });
+
+  it("UT-PARTY-DRAW-05: 候補が直前の1つだけならそれを返す", () => {
+    expect(drawDifferent(["A"], "A", seeded()).value).toBe("A");
+  });
+
+  it("UT-PARTY-DRAW-06: 空配列なら null", () => {
+    expect(drawDifferent([], "A", seeded())).toEqual({ value: null, rest: [] });
+  });
+});
+
+describe("rankScores", () => {
+  it("UT-PARTY-RANK-01: 高い得点が1位で、低い順に番号が増える", () => {
+    expect(rankScores([5, 9, 1])).toEqual([2, 1, 3]);
+  });
+
+  it("UT-PARTY-RANK-02: 同点は同じ順位で、その分だけ次が飛ぶ", () => {
+    expect(rankScores([10, 10, 5])).toEqual([1, 1, 3]);
+  });
+
+  it("UT-PARTY-RANK-03: マイナス点や空配列でも壊れない", () => {
+    expect(rankScores([-3, 0])).toEqual([2, 1]);
+    expect(rankScores([])).toEqual([]);
   });
 });
 

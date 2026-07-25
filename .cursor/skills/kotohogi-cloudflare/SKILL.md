@@ -60,6 +60,18 @@ description: >-
 - [ ] Host/Guest を一度通した（投票・結果表示）
 ```
 
+## 余興ツール（app-tools）の必須 UX
+
+`public/app-tools/` を触るときの約束。正は `docs/requirements.md` §4.6（T-07〜T-11）と `docs/design.md` §5.3b。
+
+- 共通部品を使う: ロジックは `shared/party-logic.js`、操作まわりは `shared/ui.js`（`window.PartyUI`）
+- **`alert` / `confirm` を新規に足さない**。不足の理由は `.inline-error`、消す操作は「2回押し」
+- 実行できないときはボタンを `disabled` にし、件数など理由を `.count-hint` に出す
+- 参加者名の表示は `PartyUI.escapeHtml` を通す
+- 結果を出すツールには「結果をコピー」（`PartyUI.copyWithToast`）を付ける
+- 会場で映すもの（抽選機・タイマー）は `PartyUI.createWakeLock` と `bindShortcuts`
+- 純粋関数を足したら単体（UT-PARTY-\* / UT-UI-\*）、画面の約束を変えたら E2E（SC-TOOLS-\*）も直す
+
 ## アンケート（POLL）の必須 UX
 
 要件・設計の要約。変更時は `docs/requirements.md` / `docs/design.md` も更新する。

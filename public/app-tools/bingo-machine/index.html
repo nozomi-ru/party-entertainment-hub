@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/app.css">
     <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         .draw-display {
             display: flex;
@@ -71,6 +72,7 @@
             color: var(--color-text-light);
         }
         .hist-cell.latest { border-color: var(--color-gold); color: var(--color-gold); background: #fff; }
+        .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -88,9 +90,10 @@
         <div class="howto-note" id="app-howto">
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
-                <li>「抽選する」を押すと、まだ出ていない数字が1つ出ます。</li>
+                <li>「抽選する」を押すと、まだ出ていない数字が1つ出ます（スペースキーでも抽選）。</li>
                 <li>出た数字は下の履歴に記録され、リロードしても残ります。</li>
-                <li>会場の大画面につないで表示すると盛り上がります。</li>
+                <li>読み間違えたときは「1つ取り消す」で直前の抽選をなかったことにできます。</li>
+                <li>会場の大画面につないで表示すると盛り上がります（表示中は画面を消しません）。</li>
             </ol>
         </div>
 
@@ -98,12 +101,21 @@
             <div class="draw-letter" id="current-letter">READY</div>
             <div class="draw-number" id="current-number">–</div>
         </div>
-        <p class="count-line"><span id="drawn-count">0</span> / <span id="max-count">75</span> 個抽選済み</p>
+        <p class="count-line">
+            <span id="drawn-count">0</span> / <span id="max-count">75</span> 個抽選済み
+            （残り <span id="remaining-count">75</span>）
+        </p>
 
         <div class="stack">
             <button class="btn-gold" id="draw-btn" type="button">抽選する</button>
+            <div class="row">
+                <button class="btn-ghost" id="undo-btn" type="button">1つ取り消す</button>
+                <button class="btn-ghost" id="copy-btn" type="button">出た数字をコピー</button>
+            </div>
             <button class="btn-link" id="reset-btn" type="button">リセット（最初から）</button>
         </div>
+
+        <p class="shortcut-hint">キーボード: スペース = 抽選 / U = 取り消し</p>
 
         <div id="history" aria-label="抽選履歴"></div>
     </main>
@@ -113,9 +125,17 @@
     <script>
         "use strict";
         const P = window.PartyLogic;
+        const U = window.PartyUI;
         const MAX = 75;
         const KEY = "bingoMachineDrawn";
         const state = { drawn: [] };
+        const wakeLock = U.createWakeLock();
+        const drawBtn = document.getElementById("draw-btn");
+        const undoBtn = document.getElementById("undo-btn");
+        const resetBtn = document.getElementById("reset-btn");
+        let drawing = false;
+        let resetArmed = false;
+        let resetTimer = null;
 
         function load() {
             try { state.drawn = JSON.parse(localStorage.getItem(KEY)) || []; }
@@ -129,8 +149,15 @@
             return P.bingoNumbers(MAX).filter((n) => !set.has(n));
         }
 
+        function disarmReset() {
+            resetArmed = false;
+            if (resetTimer) { clearTimeout(resetTimer); resetTimer = null; }
+            resetBtn.textContent = "リセット（最初から）";
+        }
+
         function render(latest) {
             document.getElementById("drawn-count").textContent = String(state.drawn.length);
+            document.getElementById("remaining-count").textContent = String(MAX - state.drawn.length);
             const numEl = document.getElementById("current-number");
             const letterEl = document.getElementById("current-letter");
             if (latest != null) {
@@ -149,27 +176,45 @@
                 const cls = i === state.drawn.length - 1 ? "hist-cell latest" : "hist-cell";
                 return `<div class="${cls}">${n}</div>`;
             }).join("");
-            document.getElementById("draw-btn").disabled = remaining().length === 0;
+            drawBtn.disabled = drawing || remaining().length === 0;
+            undoBtn.disabled = drawing || state.drawn.length === 0;
+            document.getElementById("copy-btn").disabled = state.drawn.length === 0;
         }
 
         function draw() {
+            if (drawing) return;
             const pool = remaining();
             if (pool.length === 0) return;
+            disarmReset();
+            drawing = true;
+            drawBtn.disabled = true;
+            undoBtn.disabled = true;
             const numEl = document.getElementById("current-number");
             numEl.classList.add("spin");
+            const totalTicks = U.prefersReducedMotion() ? 1 : 10;
             let ticks = 0;
             const timer = setInterval(() => {
                 const preview = pool[Math.floor(Math.random() * pool.length)];
                 numEl.textContent = String(preview);
-                if (++ticks >= 10) {
+                if (++ticks >= totalTicks) {
                     clearInterval(timer);
                     numEl.classList.remove("spin");
                     const { value } = P.drawOne(pool);
                     state.drawn.push(value);
                     save();
+                    drawing = false;
                     render(value);
                 }
             }, 55);
+        }
+
+        function undo() {
+            if (drawing || state.drawn.length === 0) return;
+            disarmReset();
+            const removed = state.drawn.pop();
+            save();
+            render(null);
+            U.toast(removed + " を取り消しました");
         }
 
         function reset() {
@@ -178,11 +223,28 @@
             render(null);
         }
 
-        document.getElementById("draw-btn").addEventListener("click", draw);
-        document.getElementById("reset-btn").addEventListener("click", () => {
-            if (state.drawn.length === 0 || confirm("抽選履歴をすべて消して最初からにしますか？")) reset();
+        drawBtn.addEventListener("click", draw);
+        undoBtn.addEventListener("click", undo);
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!state.drawn.length) return;
+            U.copyWithToast(state.drawn.join(", "), "出た数字をコピーしました");
         });
-        document.getElementById("year").textContent = new Date().getFullYear();
+        // 進行中に確認ダイアログで止めないよう、2回押しで消す形にする
+        resetBtn.addEventListener("click", () => {
+            if (state.drawn.length === 0) return;
+            if (!resetArmed) {
+                resetArmed = true;
+                resetBtn.textContent = "もう一度押すと全部消えます";
+                resetTimer = setTimeout(disarmReset, 5000);
+                return;
+            }
+            disarmReset();
+            reset();
+            U.toast("抽選履歴を消しました");
+        });
+        U.bindShortcuts({ " ": draw, u: undo });
+        U.initFooterYear();
+        wakeLock.enable();
         load();
         render(null);
     </script>

@@ -31,7 +31,7 @@
 
 | 層 | 仕様 | 実装・設定 | 手順 |
 |----|------|------------|------|
-| L1 単体 | この文書 §6（poll）・§6.3b（party-logic） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
+| L1 単体 | この文書 §6（poll）・§6.3b（party-logic）・§6.3c（app-ui） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
 | L2 スモーク | この文書 §7 | `scripts/smoke.mjs` | `npm run smoke` |
 | L2b E2E | [scenario-spec.md](./scenario-spec.md) | `e2e/`, `playwright.config.ts` | [ops/testing.md](./ops/testing.md) |
 | CI | この文書 §9 | `.github/workflows/quality.yml` ほか | [ops/testing.md](./ops/testing.md) |
@@ -200,6 +200,8 @@ L4   本番                会場用。上を通ってからだけ
 |----|------|------|
 | UT-PARTY-SHUFFLE-01〜03 | `shuffle` | 要素を保つ／元配列を壊さない／同じ種で再現 |
 | UT-PARTY-DRAW-01〜02 | `drawOne` | 1つ選び残りが減る／空なら null |
+| UT-PARTY-DRAW-03〜06 | `drawDifferent` | 直前と同じ値を選ばない／残りが減る／候補が直前だけなら返す／空なら null |
+| UT-PARTY-RANK-01〜03 | `rankScores` | 高得点が1位／同点は同順位で次が飛ぶ／マイナス・空でも壊れない |
 | UT-PARTY-GROUP-01〜03 | `splitIntoGroups` | 全員配分／人数差は最大1／空でも指定数の空グループ |
 | UT-PARTY-SIZE-01 | `splitBySize` | 各グループが最大 size 人 |
 | UT-PARTY-BINGO-01〜02 | `bingoNumbers` / `bingoLetter` | 1〜75 連番／列頭文字 B I N G O |
@@ -208,6 +210,21 @@ L4   本番                会場用。上を通ってからだけ
 | UT-PARTY-KING-01 | `kingGame` | 1..N を1つずつ配り王様番号は範囲内 |
 
 これらは種を渡すため乱数に依存せず、CI でも安定して PASS する。
+
+### 6.3c 余興共通 UI 部品 `ui`（UT-UI-\*）
+
+TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM を触らない純粋関数**を検証する。対象は `public/app-tools/shared/ui.js`、テストは `src/lib/app-ui.test.ts`。
+
+トースト・コピー・Wake Lock などブラウザ API に依存する部分はここでは扱わず、E2E（SC-TOOLS-07）で確認する。
+
+| ID | 対象 | 期待 |
+|----|------|------|
+| UT-UI-ESCAPE-01〜03 | `escapeHtml` | `< > & " '` を実体参照に／普通の名前はそのまま／null は空文字 |
+| UT-UI-LINES-01〜04 | `parseLines` | 空白と空行を落として件数を返す／重複名を1回だけ報告／重複なしは空／空入力でも落ちない |
+| UT-UI-COUNT-01〜03 | `formatCount` | 件数と単位を並べる／0件は「未入力」と分かる／数値でない値は0扱い |
+| UT-UI-FORMAT-01〜05 | `formatNumberedList` / `formatGroups` / `formatPairs` | 番号付き・チーム名と人数・矢印でつなぐ／見出しは差し替え可／空は空文字 |
+
+`escapeHtml` は表示崩れ対策（要件 T-10）そのものなので、ここが落ちたら参加者名の表示を疑う。
 
 ### 6.4 保存 `poll-store`（メモリ）
 
@@ -287,6 +304,11 @@ L4   本番                会場用。上を通ってからだけ
 | SC-TOOLS-03 | `tools.feature` | 割り勘計算機が一人当たりを計算 | T-WARI |
 | SC-TOOLS-04 | `tools.feature` | グループ分けがチームを作る | T-GROUP |
 | SC-TOOLS-05 | `tools.feature` | あみだくじが結果を出す | T-AMIDA |
+| SC-TOOLS-06 | `tools.feature` | 入力不足はダイアログではなく画面上で理由が分かる | 要件 T-07 |
+| SC-TOOLS-07 | `tools.feature` | 決まった順番をコピーして共有できる | 要件 T-08 |
+| SC-TOOLS-08 | `tools.feature` | 一覧をキーワードで絞り込める | 要件 T-05 |
+| SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
+| SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |
 
 ### 8.3 動画の見方
 
