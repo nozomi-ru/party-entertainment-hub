@@ -229,7 +229,7 @@ game ID（現行実装）: `dress`（`/dress/*`） / `graph`（`/graph/*`）
 ドレス API: `/api/dress/state` · `/api/dress/vote` · `/api/dress/admin`（open / setColors / extend）。KV: `dress:{room}:meta|state|colors|vote:*`。  
 共通 TTL: `src/lib/room-ttl.ts` / UI: `RoomTtlBar` · `PartyUI.updateRoomTtlUi`。
 
-（削除済み・未実装の ID 例）: `buzz` / `digibingo` / `either` / `treasure` / `grade` / `request`
+（削除済み）: `buzz` / `digibingo` / `either` / `treasure` / `grade`（ゲスト格付けチェック） / `request`
 
 ---
 

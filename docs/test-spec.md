@@ -304,12 +304,15 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 
 ### 6.4d ライブ余興 `live/*`（UT-LIVE-\*）
 
+汎用 `/live/{game}` ゲームは撤退済み。現行のライブは Dress / Graph の専用アプリ。
+
 | ID | 操作 | 期待 |
 |----|------|------|
-| UT-LIVE-01〜09 | `summary.ts` の集計純関数 | 最速・1票・正解者・ランキング・ビンゴカード等 |
-| UT-LIVE-STORE-01〜04 | handlers + KV メモリ | ルーム作成・投票集計・早押しガード・リクエストいいね |
+| UT-LIVE-00 | `summarizeLive` | 現行汎用ゲームなしのとき空サマリー |
+| UT-LIVE-STORE-00 | カタログ | 汎用 live ゲームが撤退済みであること |
 
-実装: `src/lib/live/summary.test.ts` · `src/lib/live/store.test.ts`
+実装: `src/lib/live/summary.test.ts` · `src/lib/live/store.test.ts`  
+Dress / Graph の単体は `src/lib/dress/` · `src/lib/graph/` を参照。
 
 ### 6.5 保存 `quiz-store`（メモリ）
 

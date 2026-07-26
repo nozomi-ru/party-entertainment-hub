@@ -96,17 +96,18 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
 | WISH | 祝福メッセージボード | 静的 HTML + API | Host/Guest 同期のデジタル寄せ書き | `public/app-tools/wishboard/` + `/api/wish` |
 | TOOL-* | 幹事・進行ツール群（6種） | 静的 HTML | 抽選・進行・トーク・フォトなどの単機能アプリ | `public/app-tools/{slug}/` |
-| LIVE-* | ライブ余興（8種） | Next.js + API + KV | Guest / Screen / Admin 同期。投票等は一意キー put + list 集計 | `src/app/live/` + `/api/live` |
+| LIVE-* | ライブ余興（2種） | Next.js + API + KV | Dress / Graph。Guest / Screen / Admin | `src/app/dress/` · `src/app/graph/` · `/api/dress` · `/api/graph` |
 
 **TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・カウントダウンタイマー・得点板・テーブルトークカード・フォトミッション。
 
-**LIVE-\* の内訳（§4.7）:** 早押しクイズ・デジタルビンゴ・どっち？・ドレス色当て・QR宝探し・リクエストボード・相関図。
+**LIVE-\* の内訳（§4.7）:** お色直しドレス色当て・新郎新婦との相関図。
 
 対象外（将来候補。詳細は [roadmap.md](./roadmap.md)）:
 
 - ユーザー認証・アカウント管理
 - 永続的なイベント履歴の管理画面
 - ネイティブアプリ
+- 旧ライブ案（早押し・デジタルビンゴ・どっち？・QR宝探し・ゲスト格付け・リクエストボード）
 
 ---
 
@@ -244,7 +245,7 @@ Guest / Screen / Admin の3ロール。同期は各専用 API（`force-dynamic`�
 
 実装パス: `src/lib/dress/` · `src/lib/graph/` · `src/components/dress/` · `src/components/graph/` · `src/app/dress/` · `src/app/graph/` · `/api/dress/*` · `/api/graph/*`。カタログ: `src/lib/live/catalog.ts`（`LIVE_GAMES`）。
 
-※ 旧汎用 `/live/{game}` パネル（早押し・どっち？等）は現行カタログから外している。再導入時は本節と test/scenario を更新する。
+※ 旧汎用 `/live/{game}` パネル（早押し・どっち？・ゲスト格付けチェック等）は現行カタログから削除済み。再導入時は本節と test/scenario を更新する。
 
 ### 4.5 共通
 
