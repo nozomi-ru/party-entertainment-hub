@@ -115,3 +115,21 @@ export async function kvList(
     cursor: list_complete ? undefined : String(next),
   };
 }
+
+/** prefix 配下のキーをすべて列挙し、値も取得する（集計用） */
+export async function kvListAll(
+  prefix: string,
+): Promise<{ name: string; value: string }[]> {
+  const out: { name: string; value: string }[] = [];
+  let cursor: string | undefined;
+  for (;;) {
+    const page = await kvList({ prefix, limit: 1000, cursor });
+    for (const key of page.keys) {
+      const value = await kvGet(key.name);
+      if (value != null) out.push({ name: key.name, value });
+    }
+    if (page.list_complete || !page.cursor) break;
+    cursor = page.cursor;
+  }
+  return out;
+}

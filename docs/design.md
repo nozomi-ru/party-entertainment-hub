@@ -42,6 +42,8 @@
 | KV 共通（get/put/list） | `src/lib/kv.ts` | §3.1 |
 | ゲスト匿名セッション | `src/lib/guest-session.ts`, `src/hooks/use-guest-session.ts` | §3.1 |
 | ロール入口（Guest/Screen/Admin） | `src/app/{guest,screen,admin}/` | §3.1 |
+| ライブ余興 UI / API | `src/app/live/`, `src/components/live/`, `src/app/api/live/` | §3.2 |
+| ライブ余興ロジック | `src/lib/live/` | §3.2 |
 | KV / メモリ永続化 | `src/lib/poll-store.ts` ほか（`kv.ts` 経由） | §8.5 |
 | ビンゴ | `public/app-tools/wedding-bingo/index.html` | §6 |
 | クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
@@ -203,9 +205,25 @@ PRD の Guest / Screen / Admin に対応する入口を App Router に置く。`
 |------|------|
 | `kvGet` / `kvPut` | 単一キーの読み書き。本番は `getCloudflareContext().env.POLL_KV` |
 | `kvList` | `prefix` 付き一覧（ゲスト行動を一意キーで put → 集計側 list する設計向け） |
+| `kvListAll` | prefix 配下をページングしながら値も取得（ライブ余興の集計向け） |
 | （ローカル） | KV が無いときはプロセス内メモリへフォールバック |
 
 既存の `*-store.ts` はすべて `kv.ts` 経由。バインディング名は **`POLL_KV`** 固定（`@cloudflare/next-on-pages` の `getRequestContext` は使わない。本リポジトリは OpenNext）。
+
+### 3.2 ライブ余興（LIVE-\*）
+
+| 項目 | 内容 |
+|------|------|
+| UI | `/live/{game}/{role}`（role = guest \| screen \| admin） |
+| API | `GET/POST /api/live/{game}/{room}`（`dynamic = force-dynamic`） |
+| クライアント同期 | SWR `refreshInterval: 1500` |
+| 演出 | Framer Motion（Screen の結果表示） |
+| 相関図 | `react-force-graph-2d`（Screen のみ） |
+| 状態キー | `live:{game}:{room}:state` |
+| 行動キー | `live:{game}:{room}:a:{guestId}:{actionId}` |
+| 集計 | `kvListAll(prefix)` → `summarizeLive`（純関数・単体テスト対象） |
+
+game ID: `buzz` / `digibingo` / `either` / `dress` / `treasure` / `grade` / `request` / `graph`
 
 ---
 
@@ -240,11 +258,10 @@ PRD の Guest / Screen / Admin に対応する入口を App Router に置く。`
 | 項目 | 文言 |
 |------|------|
 | タグライン | インストール不要。会場のスマホで余興がつながる |
-| 主 CTA | 余興ツールを見る → `#tools` |
-| 副 CTA | 課題と解決を見る → `#solutions` |
-| Problem 3柱 | 余興の準備 / ゲストの参加 / 会場の一体感 |
+| ヒーロー CTA | **1つだけ**「余興ツールを見る」→ `#tools` |
+| Problem 3柱 | 配る手間 / 手元の参加 / 会場の一体感 |
 
-旧コピー（景品選び・進行可視化・「アプリを体験する」など）は実在機能と不一致のため使用しない。
+副 CTA（「課題と解決を見る」等）は置かない。課題セクションへは Scroll で進む。
 
 主要アプリのリンク例:
 

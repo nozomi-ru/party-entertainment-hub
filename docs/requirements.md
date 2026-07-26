@@ -47,6 +47,7 @@
 | 祝福メッセージ UI | `public/app-tools/wishboard/` | design §8c | （手動 / 将来 SC-WISH-*） |
 | 祝福メッセージ API | `src/app/api/wish/`, `src/lib/wish.ts`, `src/lib/wish-store.ts` | design §8c | UT-WISH-* |
 | 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧は LP `ToolsGrid.tsx`（`#tools`） | design §8b | UT-PARTY-* / SC-TOOLS-* |
+| ライブ余興（LIVE-*） | `src/lib/live/`, `src/app/live/`, `src/components/live/` | design §3.2 | UT-LIVE-* / SC-LIVE-* |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
 | 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-06〜07・09〜10 |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 | （目視） |
@@ -95,8 +96,11 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
 | WISH | 祝福メッセージボード | 静的 HTML + API | Host/Guest 同期のデジタル寄せ書き | `public/app-tools/wishboard/` + `/api/wish` |
 | TOOL-* | 幹事・進行ツール群（6種） | 静的 HTML | 抽選・進行・トーク・フォトなどの単機能アプリ | `public/app-tools/{slug}/` |
+| LIVE-* | ライブ余興（8種） | Next.js + API + KV | Guest / Screen / Admin 同期。投票等は一意キー put + list 集計 | `src/app/live/` + `/api/live` |
 
 **TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・カウントダウンタイマー・得点板・テーブルトークカード・フォトミッション。
+
+**LIVE-\* の内訳（§4.7）:** 早押しクイズ・デジタルビンゴ・どっち？・ドレス色当て・QR宝探し・ゲスト格付け・リクエストボード・相関図。
 
 対象外（将来候補。詳細は [roadmap.md](./roadmap.md)）:
 
@@ -113,7 +117,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | ID | 要件 | 優先度 |
 |----|------|--------|
 | LP-01 | ブランド名・タグライン・説明をヒーローで提示する | 必須 |
-| LP-02 | 課題→解決のセクションを表示する（3柱: 余興の準備 / ゲストの参加 / 会場の一体感） | 必須 |
+| LP-02 | 課題→解決のセクションを表示する（3柱: 配る手間 / 手元の参加 / 会場の一体感） | 必須 |
 | LP-03 | Party Tools（`#tools`）が一覧の唯一の導線となり、各アプリへ遷移できる | 必須 |
 | LP-04 | アフィリエイト／おすすめリンクを設定ファイルから差し替え可能にする | 必須 |
 | LP-05 | CTA・機能リンクを `src/config/site.ts` で一元管理する | 必須 |
@@ -226,13 +230,32 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 
 **T-07〜T-11 の背景:** 当日の使い手は「片手にマイク、片手にスマホ」の幹事・司会である。モーダルダイアログは進行を止め、押し間違いはやり直しが効かず、会場の大画面はスリープで暗くなる。共通の実装は `public/app-tools/shared/ui.js`（design §5.3b）に置く。
 
+### 4.7 ライブ余興（LIVE-\*）
+
+Guest（`/live/{game}/guest`）・Screen（`/live/{game}/screen`）・Admin（`/live/{game}/admin`）の3ロール。同期は `/api/live/{game}/{room}`（`force-dynamic`、SWR 約1.5秒ポーリング）。KV は `POLL_KV`。進行状態は `live:{game}:{room}:state`（Admin 単一書き込み）、ゲスト行動は `live:{game}:{room}:a:{guestId}:{actionId}` に一意 put し `list` で集計する。
+
+| ID | ゲーム | 要件 | 優先度 |
+|----|--------|------|--------|
+| L-BUZZ | 早押しクイズ | 押下を個別キー保存。Screen が最速を判定表示 | 必須 |
+| L-BINGO | デジタルビンゴ | Admin が数字抽選を KV 保存。Guest がカード照合 | 必須 |
+| L-EITHER | どっち？ | 二択を個別キー投票。結果を棒グラフ表示 | 必須 |
+| L-DRESS | ドレス色当て | 色投票後、正解発表時に正解者一覧（details） | 必須 |
+| L-TREASURE | QR宝探し | `?spot=` 付き URL でポイント加算・ランキング | 必須 |
+| L-GRADE | ゲスト格付け | 複数問正答率で S/A/B/C ランク一覧 | 必須 |
+| L-REQUEST | リクエストボード | 投稿＋いいね。いいね数でランキング | 必須 |
+| L-GRAPH | 相関図 | 関係入力からネットワークグラフ（force-graph） | 必須 |
+| L-01 | 共通 | 匿名 guestId（localStorage + Cookie）。認証不要 | 必須 |
+| L-02 | 共通 | ルームは英数字4文字。TTL 24h | 必須 |
+
+実装パス: `src/lib/live/`、`src/components/live/`、`src/app/live/[game]/[role]/`、`src/app/api/live/[game]/[room]/`。
+
 ### 4.5 共通
 
 | ID | 要件 | 優先度 |
 |----|------|--------|
 | C-01 | スマートフォン中心の操作に耐える UI とする | 必須 |
 | C-02 | ビンゴ／クイズ・TOOL-\* は DB なしで完結する（URL 共有 or 端末内） | 必須 |
-| C-03 | アンケート・祝福メッセージ（およびビンゴ／クイズ任意集計）はサーバー側同期（本番は Cloudflare KV / `POLL_KV`）を用いる | 必須 |
+| C-03 | アンケート・祝福メッセージ・ライブ余興（およびビンゴ／クイズ任意集計）はサーバー側同期（本番は Cloudflare KV / `POLL_KV`）を用いる | 必須 |
 | C-04 | 余興アプリの共通デザインは `public/app-tools/shared/app.css` に集約する | 推奨 |
 | C-05 | キーボード操作時にフォーカス位置が見え、主要なボタンは 44px 以上のタップ領域を持つ | 推奨 |
 | C-06 | `prefers-reduced-motion` が有効な端末では演出を短縮する（結果は同じ） | 推奨 |

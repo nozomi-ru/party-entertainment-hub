@@ -249,9 +249,9 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | ID | 操作 | 期待 |
 |----|------|------|
 | UT-SITE-01 | タグライン・description | インストール不要・余興名・ブラウザ利用を示す |
-| UT-SITE-02 | `appLinks` | 主 CTA → `#tools`、副 CTA → `#solutions` |
-| UT-SITE-03 | `problemSolutions` | 3柱（余興の準備 / ゲストの参加 / 会場の一体感） |
-| UT-SITE-04 | 旧コピー検出 | 景品選び・流れ可視化・「アプリを体験する」を含まない |
+| UT-SITE-02 | `appLinks` | CTA は1つ。`#tools` へ |
+| UT-SITE-03 | `problemSolutions` | 3柱（配る手間 / 手元の参加 / 会場の一体感） |
+| UT-SITE-04 | 旧コピー検出 | 景品選び・「課題と解決を見る」・「アプリを体験する」を含まない |
 
 実装されたテスト: `src/config/site.test.ts`
 
@@ -287,6 +287,15 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | UT-GUEST-04 | Cookie 無し／不正 | `null` |
 
 実装されたテスト: `src/lib/guest-session.test.ts`
+
+### 6.4d ライブ余興 `live/*`（UT-LIVE-\*）
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-LIVE-01〜09 | `summary.ts` の集計純関数 | 最速・1票・正解者・ランキング・ビンゴカード等 |
+| UT-LIVE-STORE-01〜04 | handlers + KV メモリ | ルーム作成・投票集計・早押しガード・リクエストいいね |
+
+実装: `src/lib/live/summary.test.ts` · `src/lib/live/store.test.ts`
 
 ### 6.5 保存 `quiz-store`（メモリ）
 
@@ -369,7 +378,7 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 |----|----------|------------------|--------|
 | SC-LP-01 | `landing.feature` | ブランド名「ことほぎ」が見える | 紹介ページの基本 |
 | SC-LP-02 | `landing.feature` | Party Tools（ToolsGrid）から3アプリへ遷移 | 受け入れ1 |
-| SC-LP-03 | `landing.feature` | ヒーローにタグラインと CTA（余興ツール / 課題と解決） | LP-01 / LP-05 |
+| SC-LP-03 | `landing.feature` | ヒーローにタグラインと CTA（余興ツールを見る） | LP-01 / LP-05 |
 | SC-LP-04 | `landing.feature` | Problem & Solution の3柱タイトルが見える | LP-02 |
 | SC-POLL-01 | `poll.feature` | Host 入室→Guest 投票 | アンケート最小経路 |
 | SC-POLL-02 | `poll.feature` | Host が結果表示 | 結果公開 |
@@ -383,6 +392,9 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-TOOLS-07 | `tools.feature` | 当選の記録をコピーして共有できる（ルーレット） | 要件 T-08 |
 | SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
 | SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |
+| SC-LIVE-01 | `live.feature` | どっち？で Guest が投票し Admin が結果表示 | L-EITHER |
+| SC-LIVE-02 | `live.feature` | 早押しで最速ゲストが Screen に表示 | L-BUZZ |
+| SC-LIVE-03 | `live.feature` | リクエストボードに投稿できる | L-REQUEST |
 
 ### 8.3 動画の見方
 

@@ -47,7 +47,7 @@ export function Hero() {
           {siteConfig.tagline}
         </p>
 
-        <div className="animate-fade-up animation-delay-300 mt-11 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+        <div className="animate-fade-up animation-delay-300 mt-11 flex justify-center">
           <Link
             href={appLinks.primaryCta.href}
             className={cn(
@@ -57,15 +57,6 @@ export function Hero() {
           >
             {appLinks.primaryCta.label}
             <ArrowRight />
-          </Link>
-          <Link
-            href={appLinks.secondaryCta.href}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "lg" }),
-              "min-w-[11.5rem] border-white/35 bg-white/10 text-white hover:border-white/60 hover:bg-white/15",
-            )}
-          >
-            {appLinks.secondaryCta.label}
           </Link>
         </div>
       </div>

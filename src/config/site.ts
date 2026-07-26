@@ -90,15 +90,11 @@ export const pageSeo = {
   },
 } as const;
 
-/** アプリ・セクションへの遷移先 */
+/** アプリ・セクションへの遷移先（ヒーローは主CTA1つのみ） */
 export const appLinks = {
   primaryCta: {
     label: "余興ツールを見る",
     href: "#tools",
-  },
-  secondaryCta: {
-    label: "課題と解決を見る",
-    href: "#solutions",
   },
 } as const;
 
@@ -110,30 +106,29 @@ export type ProblemSolutionItem = {
   icon: "clipboard" | "smartphone" | "users";
 };
 
-/** Problem & Solution セクション見出し（LP-05） */
+/** Problem & Solution セクション見出し（LP-02 / LP-05） */
 export const problemSolutionIntro = {
   eyebrow: "Problem & Solution",
-  title: "余興の悩みに、その場で使えるアプリで応える",
+  title: "余興の準備から、会場の一体感まで",
   description:
-    "特別な機材もインストールも不要。ブラウザだけで始まる余興と、幹事向けの進行ツールをまとめています。",
+    "ブラウザだけで始められます。インストールや特別な機材は不要です。",
 } as const;
 
 export const problemSolutions: ProblemSolutionItem[] = [
   {
     id: "ready",
-    title: "余興の準備",
-    problem:
-      "余興用の道具を揃えたり、ゲストへ配る手順を整えたりするのに手間がかかる。",
+    title: "配る手間",
+    problem: "余興の設定をゲストへ配るのに、印刷や説明がかさむ。",
     solution:
-      "人間ビンゴ・クイズ・アンケートなどをURLひとつで共有。設定はその場で編集できます。",
+      "URL ひとつでビンゴ・クイズ・アンケートを共有。その場で編集できます。",
     icon: "clipboard",
   },
   {
     id: "join",
-    title: "ゲストの参加",
-    problem: "ゲストが受け身になりがちで、手元から参加するきっかけが少ない。",
+    title: "手元の参加",
+    problem: "ゲストが受け身になり、手元から動くきっかけが少ない。",
     solution:
-      "スマホのブラウザから投票・回答・ビンゴ記入。アプリのインストールは不要です。",
+      "スマホのブラウザから投票・早押し・ビンゴ記入。アプリ不要です。",
     icon: "smartphone",
   },
   {
@@ -141,7 +136,7 @@ export const problemSolutions: ProblemSolutionItem[] = [
     title: "会場の一体感",
     problem: "ゲスト同士がよそよそしく、空気が硬くなりがち。",
     solution:
-      "ビンゴ・トークカード・ライブアンケートで、会場が同じ時間を共有できます。",
+      "ライブ余興やトークカードで、会場が同じ時間を共有できます。",
     icon: "users",
   },
 ];
