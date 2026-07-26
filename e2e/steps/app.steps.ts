@@ -52,17 +52,6 @@ When("{string} のアプリリンクを開く", async ({ page }, title: string) 
   await page.getByRole("link", { name: new RegExp(title) }).first().click();
 });
 
-Then(
-  "Featuresに {string} の使い方が表示される",
-  async ({ page }, title: string) => {
-    const link = page.getByRole("link", { name: new RegExp(title) }).first();
-    await expect(link).toBeVisible();
-    await expect(link.getByText("使い方", { exact: true })).toBeVisible();
-    // 幹事向けの短い手順文が入っていること
-    await expect(link).toContainText(/幹事|司会/);
-  },
-);
-
 Then("ビンゴ画面が表示される", async ({ page }) => {
   await expect(page.locator("#main-title")).toHaveText(/Bingo/i);
   await expect(page.locator("#bingo-board")).toBeVisible();
@@ -433,21 +422,6 @@ Then("数字が1つ抽選される", async ({ page }) => {
   });
 });
 
-Given("割り勘計算機を開いている", async ({ page }) => {
-  await page.goto("/app-tools/warikan/index.html");
-  await page.evaluate(() => {
-    Object.keys(localStorage)
-      .filter((k) => k.startsWith("warikan"))
-      .forEach((k) => localStorage.removeItem(k));
-  });
-  await page.reload();
-  await expect(page.locator("#main-amount")).toBeVisible();
-});
-
-Then("一人当たりの金額が表示される", async ({ page }) => {
-  await expect(page.locator("#main-amount")).toContainText("¥");
-});
-
 Given("抽選ルーレットを開いている", async ({ page }) => {
   await page.goto("/app-tools/roulette/index.html");
   await page.evaluate(() => localStorage.removeItem("rouletteNames"));
@@ -467,7 +441,16 @@ Then("入力欄に {string} と表示される", async ({ page }, text: string) 
   await expect(page.locator("#names-count")).toContainText(text);
 });
 
-When("集金メモをコピーする", async ({ page }) => {
+When("ルーレットを回す", async ({ page }) => {
+  await page.locator("#spin-btn").click();
+});
+
+Then("当選が表示される", async ({ page }) => {
+  await expect(page.locator("#winner-box")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("#winner")).not.toHaveText("–");
+});
+
+When("当選の記録をコピーする", async ({ page }) => {
   await page
     .context()
     .grantPermissions(["clipboard-read", "clipboard-write"])

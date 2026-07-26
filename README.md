@@ -78,9 +78,9 @@ party-entertainment-hub/
 
 `src/config/site.ts` を編集してください。
 
-- `appLinks.primaryCta.href` … CTA の遷移先
-- `features[].href` … Features から各アプリへの URL
-- `affiliateItems[].href` … アフィリエイト／おすすめショップの URL
+- `appLinks.primaryCta.href` … CTA の遷移先（既定は `#tools`）
+- `toolItems[].href` … Party Tools 一覧から各アプリへの URL
+- `affiliateBanners[]` … A8 バナー広告の差し替え
 
 ## ローカル開発
 

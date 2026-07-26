@@ -114,12 +114,26 @@
   }
 
   /**
-   * ビンゴ数字抽選機の全数字（既定 1〜75）。
+   * ビンゴ数字抽選機の全数字。
+   * - bingoNumbers() → 1〜75
+   * - bingoNumbers(50) → 1〜50（従来互換）
+   * - bingoNumbers(10, 40) → 10〜40
    */
-  function bingoNumbers(max) {
-    const top = Math.max(1, Math.floor(max) || 75);
+  function bingoNumbers(minOrMax, maybeMax) {
+    let min = 1;
+    let max = 75;
+    if (maybeMax != null) {
+      min = Math.floor(Number(minOrMax));
+      max = Math.floor(Number(maybeMax));
+    } else if (minOrMax != null) {
+      max = Math.floor(Number(minOrMax));
+    }
+    if (!Number.isFinite(min)) min = 1;
+    if (!Number.isFinite(max)) max = 75;
+    min = Math.max(1, Math.min(min, 9999));
+    max = Math.max(min, Math.min(max, 9999));
     const list = [];
-    for (let i = 1; i <= top; i++) list.push(i);
+    for (let i = min; i <= max; i++) list.push(i);
     return list;
   }
 

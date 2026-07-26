@@ -13,7 +13,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/app-tools/wedding-poll/index.html",
     "/app-tools/bingo-machine/index.html",
     "/app-tools/roulette/index.html",
-    "/app-tools/warikan/index.html",
     "/app-tools/countdown/index.html",
     "/app-tools/scoreboard/index.html",
   ];

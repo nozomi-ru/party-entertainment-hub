@@ -54,12 +54,12 @@ export const pageSeo = {
   tools: {
     title: "余興アプリ一覧 | ことほぎ",
     description:
-      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・抽選・割り勘などをスマホから今すぐ。",
+      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・抽選・タイマーなどをスマホから今すぐ。",
   },
   bingoMachine: {
     title: "ビンゴ数字抽選機 | ことほぎ",
     description:
-      "数字の範囲を選んでランダム抽選（1〜30・50・75・100）。出た数字を自動記録、大画面表示OK。結婚式・二次会のビンゴ大会に。",
+      "開始〜終了の数字範囲を自由に指定してランダム抽選。出た数字を自動記録、大画面表示OK。結婚式・二次会のビンゴ大会に。",
   },
   roulette: {
     title: "抽選ルーレット | ことほぎ",
@@ -68,11 +68,6 @@ export const pageSeo = {
   },
 
 
-  warikan: {
-    title: "割り勘計算機 | ことほぎ",
-    description:
-      "合計金額と人数から一人当たりを自動計算。100円・500円単位で切り上げて端数もキレイに。二次会・飲み会の割り勘に。",
-  },
   countdown: {
     title: "カウントダウンタイマー | ことほぎ",
     description:
@@ -89,11 +84,11 @@ export const pageSeo = {
 export const appLinks = {
   primaryCta: {
     label: "アプリを体験する",
-    href: "#features",
+    href: "#tools",
   },
   secondaryCta: {
-    label: "機能を見る",
-    href: "#features",
+    label: "ツール一覧を見る",
+    href: "#tools",
   },
 } as const;
 
@@ -129,80 +124,6 @@ export const problemSolutions: ProblemSolutionItem[] = [
     solution:
       "クイズやアンケートで、会場全体がひとつになる体験を。",
     icon: "users",
-  },
-];
-
-export type FeatureItem = {
-  id: string;
-  title: string;
-  description: string;
-  /** 幹事・ゲスト向けの短い使い方（余興アプリのみ） */
-  howto?: string;
-  icon:
-    | "help-circle"
-    | "bar-chart"
-    | "smartphone"
-    | "sparkles"
-    | "grid"
-    | "circle-dot"
-    | "target"
-    | "route"
-    | "users"
-    | "list-ordered"
-    | "calculator"
-    | "crown"
-    | "message-circle"
-    | "timer"
-    | "trophy"
-    | "layout-grid";
-  /** 実アプリがある場合の遷移先。未設定ならリンクなし */
-  href?: string;
-};
-
-export const features: FeatureItem[] = [
-  {
-    id: "human-bingo",
-    title: "人間ビンゴ",
-    description:
-      "ゲスト同士が声をかけ合い、マスを埋めていく交流ビンゴ。結婚式やパーティーのアイスブレイクにぴったりです。",
-    howto:
-      "幹事がマスを編集して共有URLを配布 → ゲストはマスをタップして名前を入力 → 縦横斜めが揃うとビンゴ。",
-    icon: "grid",
-    href: "/app-tools/wedding-bingo/index.html",
-  },
-  {
-    id: "quiz",
-    title: "新郎新婦クイズ",
-    description:
-      "二人のエピソードを題材にしたクイズ。結婚式向けの定番として使いつつ、問題は編集できるのでパーティーでも楽しめます。",
-    howto:
-      "幹事が問題・正解を編集して共有URLを配布 → ゲストは「はじめる」で4択に回答 → 最後にスコアと正解を確認。",
-    icon: "help-circle",
-    href: "/app-tools/wedding-quiz/index.html",
-  },
-  {
-    id: "poll",
-    title: "リアルタイムアンケート",
-    description:
-      "スマートフォンからその場で投票。結果がすぐに共有され、一体感が生まれます。",
-    howto:
-      "司会が Host で先に入室し質問を編集 → ゲスト用URLを配布して投票 → 司会が結果表示と次の質問を進行。",
-    icon: "bar-chart",
-    href: "/app-tools/wedding-poll/index.html",
-  },
-  {
-    id: "mobile",
-    title: "スマホ完結の参加",
-    description:
-      "特別な機材は不要。ゲストは手元の端末からすぐ参加できます。",
-    icon: "smartphone",
-  },
-  {
-    id: "atmosphere",
-    title: "祝福の空気づくり",
-    description:
-      "余興のテンポを整え、幹事さんは進行に集中。会場は自然と温かくなります。",
-    icon: "sparkles",
   },
 ];
 
@@ -253,7 +174,7 @@ export const toolItems: ToolItem[] = [
     id: "bingo-machine",
     title: "ビンゴ数字抽選機",
     titleEn: "Machine",
-    description: "範囲を選んでランダム抽選（1〜30/50/75/100）。自動記録、大画面OK。",
+    description: "開始〜終了を自由に指定してランダム抽選。自動記録、大画面OK。",
     href: "/app-tools/bingo-machine/index.html",
     category: "lottery",
   },
@@ -266,14 +187,6 @@ export const toolItems: ToolItem[] = [
     category: "lottery",
   },
 
-  {
-    id: "warikan",
-    title: "割り勘計算機",
-    titleEn: "Warikan",
-    description: "参加者リストと合計から一人当たりを即時計算。集金メモ付き。",
-    href: "/app-tools/warikan/index.html",
-    category: "manage",
-  },
   {
     id: "countdown",
     title: "カウントダウンタイマー",

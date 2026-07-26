@@ -286,7 +286,7 @@ https://kotohogi.nozoisfun.workers.dev/sitemap.xml
 | ヒーロー img | `next/image` ではなく素の `<img decoding="sync" fetchPriority="high">`（LCP 向け） |
 | 入場アニメ | `fade-up` から opacity 変化を外し、LCP が透明待ちにならないようにした |
 | コントラスト | `--champagne-deep` を濃くし、白背景上の AA を満たしやすくした |
-| コード分割 | LP の Features など下部セクションを `dynamic()` で分割 |
+| コード分割 | LP の ToolsGrid など下部セクションを `dynamic()` で分割 |
 
 **LCP 18.2s の正体（この計測時点の本番）:** HTML 先頭で Zen Kaku 系の **font preload が約 240 本**あり、Slow 4G では `hero.webp` よりフォントが帯域を奪う。フォント削減のデプロイ後に LCP が大きく下がる想定です。
 

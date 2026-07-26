@@ -131,6 +131,11 @@ describe("bingoNumbers / bingoLetter", () => {
     expect(bingoLetter(60)).toBe("G");
     expect(bingoLetter(75)).toBe("O");
   });
+
+  it("UT-PARTY-BINGO-03: 開始〜終了を指定できる", () => {
+    const nums = bingoNumbers(10, 15);
+    expect(nums).toEqual([10, 11, 12, 13, 14, 15]);
+  });
 });
 
 describe("splitBill", () => {

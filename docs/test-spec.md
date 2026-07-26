@@ -204,7 +204,7 @@ L4   本番                会場用。上を通ってからだけ
 | UT-PARTY-RANK-01〜03 | `rankScores` | 高得点が1位／同点は同順位で次が飛ぶ／マイナス・空でも壊れない |
 | UT-PARTY-GROUP-01〜03 | `splitIntoGroups` | 全員配分／人数差は最大1／空でも指定数の空グループ |
 | UT-PARTY-SIZE-01 | `splitBySize` | 各グループが最大 size 人 |
-| UT-PARTY-BINGO-01〜02 | `bingoNumbers` / `bingoLetter` | 1〜75 連番／列頭文字 B I N G O |
+| UT-PARTY-BINGO-01〜03 | `bingoNumbers` / `bingoLetter` | 1〜75 連番／列頭文字 B I N G O／開始〜終了指定 |
 | UT-PARTY-BILL-01〜03 | `splitBill` | 割り切れれば同額／単位切り上げで集金は合計以上／差は unit 以内 |
 | UT-PARTY-AMIDA-01〜04 | `generateLadder` / `resolveLadder` | 解は全単射／横線なしは恒等／1本は隣を入替／生成線は非隣接 |
 | UT-PARTY-KING-01 | `kingGame` | 1..N を1つずつ配り王様番号は範囲内 |
@@ -215,7 +215,7 @@ L4   本番                会場用。上を通ってからだけ
 
 TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM を触らない純粋関数**を検証する。対象は `public/app-tools/shared/ui.js`、テストは `src/lib/app-ui.test.ts`。
 
-トースト・コピー・Wake Lock などブラウザ API に依存する部分はここでは扱わず、E2E（SC-TOOLS-07：集金メモのコピー）で確認する。
+トースト・コピー・Wake Lock などブラウザ API に依存する部分はここでは扱わず、E2E（SC-TOOLS-07：当選記録のコピー）で確認する。
 
 | ID | 対象 | 期待 |
 |----|------|------|
@@ -317,8 +317,7 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | ID | ファイル | シナリオ（要約） | ねらい |
 |----|----------|------------------|--------|
 | SC-LP-01 | `landing.feature` | ブランド名「ことほぎ」が見える | 紹介ページの基本 |
-| SC-LP-02 | `landing.feature` | Features から3アプリへ遷移 | 受け入れ1 |
-| SC-LP-03 | `landing.feature` | Features に使い方一行 | 使い方補足 |
+| SC-LP-02 | `landing.feature` | Party Tools（ToolsGrid）から3アプリへ遷移 | 受け入れ1 |
 | SC-POLL-01 | `poll.feature` | Host 入室→Guest 投票 | アンケート最小経路 |
 | SC-POLL-02 | `poll.feature` | Host が結果表示 | 結果公開 |
 | SC-POLL-03 | `poll.feature` | Host は投票不可 | 受け入れ5 |
@@ -327,9 +326,8 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題（使い方表示あり） | 受け入れ3 |
 | SC-TOOLS-01 | `tools.feature` | 一覧から各ツールへ遷移 | TOOL-* 導線 |
 | SC-TOOLS-02 | `tools.feature` | ビンゴ数字抽選機で1つ抽選（使い方表示あり） | T-BINGOM |
-| SC-TOOLS-03 | `tools.feature` | 割り勘計算機が一人当たりを計算 | T-WARI |
 | SC-TOOLS-06 | `tools.feature` | 入力不足はダイアログではなく画面上で理由が分かる（ルーレット） | 要件 T-07 |
-| SC-TOOLS-07 | `tools.feature` | 集金メモをコピーして共有できる（割り勘） | 要件 T-08 |
+| SC-TOOLS-07 | `tools.feature` | 当選の記録をコピーして共有できる（ルーレット） | 要件 T-08 |
 | SC-TOOLS-08 | `tools.feature` | 一覧をキーワードで絞り込める | 要件 T-05 |
 | SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
 | SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |

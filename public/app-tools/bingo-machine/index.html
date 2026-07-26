@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ビンゴ数字抽選機（無料・アプリ不要） | ことほぎ</title>
-    <meta name="description" content="1〜75の数字をランダムに抽選するビンゴマシン。結婚式・二次会・パーティーのビンゴ大会に。出た数字は自動で記録、大画面表示OK、インストール不要で今すぐ使えます。">
+    <meta name="description" content="開始〜終了の数字範囲を自由に指定してランダム抽選するビンゴマシン。結婚式・二次会・パーティーのビンゴ大会に。出た数字は自動記録、大画面表示OK、インストール不要。">
     <meta name="robots" content="index,follow">
     <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/bingo-machine/index.html">
     <meta property="og:type" content="website">
@@ -73,9 +73,45 @@
         }
         .hist-cell.latest { border-color: var(--color-gold); color: var(--color-gold); background: #fff; }
         .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 10px; }
-        .range-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 1.2em; }
-        .range-btn { font-size: 0.82rem; padding: 5px 14px; }
+        .range-panel {
+            border: 1px solid var(--color-border);
+            background: var(--color-panel);
+            padding: 14px 16px;
+            margin-bottom: 1.2em;
+            text-align: left;
+        }
+        .range-panel h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            color: var(--color-gold);
+            text-transform: uppercase;
+            margin: 0 0 10px;
+        }
+        .range-custom {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto;
+            gap: 8px;
+            align-items: end;
+        }
+        .range-custom .field { margin: 0; }
+        .range-custom input { width: 100%; text-align: center; }
+        .range-tilde {
+            padding-bottom: 12px;
+            color: var(--color-text-light);
+            font-weight: 700;
+        }
+        .range-row {
+            display: flex; flex-wrap: wrap; gap: 8px;
+            margin-top: 10px;
+        }
+        .range-btn { font-size: 0.78rem; padding: 5px 12px; }
         .range-btn.active { border-color: var(--color-gold); color: var(--color-gold); font-weight: 700; }
+        @media (max-width: 480px) {
+            .range-custom { grid-template-columns: 1fr 1fr; }
+            .range-tilde { display: none; }
+            .range-custom #apply-range-btn { grid-column: 1 / -1; }
+        }
     </style>
 </head>
 <body>
@@ -93,18 +129,35 @@
         <div class="howto-note" id="app-howto">
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
-                <li>上のボタンで抽選範囲（1〜30 / 50 / 75 / 100）を選びます。</li>
+                <li>開始・終了の数字を入力して「範囲を適用」（クイック選択も可）。</li>
                 <li>「抽選する」を押すと、まだ出ていない数字が1つ出ます（スペースキーでも抽選）。</li>
                 <li>出た数字は下の履歴に記録され、リロードしても残ります。</li>
                 <li>読み間違えたときは「1つ取り消す」で直前の抽選をなかったことにできます。</li>
             </ol>
         </div>
 
-        <div class="range-row" id="range-btns" role="group" aria-label="抽選範囲">
-            <button class="btn-ghost range-btn" data-max="30" type="button">1〜30</button>
-            <button class="btn-ghost range-btn" data-max="50" type="button">1〜50</button>
-            <button class="btn-ghost range-btn active" data-max="75" type="button">1〜75（標準）</button>
-            <button class="btn-ghost range-btn" data-max="100" type="button">1〜100</button>
+        <div class="range-panel">
+            <h2>抽選範囲</h2>
+            <div class="range-custom">
+                <div class="field">
+                    <label for="range-from">開始</label>
+                    <input type="number" id="range-from" min="1" max="9999" value="1" inputmode="numeric">
+                </div>
+                <span class="range-tilde" aria-hidden="true">〜</span>
+                <div class="field">
+                    <label for="range-to">終了</label>
+                    <input type="number" id="range-to" min="1" max="9999" value="75" inputmode="numeric">
+                </div>
+                <button class="btn-ghost" id="apply-range-btn" type="button">範囲を適用</button>
+            </div>
+            <p class="inline-error" id="range-error" role="alert" hidden></p>
+            <div class="range-row" id="range-btns" role="group" aria-label="よく使う範囲">
+                <button class="btn-ghost range-btn" data-from="1" data-to="30" type="button">1〜30</button>
+                <button class="btn-ghost range-btn" data-from="1" data-to="50" type="button">1〜50</button>
+                <button class="btn-ghost range-btn active" data-from="1" data-to="75" type="button">1〜75</button>
+                <button class="btn-ghost range-btn" data-from="1" data-to="100" type="button">1〜100</button>
+            </div>
+            <p class="count-hint" id="range-hint">いまの範囲: 1〜75（75個）</p>
         </div>
 
         <div class="draw-display">
@@ -112,7 +165,7 @@
             <div class="draw-number" id="current-number">–</div>
         </div>
         <p class="count-line">
-            <span id="drawn-count">0</span> / <span id="max-count">75</span> 個抽選済み
+            <span id="drawn-count">0</span> / <span id="pool-count">75</span> 個抽選済み
             （残り <span id="remaining-count">75</span>）
         </p>
 
@@ -136,39 +189,86 @@
         "use strict";
         const P = window.PartyLogic;
         const U = window.PartyUI;
-        const MAX_KEY = "bingoMachineMax";
+        const FROM_KEY = "bingoMachineFrom";
+        const TO_KEY = "bingoMachineTo";
         const DRAWN_KEY = "bingoMachineDrawn";
-        const PRESETS = [30, 50, 75, 100];
-        const state = { max: 75, drawn: [] };
+        const state = { from: 1, to: 75, drawn: [] };
         const wakeLock = U.createWakeLock();
         const drawBtn = document.getElementById("draw-btn");
         const undoBtn = document.getElementById("undo-btn");
         const resetBtn = document.getElementById("reset-btn");
+        const fromInput = document.getElementById("range-from");
+        const toInput = document.getElementById("range-to");
+        const applyBtn = document.getElementById("apply-range-btn");
         let drawing = false;
         let resetArmed = false;
         let resetTimer = null;
-        let pendingRange = null;
+        let pendingRangeKey = null;
         let pendingRangeTimer = null;
 
-        function drawnKey() { return DRAWN_KEY + "_" + state.max; }
+        function poolSize() { return state.to - state.from + 1; }
+        function rangeLabel() { return state.from + "〜" + state.to; }
+        function rangeKey(from, to) { return from + "_" + to; }
+        function drawnKey() { return DRAWN_KEY + "_" + rangeKey(state.from, state.to); }
+
+        function clampRange(from, to) {
+            from = Math.floor(Number(from));
+            to = Math.floor(Number(to));
+            if (!Number.isFinite(from)) from = 1;
+            if (!Number.isFinite(to)) to = 75;
+            from = Math.max(1, Math.min(from, 9999));
+            to = Math.max(1, Math.min(to, 9999));
+            if (to < from) {
+                const tmp = from;
+                from = to;
+                to = tmp;
+            }
+            return { from, to };
+        }
+
+        function readInputs() {
+            return clampRange(fromInput.value, toInput.value);
+        }
+
+        function syncInputs() {
+            fromInput.value = String(state.from);
+            toInput.value = String(state.to);
+        }
 
         function load() {
-            try { state.max = parseInt(localStorage.getItem(MAX_KEY), 10) || 75; }
-            catch { state.max = 75; }
-            if (!PRESETS.includes(state.max)) state.max = 75;
+            // 旧キー（maxのみ）からの移行も拾う
+            let from = parseInt(localStorage.getItem(FROM_KEY), 10);
+            let to = parseInt(localStorage.getItem(TO_KEY), 10);
+            if (!Number.isFinite(from) || !Number.isFinite(to)) {
+                const legacyMax = parseInt(localStorage.getItem("bingoMachineMax"), 10);
+                if (Number.isFinite(legacyMax)) {
+                    from = 1;
+                    to = legacyMax;
+                } else {
+                    from = 1;
+                    to = 75;
+                }
+            }
+            const clamped = clampRange(from, to);
+            state.from = clamped.from;
+            state.to = clamped.to;
             try { state.drawn = JSON.parse(localStorage.getItem(drawnKey())) || []; }
             catch { state.drawn = []; }
             if (!Array.isArray(state.drawn)) state.drawn = [];
+            // 範囲外の履歴は捨てる
+            state.drawn = state.drawn.filter((n) => n >= state.from && n <= state.to);
+            syncInputs();
         }
 
         function save() {
-            localStorage.setItem(MAX_KEY, String(state.max));
+            localStorage.setItem(FROM_KEY, String(state.from));
+            localStorage.setItem(TO_KEY, String(state.to));
             localStorage.setItem(drawnKey(), JSON.stringify(state.drawn));
         }
 
         function remaining() {
             const set = new Set(state.drawn);
-            return P.bingoNumbers(state.max).filter((n) => !set.has(n));
+            return P.bingoNumbers(state.from, state.to).filter((n) => !set.has(n));
         }
 
         function disarmReset() {
@@ -177,17 +277,26 @@
             resetBtn.textContent = "リセット（最初から）";
         }
 
+        function clearPendingRange() {
+            pendingRangeKey = null;
+            if (pendingRangeTimer) { clearTimeout(pendingRangeTimer); pendingRangeTimer = null; }
+            applyBtn.textContent = "範囲を適用";
+        }
+
         function updateRangeBtns() {
             document.querySelectorAll(".range-btn").forEach((btn) => {
-                const active = parseInt(btn.dataset.max, 10) === state.max;
-                btn.classList.toggle("active", active);
+                const f = parseInt(btn.dataset.from, 10);
+                const t = parseInt(btn.dataset.to, 10);
+                btn.classList.toggle("active", f === state.from && t === state.to);
             });
+            U.setHint("range-hint", "いまの範囲: " + rangeLabel() + "（" + poolSize() + "個）");
         }
 
         function render(latest) {
+            const left = remaining().length;
             document.getElementById("drawn-count").textContent = String(state.drawn.length);
-            document.getElementById("max-count").textContent = String(state.max);
-            document.getElementById("remaining-count").textContent = String(state.max - state.drawn.length);
+            document.getElementById("pool-count").textContent = String(poolSize());
+            document.getElementById("remaining-count").textContent = String(left);
             const numEl = document.getElementById("current-number");
             const letterEl = document.getElementById("current-letter");
             if (latest != null) {
@@ -206,7 +315,7 @@
                 const cls = i === state.drawn.length - 1 ? "hist-cell latest" : "hist-cell";
                 return `<div class="${cls}">${n}</div>`;
             }).join("");
-            drawBtn.disabled = drawing || remaining().length === 0;
+            drawBtn.disabled = drawing || left === 0;
             undoBtn.disabled = drawing || state.drawn.length === 0;
             document.getElementById("copy-btn").disabled = state.drawn.length === 0;
             updateRangeBtns();
@@ -254,28 +363,44 @@
             render(null);
         }
 
-        function clearPendingRange() {
-            pendingRange = null;
-            if (pendingRangeTimer) { clearTimeout(pendingRangeTimer); pendingRangeTimer = null; }
-        }
-
-        function changeRange(newMax) {
-            if (newMax === state.max) return;
+        function applyRange(from, to, { force } = {}) {
+            const next = clampRange(from, to);
+            if (next.to - next.from + 1 < 2) {
+                U.setError("range-error", "範囲は2個以上になるように指定してください。");
+                return;
+            }
+            U.clearError("range-error");
+            if (next.from === state.from && next.to === state.to) {
+                syncInputs();
+                return;
+            }
+            const key = rangeKey(next.from, next.to);
             // 履歴があるときは confirm ではなく「同じ範囲をもう一度」で確定する
-            if (state.drawn.length > 0 && pendingRange !== newMax) {
-                pendingRange = newMax;
+            if (!force && state.drawn.length > 0 && pendingRangeKey !== key) {
+                pendingRangeKey = key;
                 if (pendingRangeTimer) clearTimeout(pendingRangeTimer);
                 pendingRangeTimer = setTimeout(clearPendingRange, 5000);
-                U.toast("履歴があります。もう一度押すと 1〜" + newMax + " に切り替えます");
+                applyBtn.textContent = "もう一度で適用";
+                U.toast("履歴があります。もう一度押すと " + next.from + "〜" + next.to + " に切り替えます");
+                syncInputs();
+                fromInput.value = String(next.from);
+                toInput.value = String(next.to);
                 return;
             }
             clearPendingRange();
             disarmReset();
-            state.max = newMax;
+            state.from = next.from;
+            state.to = next.to;
             state.drawn = [];
+            // 新しい範囲の保存済み履歴があれば復元
+            try {
+                const saved = JSON.parse(localStorage.getItem(drawnKey()));
+                if (Array.isArray(saved)) state.drawn = saved;
+            } catch { /* ignore */ }
+            syncInputs();
             save();
             render(null);
-            U.toast("1〜" + newMax + " に切り替えました");
+            U.toast(rangeLabel() + " に切り替えました");
         }
 
         drawBtn.addEventListener("click", draw);
@@ -284,7 +409,6 @@
             if (!state.drawn.length) return;
             U.copyWithToast(state.drawn.join(", "), "出た数字をコピーしました");
         });
-        // 進行中に確認ダイアログで止めないよう、2回押しで消す形にする
         resetBtn.addEventListener("click", () => {
             if (state.drawn.length === 0) return;
             if (!resetArmed) {
@@ -297,10 +421,18 @@
             resetDrawn();
             U.toast("抽選履歴を消しました");
         });
+        applyBtn.addEventListener("click", () => {
+            const next = readInputs();
+            applyRange(next.from, next.to);
+        });
         document.getElementById("range-btns").addEventListener("click", (e) => {
             const btn = e.target.closest(".range-btn");
             if (!btn) return;
-            changeRange(parseInt(btn.dataset.max, 10));
+            const from = parseInt(btn.dataset.from, 10);
+            const to = parseInt(btn.dataset.to, 10);
+            fromInput.value = String(from);
+            toInput.value = String(to);
+            applyRange(from, to);
         });
         U.bindShortcuts({ " ": draw, u: undo });
         U.initFooterYear();

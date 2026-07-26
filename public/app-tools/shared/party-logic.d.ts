@@ -38,7 +38,7 @@ export interface PartyLogicApi {
   rankScores(scores: number[]): number[];
   splitIntoGroups<T>(items: T[], groupCount: number, rng?: Rng): T[][];
   splitBySize<T>(items: T[], size: number, rng?: Rng): T[][];
-  bingoNumbers(max?: number): number[];
+  bingoNumbers(minOrMax?: number, maybeMax?: number): number[];
   bingoLetter(num: number): string;
   splitBill(total: number, people: number, unit: number): BillSplit;
   generateLadder(width: number, height: number, rng?: Rng): Ladder[];

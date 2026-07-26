@@ -125,7 +125,7 @@ party-entertainment-hub/
 │   │   ├── page.tsx           # ランディング
 │   │   ├── layout.tsx
 │   │   └── api/poll/[room]/  # アンケート API
-│   ├── components/landing/    # LP セクション（Hero / Features / ToolsGrid 等）
+│   ├── components/landing/    # LP セクション（Hero / ToolsGrid 等）
 │   ├── config/site.ts         # リンク・文言の単一設定源
 │   └── lib/
 │       ├── poll.ts            # ルーム／票の正規化（単体テスト対象）
@@ -145,7 +145,6 @@ party-entertainment-hub/
 │       ├── wedding-poll/      # リアルタイムアンケート
 │       ├── bingo-machine/     # ビンゴ数字抽選機（範囲選択対応）
 │       ├── roulette/          # 抽選ルーレット（コンフェッティ演出）
-│       ├── warikan/           # 割り勘計算機（参加者リスト形式）
 │       ├── countdown/         # カウントダウンタイマー
 │       └── scoreboard/        # 得点板
 ├── wrangler.jsonc             # Workers / KV バインディング
@@ -183,12 +182,11 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 
 1. Hero
 2. ProblemSolution
-3. Features（主要3アプリの詳細＋使い方）
-4. ToolsGrid（余興・進行ツールのカテゴリ別一覧）
-5. Affiliate
-6. Footer
+3. ToolsGrid（余興・進行ツールのカテゴリ別一覧。`#tools`）
+4. Affiliate
+5. Footer
 
-コンポーネント実体は `src/components/landing/` 配下です。
+コンポーネント実体は `src/components/landing/` 配下です。旧 Features セクションは廃止し、導線は ToolsGrid に集約する。
 
 ### 4.2 設定
 
@@ -196,9 +194,9 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 
 | キー | 用途 |
 |------|------|
-| `features` | Features セクション（主要3アプリ＋説明項目） |
 | `toolItems` / `toolCategories` | ToolsGrid セクション（カテゴリ別ツール一覧） |
 | `affiliateBanners` | Affiliate セクション（A8 バナー） |
+| `appLinks` | ヒーロー CTA（`#tools` へスクロール） |
 
 主要アプリのリンク例:
 
@@ -212,6 +210,7 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 - 本文: Zen Kaku Gothic New
 - `layout.tsx` の metadata は `siteConfig` 由来
 - トーンの CSS 変数は `globals.css`（cool paper / ink / muted champagne）
+- ToolsGrid はカード個別の枠線＋`gap` で並べる（`gap-px`＋背景色による空きマスの灰色帯は使わない）
 
 ---
 
@@ -243,6 +242,7 @@ TOOL-\*（§8b）で使う乱数系の純粋関数を `public/app-tools/shared/p
 - 形式: UMD 風。ブラウザでは `window.PartyLogic`、Node（Vitest）では `import` できる
 - 型: 同ディレクトリの `party-logic.d.ts`
 - 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `drawDifferent`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`, `rankScores`
+- `bingoNumbers()` は既定 1〜75。`bingoNumbers(max)` で 1〜max、`bingoNumbers(from, to)` で任意範囲（UT-PARTY-BINGO-01〜03）
 - テスト: `src/lib/party-logic.test.ts`（[test-spec.md §6](./test-spec.md)）
 
 `drawDifferent` は「直前と同じものを引かない」抽選、`rankScores` は同点を同順位にする順位付け（得点板）に使う。
@@ -461,9 +461,8 @@ TTL: 24 時間（KV `expirationTtl`）
 
 | slug | 主な要素 ID（E2E 目印） | 使うロジック | 固有の操作性 |
 |------|--------------------------|--------------|--------------|
-| `bingo-machine` | `#draw-btn` `#undo-btn` `#range-btns` `#current-number` `#drawn-count` | `bingoNumbers` `bingoLetter` `drawOne` | 範囲選択（1〜30/50/75/100）・1つ取り消す・Wake Lock・スペース/U キー |
-| `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` | Canvas 描画（乱数は当選 index） | 減速演出・当選ハイライト・コンフェッティ・当選を**値**で保持・当選履歴 |
-| `warikan` | `#total-input` `#main-amount` `#people-list` `#copy-btn` | `splitBill` | 参加者リスト＋/−・金額ステッパー・一人当たり大表示・集金メモのコピー |
+| `bingo-machine` | `#draw-btn` `#undo-btn` `#range-from` `#range-to` `#apply-range-btn` `#current-number` | `bingoNumbers` `bingoLetter` `drawOne` | 開始〜終了の手動指定＋クイック選択・1つ取り消す・Wake Lock・スペース/U キー |
+| `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` `#copy-btn` | Canvas 描画（乱数は当選 index） | 減速演出・当選ハイライト・コンフェッティ・当選を**値**で保持・当選履歴コピー |
 | `countdown` | `#minutes-input` `#start-btn` `#timer-display` `#exit-fs-btn` | （タイマー） | Wake Lock・タブ見出しに残り時間・全画面の離脱手段・終了音3回 |
 | `scoreboard` | `#scoreboard` `#add-team-btn` `#undo-btn` | `rankScores` | 同点は同順位・1つ元に戻す・44px のタップ領域 |
 | 一覧 `index.html` | `#tool-filter` `#no-match` | — | キーワードでの絞り込み（`data-keywords` に同義語） |

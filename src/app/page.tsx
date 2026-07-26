@@ -9,9 +9,6 @@ const ProblemSolution = dynamic(
       (m) => m.ProblemSolution,
     ),
 );
-const Features = dynamic(() =>
-  import("@/components/landing/Features").then((m) => m.Features),
-);
 const ToolsGrid = dynamic(() =>
   import("@/components/landing/ToolsGrid").then((m) => m.ToolsGrid),
 );
@@ -38,7 +35,6 @@ export default function HomePage() {
     <main>
       <Hero />
       <ProblemSolution />
-      <Features />
       <ToolsGrid />
       <Affiliate />
       <Footer />
