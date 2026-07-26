@@ -339,45 +339,41 @@ export const features: FeatureItem[] = [
   },
 ];
 
-export type AffiliateItem = {
+export type AffiliateBanner = {
   id: string;
-  title: string;
-  description: string;
   href: string;
-  badge: string;
-  icon: "shopping-bag" | "package" | "award";
+  imageSrc: string;
+  imageWidth: number;
+  imageHeight: number;
+  trackingPixelSrc: string;
+  alt: string;
 };
 
 /**
- * アフィリエイト・おすすめリンク
- * href を差し替えるだけでカードの遷移先が変わります。
+ * A8.net バナー広告（LP Affiliate セクション）
+ * タグ差し替え時はこの配列だけ更新すれば反映されます。
  */
-export const affiliateItems: AffiliateItem[] = [
+export const affiliateBanners: AffiliateBanner[] = [
   {
-    id: "prize-shop",
-    title: "パーティー向け景品セレクト",
-    description:
-      "ゲストが喜ぶ定番から、ちょっと特別な一品まで。予算別に探しやすいショップです。",
-    href: "https://example.com/affiliate/prizes",
-    badge: "景品",
-    icon: "shopping-bag",
+    id: "a8-336x280",
+    href: "https://px.a8.net/svt/ejp?a8mat=4B85P5+3AHA5U+FOG+3H7O8H",
+    imageSrc:
+      "https://www26.a8.net/svt/bgt?aid=260721113199&wid=001&eno=01&mid=s00000002032021031000&mc=1",
+    imageWidth: 336,
+    imageHeight: 280,
+    trackingPixelSrc:
+      "https://www19.a8.net/0.gif?a8mat=4B85P5+3AHA5U+FOG+3H7O8H",
+    alt: "",
   },
   {
-    id: "gift-set",
-    title: "パーティーギフトセット",
-    description:
-      "抽選やビンゴの景品に便利な詰め合わせ。当日の準備時間を短縮できます。",
-    href: "https://example.com/affiliate/gift-sets",
-    badge: "ギフト",
-    icon: "package",
-  },
-  {
-    id: "premium",
-    title: "記念品・プチギフト",
-    description:
-      "お帰りの際に渡す小さな祝福の品。会場の印象を丁寧に締めくくれます。",
-    href: "https://example.com/affiliate/memorial",
-    badge: "記念品",
-    icon: "award",
+    id: "a8-300x250",
+    href: "https://px.a8.net/svt/ejp?a8mat=4B85P5+2MNXYQ+4YJS+614CX",
+    imageSrc:
+      "https://www27.a8.net/svt/bgt?aid=260721113159&wid=001&eno=01&mid=s00000023140001013000&mc=1",
+    imageWidth: 300,
+    imageHeight: 250,
+    trackingPixelSrc:
+      "https://www15.a8.net/0.gif?a8mat=4B85P5+2MNXYQ+4YJS+614CX",
+    alt: "",
   },
 ];
