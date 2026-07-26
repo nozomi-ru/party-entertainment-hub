@@ -9,13 +9,15 @@ export function Affiliate() {
       <div className="relative mx-auto max-w-5xl">
         <header className="mx-auto max-w-2xl text-center">
           <p className="font-[family-name:var(--font-display)] text-[0.7rem] tracking-[0.35em] text-[var(--champagne-deep)] uppercase">
-            Recommendations
+            PR
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-wide text-[var(--ink)] sm:text-[2.5rem] sm:leading-tight">
-            景品・ギフトのおすすめ
+            ご参列の後は、あなたの縁活を
           </h2>
           <p className="mt-5 text-sm leading-relaxed text-[var(--muted)] sm:text-[0.95rem] sm:leading-7">
-            余興の盛り上がりを支える、景品・ギフト選びの参考です。
+            婚活パーティーへの参加や、パートナーシップ診断で、
+            <br className="hidden sm:inline" />
+            出会いの次のステップを探してみませんか。
           </p>
         </header>
 

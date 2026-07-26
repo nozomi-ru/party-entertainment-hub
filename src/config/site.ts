@@ -363,7 +363,7 @@ export const affiliateBanners: AffiliateBanner[] = [
     imageHeight: 280,
     trackingPixelSrc:
       "https://www19.a8.net/0.gif?a8mat=4B85P5+3AHA5U+FOG+3H7O8H",
-    alt: "",
+    alt: "IBJ Matching（旧PARTY☆PARTY）婚活パーティー・街コン",
   },
   {
     id: "a8-300x250",
@@ -374,6 +374,6 @@ export const affiliateBanners: AffiliateBanner[] = [
     imageHeight: 250,
     trackingPixelSrc:
       "https://www15.a8.net/0.gif?a8mat=4B85P5+2MNXYQ+4YJS+614CX",
-    alt: "",
+    alt: "parcy's（パーシーズ）恋愛・結婚のパーソナル診断",
   },
 ];
