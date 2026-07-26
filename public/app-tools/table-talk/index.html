@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テーブルトークカード（アイスブレイク質問） | ことほぎ</title>
+    <meta name="description" content="席ごとの会話が弾むアイスブレイク質問カード。カテゴリを選んで1枚引き、大画面に映せます。結婚式・二次会・懇親会向け。無料・登録不要。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/table-talk/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="テーブルトークカード | ことほぎ">
+    <meta property="og:description" content="席ごとの会話が弾むアイスブレイク質問カード。カテゴリを選んで1枚引き。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/table-talk/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="テーブルトークカード | ことほぎ">
+    <meta name="twitter:description" content="席ごとの会話が弾むアイスブレイク質問カード。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
+    <style>
+        .cat-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 1em 0; }
+        .cat-row button {
+            border: 1px solid var(--color-border); background: var(--color-panel);
+            padding: 8px 14px; font-family: inherit; font-weight: 600; cursor: pointer; min-height: 44px;
+        }
+        .cat-row button.active { border-color: var(--color-gold); color: var(--color-gold); background: #fff; }
+        .card-stage {
+            min-height: 200px; border: 1px solid var(--color-border); background: #fff;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 1.6em 1.2em; margin: 1em 0; text-align: center;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+        }
+        .card-stage.flip { animation: card-pop 0.45s cubic-bezier(0.17, 0.89, 0.32, 1.2); }
+        @keyframes card-pop {
+            0% { transform: scale(0.92) rotate(-1deg); opacity: 0.4; }
+            100% { transform: none; opacity: 1; }
+        }
+        .card-cat {
+            font-family: 'Playfair Display', serif; color: var(--color-gold);
+            letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 0.6em;
+        }
+        .card-text {
+            font-size: clamp(1.15rem, 4.2vw, 1.75rem); font-weight: 700; line-height: 1.65;
+        }
+        .history { text-align: left; margin-top: 1.2em; }
+        .history h2 {
+            font-family: 'Playfair Display', serif; font-size: 0.85rem; color: var(--color-gold);
+            letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px;
+        }
+        .history ol { margin: 0; padding-left: 1.4em; font-size: 0.9rem; }
+        .history li { margin-bottom: 6px; }
+        body.present .app-nav, body.present .app-footer, body.present .howto-note,
+        body.present .cat-row, body.present .history, body.present .custom-box,
+        body.present .ornament, body.present .app-lead, body.present .shortcut-hint { display: none; }
+        body.present .card { max-width: none; min-height: 100vh; border: none; box-shadow: none; display: flex; flex-direction: column; justify-content: center; }
+        body.present .card::before { display: none; }
+        body.present .card-stage { min-height: 50vh; border-color: var(--color-gold); }
+        body.present .card-text { font-size: clamp(1.6rem, 6vw, 2.8rem); }
+        .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 12px; }
+        .custom-box { margin-top: 1.4em; text-align: left; }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Table Talk</h1>
+        <p class="app-subtitle">テーブルトークカード</p>
+        <p class="app-lead">席の会話が弾む質問を1枚ずつ引きます。初対面のテーブルにも。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>カテゴリを選び、「カードを引く」で質問を出します。</li>
+                <li>「発表モード」で大画面に映し、スペースキーでも次のカードを引けます。</li>
+                <li>オリジナルのお題を下の欄に追加できます（1行1問）。</li>
+                <li>出たカードの履歴はコピーして台本に残せます。</li>
+            </ol>
+        </div>
+
+        <div class="cat-row" id="cat-row" role="group" aria-label="カテゴリ">
+            <button type="button" data-cat="all" class="active">すべて</button>
+            <button type="button" data-cat="ice">アイスブレイク</button>
+            <button type="button" data-cat="couple">新郎新婦</button>
+            <button type="button" data-cat="fun">笑い</button>
+            <button type="button" data-cat="deep">ちょっと深い</button>
+            <button type="button" data-cat="custom">オリジナル</button>
+        </div>
+        <p class="count-hint" id="deck-count"></p>
+
+        <div class="card-stage" id="card-stage" aria-live="polite">
+            <div class="card-cat" id="card-cat">Ready</div>
+            <p class="card-text" id="card-text">「カードを引く」を押すと質問が出ます</p>
+        </div>
+
+        <div class="stack">
+            <button class="btn-gold" id="draw-btn" type="button">カードを引く</button>
+            <div class="row">
+                <button class="btn-ghost" id="present-btn" type="button">発表モード</button>
+                <button class="btn-ghost" id="copy-btn" type="button">履歴をコピー</button>
+            </div>
+            <button class="btn-link" id="reset-btn" type="button">履歴を消して山札を戻す</button>
+        </div>
+        <p class="shortcut-hint">スペース: 引く ／ Esc: 発表モード解除</p>
+
+        <div class="history" id="history" hidden>
+            <h2>出たカード</h2>
+            <ol id="history-list"></ol>
+        </div>
+
+        <div class="custom-box field">
+            <label for="custom-input">オリジナルのお題（1行に1つ）</label>
+            <textarea id="custom-input" rows="4" placeholder="子どものころのあだ名は？&#10;最近ハマっていることは？"></textarea>
+            <p class="count-hint" id="custom-count"></p>
+        </div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const U = window.PartyUI;
+        const wake = U.createWakeLock();
+        const KEY_CUSTOM = "tableTalkCustom";
+        const KEY_HISTORY = "tableTalkHistory";
+
+        const LABELS = {
+            all: "すべて",
+            ice: "アイスブレイク",
+            couple: "新郎新婦",
+            fun: "笑い",
+            deep: "ちょっと深い",
+            custom: "オリジナル",
+        };
+
+        const BUILTIN = [
+            { category: "ice", text: "隣の人と、出身地を教えてください" },
+            { category: "ice", text: "最近いちばん美味しかったごはんは？" },
+            { category: "ice", text: "今朝、会場までどうやって来ましたか？" },
+            { category: "ice", text: "今の仕事／学校を一言で表すと？" },
+            { category: "ice", text: "好きな季節とその理由は？" },
+            { category: "ice", text: "最近観た映画・ドラマは？" },
+            { category: "couple", text: "新郎新婦の第一印象を一言で" },
+            { category: "couple", text: "二人が似合いだと思った瞬間は？" },
+            { category: "couple", text: "新郎／新婦に贈るアドバイスは？" },
+            { category: "couple", text: "二人のこれからに期待することは？" },
+            { category: "couple", text: "今日いちばん印象に残った演出は？" },
+            { category: "fun", text: "もし明日が休日なら、何をしますか？" },
+            { category: "fun", text: "無人島に持っていくなら何？" },
+            { category: "fun", text: "朝型？夜型？どちら派？" },
+            { category: "fun", text: "好きな飲み物ランキング1位は？" },
+            { category: "fun", text: "子どものころのあだ名は？" },
+            { category: "deep", text: "いま大切にしていることは？" },
+            { category: "deep", text: "最近うれしかった小さなことは？" },
+            { category: "deep", text: "10年後の自分に一言送るなら？" },
+            { category: "deep", text: "「ありがとう」を伝えたい人は？" },
+        ];
+
+        let category = "all";
+        let previous = null;
+        let history = [];
+        let resetArmed = false;
+        let resetTimer = null;
+
+        function customCards() {
+            return U.parseLines(document.getElementById("custom-input").value).items
+                .map((text) => ({ category: "custom", text }));
+        }
+
+        function fullDeck() {
+            return BUILTIN.concat(customCards());
+        }
+
+        function pool() {
+            return P.filterByCategory(fullDeck(), category);
+        }
+
+        function syncCustom() {
+            const { count } = U.parseLines(document.getElementById("custom-input").value);
+            U.setHint("custom-count", "オリジナル " + U.formatCount(count, "件"));
+            localStorage.setItem(KEY_CUSTOM, document.getElementById("custom-input").value);
+            syncDeck();
+        }
+
+        function syncDeck() {
+            const n = pool().length;
+            U.setHint("deck-count", "山札 " + U.formatCount(n, "枚") + "（" + LABELS[category] + "）");
+            document.getElementById("draw-btn").disabled = n === 0;
+        }
+
+        function saveHistory() {
+            localStorage.setItem(KEY_HISTORY, JSON.stringify(history));
+        }
+
+        function renderHistory() {
+            const box = document.getElementById("history");
+            box.hidden = history.length === 0;
+            document.getElementById("history-list").innerHTML = history.map((h) =>
+                `<li><strong>${U.escapeHtml(LABELS[h.category] || h.category)}</strong> — ${U.escapeHtml(h.text)}</li>`
+            ).join("");
+        }
+
+        function showCard(card) {
+            const stage = document.getElementById("card-stage");
+            document.getElementById("card-cat").textContent = LABELS[card.category] || card.category;
+            document.getElementById("card-text").textContent = card.text;
+            stage.classList.remove("flip");
+            void stage.offsetWidth;
+            stage.classList.add("flip");
+        }
+
+        function draw() {
+            const list = pool();
+            if (!list.length) return;
+            const texts = list.map((c) => c.text);
+            const { value } = P.drawDifferent(texts, previous);
+            previous = value;
+            const card = list.find((c) => c.text === value) || list[0];
+            history.unshift(card);
+            if (history.length > 40) history.pop();
+            saveHistory();
+            showCard(card);
+            renderHistory();
+            wake.request();
+        }
+
+        document.querySelectorAll("#cat-row button").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                category = btn.dataset.cat;
+                document.querySelectorAll("#cat-row button").forEach((b) =>
+                    b.classList.toggle("active", b === btn));
+                syncDeck();
+            });
+        });
+
+        document.getElementById("draw-btn").addEventListener("click", draw);
+        document.getElementById("present-btn").addEventListener("click", () => {
+            document.body.classList.add("present");
+            wake.request();
+        });
+        document.getElementById("copy-btn").addEventListener("click", () => {
+            if (!history.length) { U.toast("まだ履歴がありません"); return; }
+            const text = history.map((h, i) =>
+                (i + 1) + ". [" + (LABELS[h.category] || h.category) + "] " + h.text
+            ).join("\n");
+            U.copyWithToast(text, "履歴をコピーしました");
+        });
+        document.getElementById("reset-btn").addEventListener("click", () => {
+            const btn = document.getElementById("reset-btn");
+            if (!resetArmed) {
+                resetArmed = true;
+                btn.textContent = "もう一度押すとリセット";
+                resetTimer = setTimeout(() => {
+                    resetArmed = false;
+                    btn.textContent = "履歴を消して山札を戻す";
+                }, 3000);
+                return;
+            }
+            resetArmed = false;
+            if (resetTimer) clearTimeout(resetTimer);
+            btn.textContent = "履歴を消して山札を戻す";
+            history = [];
+            previous = null;
+            saveHistory();
+            renderHistory();
+            document.getElementById("card-cat").textContent = "Ready";
+            document.getElementById("card-text").textContent = "「カードを引く」を押すと質問が出ます";
+            U.toast("履歴を消しました");
+        });
+        document.getElementById("custom-input").addEventListener("input", syncCustom);
+
+        U.bindShortcuts({
+            " ": (e) => { e.preventDefault(); draw(); },
+            Escape: () => document.body.classList.remove("present"),
+        });
+
+        try {
+            document.getElementById("custom-input").value = localStorage.getItem(KEY_CUSTOM) || "";
+            history = JSON.parse(localStorage.getItem(KEY_HISTORY) || "[]");
+            if (!Array.isArray(history)) history = [];
+        } catch { history = []; }
+
+        U.initFooterYear();
+        syncCustom();
+        renderHistory();
+        if (history[0]) showCard(history[0]);
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

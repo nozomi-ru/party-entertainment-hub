@@ -30,6 +30,23 @@ export interface KingGameResult {
   king: number;
 }
 
+export interface MissionProgress {
+  done: number;
+  total: number;
+  remaining: number;
+  percent: number;
+}
+
+export interface CategorizedItem {
+  category?: string;
+  [key: string]: unknown;
+}
+
+export interface WishExportItem {
+  name?: string;
+  text?: string;
+}
+
 export interface PartyLogicApi {
   mulberry32(seed: number): Rng;
   shuffle<T>(array: T[], rng?: Rng): T[];
@@ -45,6 +62,10 @@ export interface PartyLogicApi {
   resolveLadder(width: number, rungs: Ladder[]): number[];
   kingGame(count: number, rng?: Rng): KingGameResult;
   groupSizes<T>(groups: T[][]): number[];
+  clampText(text: string, maxLen: number): string;
+  filterByCategory<T extends CategorizedItem>(items: T[], category?: string): T[];
+  missionProgress(doneCount: number, total: number): MissionProgress;
+  formatWishExport(messages: WishExportItem[]): string;
 }
 
 declare const PartyLogic: PartyLogicApi;

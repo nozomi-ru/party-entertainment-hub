@@ -6,6 +6,8 @@ const { mulberry32, shuffle, drawOne, splitIntoGroups, splitBySize } =
 const { drawDifferent, rankScores } = PartyLogic;
 const { bingoNumbers, bingoLetter, splitBill } = PartyLogic;
 const { generateLadder, resolveLadder, kingGame, groupSizes } = PartyLogic;
+const { clampText, filterByCategory, missionProgress, formatWishExport } =
+  PartyLogic;
 
 /** テスト用の決定的な乱数（種固定） */
 function seeded(seed = 42) {
@@ -201,5 +203,40 @@ describe("kingGame", () => {
     expect([...numbers].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5]);
     expect(king).toBeGreaterThanOrEqual(1);
     expect(king).toBeLessThanOrEqual(5);
+  });
+});
+
+describe("clampText / filterByCategory / missionProgress / formatWishExport", () => {
+  it("UT-PARTY-TEXT-01: 空白を畳み最大長で切る", () => {
+    expect(clampText("  hello   world  ", 8)).toBe("hello wo");
+  });
+
+  it("UT-PARTY-FILTER-01: カテゴリで絞り込む", () => {
+    const items = [
+      { category: "ice", text: "A" },
+      { category: "fun", text: "B" },
+      { category: "ice", text: "C" },
+    ];
+    expect(filterByCategory(items, "ice")).toHaveLength(2);
+    expect(filterByCategory(items, "all")).toHaveLength(3);
+  });
+
+  it("UT-PARTY-MISSION-01: 進捗パーセントを計算する", () => {
+    expect(missionProgress(2, 8)).toEqual({
+      done: 2,
+      total: 8,
+      remaining: 6,
+      percent: 25,
+    });
+    expect(missionProgress(0, 0).percent).toBe(0);
+  });
+
+  it("UT-PARTY-WISH-01: 寄せ書きを読み上げ用テキストにする", () => {
+    expect(
+      formatWishExport([
+        { name: "太郎", text: "おめでとう" },
+        { name: "花子", text: "幸せに" },
+      ]),
+    ).toBe("1. 太郎\nおめでとう\n\n2. 花子\n幸せに");
   });
 });

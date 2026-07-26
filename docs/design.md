@@ -43,6 +43,7 @@
 | ビンゴ | `public/app-tools/wedding-bingo/index.html` | §6 |
 | クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
 | アンケート UI | `public/app-tools/wedding-poll/index.html` | §8 |
+| 祝福メッセージ | `public/app-tools/wishboard/`, `src/app/api/wish/`, `src/lib/wish*.ts` | §8c |
 | 幹事・進行ツール群 | `public/app-tools/{slug}/`, `public/app-tools/index.html` | §8b |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | §5.3 |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | §5.4 |
@@ -94,7 +95,7 @@ flowchart TB
 - LP と API は Next.js（App Router）+ OpenNext で Workers に載せる → 1つのデプロイ単位で紹介サイトと API を出せる
 - 余興アプリ本体は `public/app-tools/` の静的 HTML → 依存が少なく、会場スマホでも軽い
 - ビンゴ／クイズは **URL 埋め込み共有**（DB 不要）→ 幹事が設定を配るだけで足りる
-- アンケートのみ **サーバー同期**（本番 KV / ローカルはメモリ）→ 全員の票を共有する必要があるため
+- アンケート・祝福メッセージ（およびビンゴ／クイズ任意集計）は **サーバー同期**（本番 KV / ローカルはメモリ）→ 端末横断で共有する必要があるため
 
 状態の置き場の要約:
 
@@ -131,7 +132,9 @@ party-entertainment-hub/
 │       ├── poll.ts            # ルーム／票の正規化（単体テスト対象）
 │       ├── poll-store.ts      # KV / メモリ永続化
 │       ├── bingo-store.ts     # ビンゴ集計（KV / メモリ）
-│       └── quiz-store.ts      # クイズ集計（KV / メモリ）
+│       ├── quiz-store.ts      # クイズ集計（KV / メモリ）
+│       ├── wish.ts            # 寄せ書き正規化（単体テスト対象）
+│       └── wish-store.ts      # 寄せ書き（KV / メモリ）
 ├── public/
 │   ├── _headers
 │   └── app-tools/
@@ -143,6 +146,9 @@ party-entertainment-hub/
 │       ├── wedding-bingo/     # 人間ビンゴ
 │       ├── wedding-quiz/      # 新郎新婦クイズ
 │       ├── wedding-poll/      # リアルタイムアンケート
+│       ├── wishboard/         # 祝福メッセージボード
+│       ├── table-talk/        # テーブルトークカード
+│       ├── photo-mission/     # フォトミッション
 │       ├── bingo-machine/     # ビンゴ数字抽選機（範囲選択対応）
 │       ├── roulette/          # 抽選ルーレット（コンフェッティ演出）
 │       ├── countdown/         # カウントダウンタイマー
@@ -203,6 +209,9 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 - `/app-tools/wedding-bingo/index.html`
 - `/app-tools/wedding-quiz/index.html`
 - `/app-tools/wedding-poll/index.html`
+- `/app-tools/wishboard/index.html`
+- `/app-tools/table-talk/index.html`
+- `/app-tools/photo-mission/index.html`
 
 ### 4.3 スタイル
 
@@ -241,7 +250,7 @@ TOOL-\*（§8b）で使う乱数系の純粋関数を `public/app-tools/shared/p
 
 - 形式: UMD 風。ブラウザでは `window.PartyLogic`、Node（Vitest）では `import` できる
 - 型: 同ディレクトリの `party-logic.d.ts`
-- 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `drawDifferent`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`, `rankScores`
+- 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `drawDifferent`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`, `rankScores`, `clampText`, `filterByCategory`, `missionProgress`, `formatWishExport`
 - `bingoNumbers()` は既定 1〜75。`bingoNumbers(max)` で 1〜max、`bingoNumbers(from, to)` で任意範囲（UT-PARTY-BINGO-01〜03）
 - テスト: `src/lib/party-logic.test.ts`（[test-spec.md §6](./test-spec.md)）
 
@@ -465,6 +474,8 @@ TTL: 24 時間（KV `expirationTtl`）
 | `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` `#copy-btn` | Canvas 描画（乱数は当選 index） | 減速演出・当選ハイライト・コンフェッティ・当選を**値**で保持・当選履歴コピー |
 | `countdown` | `#minutes-input` `#start-btn` `#timer-display` `#exit-fs-btn` | （タイマー） | Wake Lock・タブ見出しに残り時間・全画面の離脱手段・終了音3回 |
 | `scoreboard` | `#scoreboard` `#add-team-btn` `#undo-btn` | `rankScores` | 同点は同順位・1つ元に戻す・44px のタップ領域 |
+| `table-talk` | `#draw-btn` `#card-text` `#cat-row` `#custom-input` `#copy-btn` | `drawDifferent` `filterByCategory` | カテゴリ絞り込み・発表モード・スペースで引く・履歴コピー |
+| `photo-mission` | `#mission-list` `#apply-btn` `#copy-remain-btn` `#progress-fill` | `missionProgress` `clampText` | チェック進捗・残り／達成コピー・プリセット復元・2回押しリセット |
 | 一覧 `index.html` | `#tool-filter` `#no-match` | — | キーワードでの絞り込み（`data-keywords` に同義語） |
 
 共通事項:
@@ -478,6 +489,27 @@ TTL: 24 時間（KV `expirationTtl`）
   - 参加者名の表示は `escapeHtml` を通す（要件 T-10）
   - 結果を出すツールは「結果をコピー」を用意する（要件 T-08）
 - 分析ビーコン `/cf-web-analytics.js` を各ページに読み込む
+
+---
+
+## 8c. 祝福メッセージボード（WISH）設計
+
+**要件:** W-01〜W-09 / **UI:** `public/app-tools/wishboard/index.html`  
+**API:** `/api/wish/[room]` / **永続化:** `src/lib/wish-store.ts`（キー `wish:{room}`、TTL 24h、`POLL_KV`）
+
+Host/Guest モデルはアンケート（§8）に近い。違いは「選択肢投票」ではなく「短いテキスト投稿」であること。
+
+| Method | action / query | 説明 |
+|--------|----------------|------|
+| GET | `?role=guest` | ゲスト向け。`showWall=false` のとき本文を伏せる |
+| GET | （Host） | 全メッセージを返す |
+| POST | `upsert` | ルーム作成・タイトル更新 |
+| POST | `post` | メッセージ追加（名前・本文必須、件数上限あり） |
+| POST | `toggleWall` / `setWall` | ゲストへの壁公開 |
+| POST | `clear` | メッセージ全消し |
+
+正規化: `src/lib/wish.ts`（`normalizeWishRoom` / `normalizeWishEntry`）。  
+UI は約2.5秒ポーリング、スポットライトは5秒でローテーション。大画面は `body.wall-fs`。
 
 ---
 

@@ -208,8 +208,23 @@ L4   本番                会場用。上を通ってからだけ
 | UT-PARTY-BILL-01〜03 | `splitBill` | 割り切れれば同額／単位切り上げで集金は合計以上／差は unit 以内 |
 | UT-PARTY-AMIDA-01〜04 | `generateLadder` / `resolveLadder` | 解は全単射／横線なしは恒等／1本は隣を入替／生成線は非隣接 |
 | UT-PARTY-KING-01 | `kingGame` | 1..N を1つずつ配り王様番号は範囲内 |
+| UT-PARTY-TEXT-01 | `clampText` | 空白を畳み最大長で切る |
+| UT-PARTY-FILTER-01 | `filterByCategory` | カテゴリ絞り込み / all は全部 |
+| UT-PARTY-MISSION-01 | `missionProgress` | 進捗パーセント |
+| UT-PARTY-WISH-01 | `formatWishExport` | 寄せ書きの読み上げ用テキスト |
 
 これらは種を渡すため乱数に依存せず、CI でも安定して PASS する。
+
+### 6.3d 祝福メッセージ `wish`（UT-WISH-\*）
+
+対象は `src/lib/wish.ts` / `wish-store.ts` の純粋部分、テストは `src/lib/wish.test.ts`。
+
+| ID | 対象 | 期待 |
+|----|------|------|
+| UT-WISH-ROOM-01〜02 | `normalizeWishRoom` | 英数字4文字／切り捨て |
+| UT-WISH-ENTRY-01〜03 | `normalizeWishEntry` | ok 判定／空は不可／長さ上限 |
+| UT-WISH-TEXT-01 / TITLE-01 | `clampWishText` / `normalizeWishTitle` | 空白畳み／既定タイトル |
+| UT-WISH-VIEW-01〜02 | `toGuestView` | 壁非公開で本文伏せ／公開でそのまま |
 
 ### 6.3c 余興共通 UI 部品 `ui`（UT-UI-\*）
 

@@ -269,6 +269,54 @@
     return groups.map((g) => g.length);
   }
 
+  /**
+   * テキストを trim して最大長に切り詰める（寄せ書き・お題など共通）。
+   */
+  function clampText(text, maxLen) {
+    const max = Math.max(0, Math.floor(maxLen) || 0);
+    return String(text || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, max);
+  }
+
+  /**
+   * カテゴリでカード／お題を絞り込む。category が空 or "all" なら全部。
+   */
+  function filterByCategory(items, category) {
+    const list = Array.isArray(items) ? items : [];
+    if (!category || category === "all") return list.slice();
+    return list.filter((item) => item && item.category === category);
+  }
+
+  /**
+   * フォトミッションなどの進捗。percent は 0〜100 の整数。
+   */
+  function missionProgress(doneCount, total) {
+    const t = Math.max(0, Math.floor(Number(total)) || 0);
+    const d = Math.max(0, Math.min(t, Math.floor(Number(doneCount)) || 0));
+    return {
+      done: d,
+      total: t,
+      remaining: t - d,
+      percent: t === 0 ? 0 : Math.round((d / t) * 100),
+    };
+  }
+
+  /**
+   * 寄せ書きメッセージをコピー用テキストに整形する。
+   */
+  function formatWishExport(messages) {
+    const list = Array.isArray(messages) ? messages : [];
+    return list
+      .map((m, i) => {
+        const name = m && m.name != null ? String(m.name) : "";
+        const text = m && m.text != null ? String(m.text) : "";
+        return `${i + 1}. ${name}\n${text}`;
+      })
+      .join("\n\n");
+  }
+
   return {
     mulberry32,
     shuffle,
@@ -284,5 +332,9 @@
     resolveLadder,
     kingGame,
     groupSizes,
+    clampText,
+    filterByCategory,
+    missionProgress,
+    formatWishExport,
   };
 });

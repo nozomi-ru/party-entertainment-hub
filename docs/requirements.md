@@ -44,6 +44,8 @@
 | クイズ集計 API | `src/app/api/quiz/`, `src/lib/quiz-store.ts` | design §7.5 | UT-QUIZ-STORE-* |
 | アンケート UI | `public/app-tools/wedding-poll/` | design §8 | SC-POLL-* |
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
+| 祝福メッセージ UI | `public/app-tools/wishboard/` | design §8c | （手動 / 将来 SC-WISH-*） |
+| 祝福メッセージ API | `src/app/api/wish/`, `src/lib/wish.ts`, `src/lib/wish-store.ts` | design §8c | UT-WISH-* |
 | 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html`, LP `ToolsGrid.tsx` | design §8b | UT-PARTY-* / SC-TOOLS-* |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
 | 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-08〜10 |
@@ -90,10 +92,11 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | BINGO | 人間ビンゴ | 静的 HTML + API | 3×3 交流ビンゴ（任意ルームでビンゴ達成を集計） | `public/app-tools/wedding-bingo/` + `/api/bingo` |
 | QUIZ | 新郎新婦クイズ | 静的 HTML + API | 4択クイズ（任意ルームで得点を集計） | `public/app-tools/wedding-quiz/` + `/api/quiz` |
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
+| WISH | 祝福メッセージボード | 静的 HTML + API | Host/Guest 同期のデジタル寄せ書き | `public/app-tools/wishboard/` + `/api/wish` |
 | HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ（LP にも一覧を掲載） | `public/app-tools/index.html` |
-| TOOL-* | 幹事・進行ツール群（5種） | 静的 HTML | 抽選・進行などの単機能アプリ | `public/app-tools/{slug}/` |
+| TOOL-* | 幹事・進行ツール群（6種） | 静的 HTML | 抽選・進行・トーク・フォトなどの単機能アプリ | `public/app-tools/{slug}/` |
 
-**TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・カウントダウンタイマー・得点板。
+**TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・カウントダウンタイマー・得点板・テーブルトークカード・フォトミッション。
 
 対象外（将来候補。詳細は [roadmap.md](./roadmap.md)）:
 
@@ -176,6 +179,22 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 - `mode=host` だけでは自動入室しない（ボタン操作が必要）。設計書 §8.3 参照
 - 同期は約 **2秒** 間隔のポーリング（N-02）。WebSocket は使わない
 
+### 4.4b 祝福メッセージボード（WISH）
+
+| ID | 要件 | 優先度 |
+|----|------|--------|
+| W-01 | 英数字4文字のルームコードでセッションを識別する | 必須 |
+| W-02 | Host はルームを作成し、ゲスト用 URL を表示・コピーできる | 必須 |
+| W-03 | Guest は名前と短い本文（上限あり）でメッセージを投稿できる | 必須 |
+| W-04 | Guest は `?room=XXXX` で自動入室できる（Host 未作成時は待機） | 必須 |
+| W-05 | Host は届いたメッセージ一覧とスポットライト表示ができる | 必須 |
+| W-06 | ゲストへの壁表示（他者メッセージの公開）は Host が切り替える | 必須 |
+| W-07 | Host はメッセージ全文をコピーできる | 必須 |
+| W-08 | Host はメッセージ全消しを2回押しで実行できる | 必須 |
+| W-09 | セッションデータは一定時間後に自動削除される（24時間想定） | 必須 |
+
+**補足:** 写真・動画は扱わない（テキストのみ）。KV キーは `wish:{room}`（`POLL_KV`）。同期は約2.5秒ポーリング。
+
 ### 4.6 幹事・進行ツール群（TOOL-\*）
 
 集客（検索流入）と当日運用の両面を狙った、単機能の静的アプリ群。**すべて DB 不要・端末内で完結**し、ロジックは共通モジュール `public/app-tools/shared/party-logic.js`（単体テスト対象）に集約する。
@@ -186,6 +205,8 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | T-ROUL | 抽選ルーレット | `roulette` | 名前・景品から当選を1つ選ぶ（コンフェッティ演出） |
 | T-CD | カウントダウンタイマー | `countdown` | 残り時間の大画面表示・全画面・アラート |
 | T-SCORE | 得点板 | `scoreboard` | チーム得点の加減算・順位・自動保存 |
+| T-TALK | テーブルトークカード | `table-talk` | カテゴリ付きアイスブレイク質問を1枚ずつ引く |
+| T-PHOTO | フォトミッション | `photo-mission` | 写真お題のチェックリストと進捗表示（アップロード不要） |
 
 | ID | 要件 | 優先度 |
 |----|------|--------|
@@ -211,7 +232,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 |----|------|--------|
 | C-01 | スマートフォン中心の操作に耐える UI とする | 必須 |
 | C-02 | ビンゴ／クイズ・TOOL-\* は DB なしで完結する（URL 共有 or 端末内） | 必須 |
-| C-03 | アンケートのみサーバー側同期（本番は Cloudflare KV）を用いる | 必須 |
+| C-03 | アンケート・祝福メッセージ（およびビンゴ／クイズ任意集計）はサーバー側同期（本番は Cloudflare KV / `POLL_KV`）を用いる | 必須 |
 | C-04 | 余興アプリの共通デザインは `public/app-tools/shared/app.css` に集約する | 推奨 |
 | C-05 | キーボード操作時にフォーカス位置が見え、主要なボタンは 44px 以上のタップ領域を持つ | 推奨 |
 | C-06 | `prefers-reduced-motion` が有効な端末では演出を短縮する（結果は同じ） | 推奨 |

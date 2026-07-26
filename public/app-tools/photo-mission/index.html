@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>フォトミッション（写真お題リスト） | ことほぎ</title>
+    <meta name="description" content="結婚式・二次会でゲストが撮る写真のお題リスト。達成をチェックして進捗を共有。アップロード不要でその場で盛り上がれます。無料・登録不要。">
+    <meta name="robots" content="index,follow">
+    <link rel="canonical" href="https://kotohogi.nozoisfun.workers.dev/app-tools/photo-mission/index.html">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:site_name" content="ことほぎ">
+    <meta property="og:title" content="フォトミッション | ことほぎ">
+    <meta property="og:description" content="ゲストが撮る写真のお題リスト。達成チェック・進捗表示。アップロード不要。">
+    <meta property="og:url" content="https://kotohogi.nozoisfun.workers.dev/app-tools/photo-mission/index.html">
+    <meta property="og:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="フォトミッション | ことほぎ">
+    <meta name="twitter:description" content="ゲストが撮る写真のお題リスト。達成チェック・進捗表示。">
+    <meta name="twitter:image" content="https://kotohogi.nozoisfun.workers.dev/og.jpg">
+    <link rel="icon" href="../shared/favicon.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/app.css">
+    <script src="../shared/party-logic.js"></script>
+    <script src="../shared/ui.js"></script>
+    <style>
+        .progress-wrap { margin: 1em 0 1.4em; text-align: left; }
+        .progress-bar {
+            height: 10px; background: var(--color-border); border-radius: 999px; overflow: hidden;
+        }
+        .progress-bar > span {
+            display: block; height: 100%; width: 0; background: var(--color-gold);
+            transition: width 0.4s ease;
+        }
+        .progress-label {
+            font-family: 'Playfair Display', serif; color: var(--color-gold);
+            letter-spacing: 0.06em; font-size: 0.85rem; margin-bottom: 8px;
+        }
+        #mission-list { display: flex; flex-direction: column; gap: 8px; margin: 1em 0; text-align: left; }
+        .mission-item {
+            display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start;
+            border: 1px solid var(--color-border); background: var(--color-panel); padding: 10px 12px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .mission-item.done { border-color: var(--color-gold); background: #fff; }
+        .mission-item.done .mission-text { text-decoration: line-through; color: var(--color-text-light); }
+        .mission-check {
+            width: 44px; height: 44px; border: 1px solid var(--color-border); background: #fff;
+            font-size: 1.2rem; cursor: pointer; font-family: inherit; line-height: 1;
+        }
+        .mission-item.done .mission-check { border-color: var(--color-gold); color: var(--color-gold); }
+        .mission-text { font-weight: 600; line-height: 1.5; padding-top: 10px; }
+        .mission-meta { font-size: 0.75rem; color: var(--color-text-light); margin-top: 4px; }
+        .edit-box { margin-top: 1.4em; text-align: left; }
+        .celebrate {
+            display: none; margin: 1em 0; padding: 1em; border: 1px solid var(--color-gold);
+            background: #fff; font-weight: 700; animation: cele 0.5s ease;
+        }
+        .celebrate.show { display: block; }
+        @keyframes cele {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="app-nav">
+        <a href="../index.html">← 余興アプリ一覧</a>
+        <a class="brand" href="/">ことほぎ</a>
+    </nav>
+
+    <main class="card">
+        <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
+        <h1 class="app-title">Photo Mission</h1>
+        <p class="app-subtitle">フォトミッション</p>
+        <p class="app-lead">撮る写真のお題をチェックリストに。アップロード不要でその場で遊べます。</p>
+
+        <div class="howto-note" id="app-howto">
+            <strong>使い方の要点（幹事・司会向け）</strong>
+            <ol>
+                <li>お題はプリセットのまま使えます。下の欄で自由に書き換えもできます。</li>
+                <li>ゲストは撮れたお題をタップしてチェック。進捗バーで達成度が見えます。</li>
+                <li>写真の送信先はLINEアルバムや共有フォルダなど、普段の方法でOK（このアプリはお題管理専用）。</li>
+                <li>残りお題や達成リストはコピーして読み上げに使えます。</li>
+            </ol>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-label" id="progress-label">0 / 0</div>
+            <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+            <p class="count-hint" id="progress-hint"></p>
+        </div>
+
+        <div class="celebrate" id="celebrate" role="status">コンプリート！全部のミッションを達成しました</div>
+
+        <div id="mission-list" aria-live="polite"></div>
+
+        <div class="stack">
+            <div class="row">
+                <button class="btn-ghost" id="copy-remain-btn" type="button">残りお題をコピー</button>
+                <button class="btn-ghost" id="copy-done-btn" type="button">達成リストをコピー</button>
+            </div>
+            <button class="btn-link" id="reset-btn" type="button">チェックをすべて外す</button>
+        </div>
+
+        <div class="edit-box field">
+            <label for="missions-input">お題リスト（1行に1つ）</label>
+            <textarea id="missions-input" rows="8"></textarea>
+            <p class="count-hint" id="missions-count"></p>
+            <div class="stack" style="margin-top:0.8em;">
+                <button class="btn-ghost" id="apply-btn" type="button">お題を反映する</button>
+                <button class="btn-link" id="preset-btn" type="button">結婚式プリセットに戻す</button>
+            </div>
+        </div>
+    </main>
+
+    <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
+
+    <script>
+        "use strict";
+        const P = window.PartyLogic;
+        const U = window.PartyUI;
+        const KEY = "photoMissionState";
+
+        const PRESET = [
+            "新郎新婦とツーショット",
+            "3世代が写った一枚",
+            "料理の一番きれいな瞬間",
+            "笑顔がはじけているテーブル",
+            "指輪やブーケのアップ",
+            "乾杯の瞬間",
+            "ダンス／余興のワンシーン",
+            "友人グループ集合写真",
+            "会場の雰囲気が伝わる一枚",
+            "自分のベストショット（自由）",
+        ];
+
+        let missions = PRESET.slice();
+        let done = {};
+        let resetArmed = false;
+        let resetTimer = null;
+
+        function load() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(KEY) || "null");
+                if (raw && Array.isArray(raw.missions) && raw.missions.length) {
+                    missions = raw.missions.map((t) => P.clampText(String(t), 80)).filter(Boolean);
+                    done = raw.done && typeof raw.done === "object" ? raw.done : {};
+                }
+            } catch { /* defaults */ }
+            document.getElementById("missions-input").value = missions.join("\n");
+        }
+
+        function save() {
+            localStorage.setItem(KEY, JSON.stringify({ missions, done }));
+        }
+
+        function progress() {
+            const doneCount = missions.filter((_, i) => done[i]).length;
+            return P.missionProgress(doneCount, missions.length);
+        }
+
+        function render() {
+            const p = progress();
+            document.getElementById("progress-label").textContent = p.done + " / " + p.total;
+            document.getElementById("progress-fill").style.width = p.percent + "%";
+            U.setHint("progress-hint",
+                p.total === 0 ? "お題を追加してください"
+                    : "達成 " + p.percent + "% ／ 残り " + U.formatCount(p.remaining, "件"));
+            document.getElementById("celebrate").classList.toggle("show", p.total > 0 && p.remaining === 0);
+
+            const box = document.getElementById("mission-list");
+            box.innerHTML = missions.map((text, i) => {
+                const isDone = !!done[i];
+                return `<div class="mission-item${isDone ? " done" : ""}">
+                    <button type="button" class="mission-check" data-i="${i}" aria-pressed="${isDone}" aria-label="${U.escapeHtml(text)}を${isDone ? "未達に戻す" : "達成にする"}">${isDone ? "✓" : ""}</button>
+                    <div>
+                        <div class="mission-text">${U.escapeHtml(text)}</div>
+                        <div class="mission-meta">Mission ${String(i + 1).padStart(2, "0")}</div>
+                    </div>
+                </div>`;
+            }).join("");
+
+            box.querySelectorAll(".mission-check").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const i = +btn.dataset.i;
+                    if (done[i]) delete done[i];
+                    else done[i] = true;
+                    save();
+                    render();
+                });
+            });
+
+            const { count } = U.parseLines(document.getElementById("missions-input").value);
+            U.setHint("missions-count", "編集中 " + U.formatCount(count, "件"));
+            document.getElementById("copy-remain-btn").disabled = p.remaining === 0;
+            document.getElementById("copy-done-btn").disabled = p.done === 0;
+        }
+
+        function applyMissions() {
+            const items = U.parseLines(document.getElementById("missions-input").value).items
+                .map((t) => P.clampText(t, 80))
+                .filter(Boolean);
+            if (!items.length) {
+                U.toast("お題を1つ以上入力してください");
+                return;
+            }
+            missions = items;
+            done = {};
+            save();
+            render();
+            U.toast("お題を反映しました");
+        }
+
+        document.getElementById("apply-btn").addEventListener("click", applyMissions);
+        document.getElementById("preset-btn").addEventListener("click", () => {
+            document.getElementById("missions-input").value = PRESET.join("\n");
+            missions = PRESET.slice();
+            done = {};
+            save();
+            render();
+            U.toast("プリセットに戻しました");
+        });
+        document.getElementById("missions-input").addEventListener("input", () => {
+            const { count } = U.parseLines(document.getElementById("missions-input").value);
+            U.setHint("missions-count", "編集中 " + U.formatCount(count, "件") + "（反映ボタンで適用）");
+        });
+        document.getElementById("copy-remain-btn").addEventListener("click", () => {
+            const lines = missions.filter((_, i) => !done[i]);
+            if (!lines.length) { U.toast("残りはありません"); return; }
+            U.copyWithToast(lines.map((t, i) => (i + 1) + ". " + t).join("\n"), "残りお題をコピーしました");
+        });
+        document.getElementById("copy-done-btn").addEventListener("click", () => {
+            const lines = missions.filter((_, i) => done[i]);
+            if (!lines.length) { U.toast("まだ達成がありません"); return; }
+            U.copyWithToast(lines.map((t, i) => (i + 1) + ". " + t).join("\n"), "達成リストをコピーしました");
+        });
+        document.getElementById("reset-btn").addEventListener("click", () => {
+            const btn = document.getElementById("reset-btn");
+            if (!resetArmed) {
+                resetArmed = true;
+                btn.textContent = "もう一度押すとチェック解除";
+                resetTimer = setTimeout(() => {
+                    resetArmed = false;
+                    btn.textContent = "チェックをすべて外す";
+                }, 3000);
+                return;
+            }
+            resetArmed = false;
+            if (resetTimer) clearTimeout(resetTimer);
+            btn.textContent = "チェックをすべて外す";
+            done = {};
+            save();
+            render();
+            U.toast("チェックを外しました");
+        });
+
+        U.initFooterYear();
+        load();
+        render();
+    </script>
+    <script src="/cf-web-analytics.js" defer></script>
+</body>
+</html>

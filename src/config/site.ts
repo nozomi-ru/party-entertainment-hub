@@ -23,7 +23,7 @@ export const siteConfig = {
   tagline: "幹事の負担を減らし、会場の一体感を最大化する",
   /** LP 用（検索・OGP。おおよそ100〜120文字） */
   description:
-    "結婚式・パーティーの余興を支えるWebアプリ。人間ビンゴ・クイズ・リアルタイムアンケートで、幹事の負担を減らし会場の一体感をつくります。",
+    "結婚式・パーティーの余興を支えるWebアプリ。人間ビンゴ・クイズ・アンケート・祝福メッセージ・トークカード・フォトミッションで、幹事の負担を減らし会場の一体感をつくります。",
   copyrightYear: 2026,
   author: "Kotohogi",
   /** SNS共有カード用画像（public/og.jpg） */
@@ -54,7 +54,7 @@ export const pageSeo = {
   tools: {
     title: "余興アプリ一覧 | ことほぎ",
     description:
-      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・抽選・タイマーなどをスマホから今すぐ。",
+      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・寄せ書き・トークカード・フォトミッション・抽選・タイマーなどをスマホから今すぐ。",
   },
   bingoMachine: {
     title: "ビンゴ数字抽選機 | ことほぎ",
@@ -77,6 +77,21 @@ export const pageSeo = {
     title: "得点板・スコアボード | ことほぎ",
     description:
       "チーム対抗ゲームの得点をその場で加減算できるスコアボード。クイズ大会・ゲーム大会の点数管理に。自動保存・順位表示。",
+  },
+  wishboard: {
+    title: "祝福メッセージボード | ことほぎ",
+    description:
+      "ゲストがスマホから新郎新婦へ短い祝福を送れるデジタル寄せ書き。司会がルームを開き、大画面で読み上げ・表示できます。",
+  },
+  tableTalk: {
+    title: "テーブルトークカード | ことほぎ",
+    description:
+      "席ごとの会話が弾むアイスブレイク質問カード。カテゴリを選んで1枚引き、発表モードで大画面に映せます。",
+  },
+  photoMission: {
+    title: "フォトミッション | ことほぎ",
+    description:
+      "撮る写真のお題リスト。達成をチェックして進捗を共有。アップロード不要で結婚式・二次会その場で使えます。",
   },
 } as const;
 
@@ -168,6 +183,30 @@ export const toolItems: ToolItem[] = [
     titleEn: "Poll",
     description: "司会がルームを開き、ゲストがスマホから投票・結果表示。",
     href: "/app-tools/wedding-poll/index.html",
+    category: "together",
+  },
+  {
+    id: "wishboard",
+    title: "祝福メッセージボード",
+    titleEn: "Wish",
+    description: "ゲストがスマホから短い祝福を送るデジタル寄せ書き。",
+    href: "/app-tools/wishboard/index.html",
+    category: "together",
+  },
+  {
+    id: "table-talk",
+    title: "テーブルトークカード",
+    titleEn: "Talk",
+    description: "席の会話が弾む質問を1枚ずつ引くアイスブレイク。",
+    href: "/app-tools/table-talk/index.html",
+    category: "together",
+  },
+  {
+    id: "photo-mission",
+    title: "フォトミッション",
+    titleEn: "Photo",
+    description: "撮る写真のお題リスト。チェックして進捗を共有。",
+    href: "/app-tools/photo-mission/index.html",
     category: "together",
   },
   {
