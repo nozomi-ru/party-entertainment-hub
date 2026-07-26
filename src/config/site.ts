@@ -3,6 +3,8 @@
  * アプリURL・アフィリエイトリンクはここだけ編集すれば反映されます。
  */
 
+import { LIVE_GAMES } from "@/lib/live/catalog";
+
 /** 本番の公開オリジン（末尾スラッシュなし）。カスタムドメイン時は環境変数かここを更新 */
 export const siteUrl = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://kotohogi.nozoisfun.workers.dev"
@@ -155,19 +157,31 @@ export type ToolItem = {
   titleEn: string;
   description: string;
   href: string;
-  category: "together" | "lottery" | "manage";
+  category: "live" | "together" | "lottery" | "manage";
 };
 
 export const toolCategories: Record<
   ToolItem["category"],
   { label: string; labelEn: string }
 > = {
+  live: { label: "ライブ余興（会場同期）", labelEn: "Live" },
   together: { label: "会場でみんなと", labelEn: "Together" },
   lottery: { label: "抽選・くじ引き", labelEn: "Lottery" },
   manage: { label: "幹事の準備・進行", labelEn: "Manage" },
 };
 
+/** ライブ余興は catalog を正とし、LP からは Admin 入口へ */
+const liveToolItems: ToolItem[] = LIVE_GAMES.map((game) => ({
+  id: `live-${game.id}`,
+  title: game.title,
+  titleEn: game.short,
+  description: game.description,
+  href: `/live/${game.id}/admin`,
+  category: "live",
+}));
+
 export const toolItems: ToolItem[] = [
+  ...liveToolItems,
   {
     id: "human-bingo",
     title: "人間ビンゴ",

@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { toolCategories, toolItems, type ToolItem } from "@/config/site";
 
 const CATEGORY_ORDER: ToolItem["category"][] = [
+  "live",
   "together",
   "lottery",
   "manage",

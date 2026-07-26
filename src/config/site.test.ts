@@ -4,7 +4,9 @@ import {
   problemSolutionIntro,
   problemSolutions,
   siteConfig,
+  toolItems,
 } from "@/config/site";
+import { LIVE_GAMES } from "@/lib/live/catalog";
 
 describe("site config（LP コピー）", () => {
   it("UT-SITE-01: タグラインが実態に合った文言である", () => {
@@ -55,5 +57,16 @@ describe("site config（LP コピー）", () => {
     expect(blob).not.toContain("アプリを体験する");
     expect(blob).not.toContain("課題と解決を見る");
     expect(blob).not.toContain("司会・幹事はこちら");
+  });
+
+  it("UT-SITE-05: LP #tools にライブ余興への Admin 導線がある", () => {
+    const liveItems = toolItems.filter((t) => t.category === "live");
+    expect(liveItems).toHaveLength(LIVE_GAMES.length);
+    for (const game of LIVE_GAMES) {
+      const item = liveItems.find((t) => t.id === `live-${game.id}`);
+      expect(item).toBeDefined();
+      expect(item!.href).toBe(`/live/${game.id}/admin`);
+      expect(item!.title).toBe(game.title);
+    }
   });
 });
