@@ -165,6 +165,7 @@ L4   本番                会場用。上を通ってからだけ
 | ルームコード・票の整え方 | `src/lib/poll.ts` | API が使う「きれいにする」処理 |
 | LP コピー（site.ts） | `src/config/site.ts` | タグライン・CTA・Problem & Solution の正 |
 | セッションの保存（メモリ経路） | `src/lib/poll-store.ts` | KV が無いときの読み書き |
+| ルーム削除期限 | `src/lib/room-ttl.ts` | `expiresAt` の算出・延長・表示文言 |
 
 コードを変えるときは、できれば **この節の期待結果も一緒に直す**（仕様と実装がずれないように）。
 
@@ -261,10 +262,23 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 
 | ID | 操作 | 期待 |
 |----|------|------|
-| UT-STORE-01 | 書いてから読む | 同じ内容が返る |
+| UT-STORE-01 | 書いてから読む | 同じ内容が返る（`createdAt` / `expiresAt` が補完される） |
 | UT-STORE-02 | 存在しないルームを読む | `null`（無い） |
+| UT-STORE-03 | `extendPollSession` | `expiresAt` が now+7日付近に進む |
 
 実装されたテスト: `src/lib/poll-store.test.ts`
+
+### 6.4a ルーム削除期限 `room-ttl`（UT-TTL-\*）
+
+| ID | 対象 | 期待 |
+|----|------|------|
+| UT-TTL-01 | `createRoomTtl` | `expiresAt = now + 7日` |
+| UT-TTL-02 | `ttlSecondsUntil` | 残り秒。最短 60 |
+| UT-TTL-03 | `resolveExpiresAt` | 明示 `expiresAt` 優先／無ければ createdAt+7日 |
+| UT-TTL-04 | `ensureRoomTtl` | 欠落フィールドを補完 |
+| UT-TTL-05 | `bumpExpiresAt` / `formatExpiresAtJa` | 延長先の時刻・日本語表示 |
+
+実装されたテスト: `src/lib/room-ttl.test.ts`
 
 ### 6.4b KV 共通 `kv.ts`（メモリ）
 
@@ -348,9 +362,10 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | 順 | やること | 成功の条件 |
 |----|----------|------------|
 | 1 | トップページを取得（GET） | HTTP が成功（だいたい 200 番台） |
-| 2 | ルームを作成・更新（POST `upsert`） | HTTP が成功 |
+| 2 | ルームを新規作成（POST `open`） | HTTP が成功。`expiresAt` がある |
 | 3 | 1票入れる（POST `vote`） | 成功し、票数が 1 になっている |
-| 4 | ルーム状態を取得（GET） | HTTP が成功 |
+| 4 | 削除期限を延長（POST `extend`） | 成功し、`expiresAt` が進んでいる |
+| 5 | ルーム状態を取得（GET） | HTTP が成功 |
 
 実装: `scripts/smoke.mjs`
 
@@ -380,10 +395,11 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-LP-02 | `landing.feature` | Party Tools（ToolsGrid）から3アプリへ遷移 | 受け入れ1 |
 | SC-LP-03 | `landing.feature` | ヒーローにタグラインと CTA（余興ツールを見る） | LP-01 / LP-05 |
 | SC-LP-04 | `landing.feature` | Problem & Solution の3柱タイトルが見える | LP-02 |
-| SC-POLL-01 | `poll.feature` | Host 入室→Guest 投票 | アンケート最小経路 |
+| SC-POLL-01 | `poll.feature` | Host がルーム自動作成→Guest 投票 | アンケート最小経路 |
 | SC-POLL-02 | `poll.feature` | Host が結果表示 | 結果公開 |
 | SC-POLL-03 | `poll.feature` | Host は投票不可 | 受け入れ5 |
 | SC-POLL-04 | `poll.feature` | Host が質問編集→Guest 反映 | 要件 P-10 |
+| SC-POLL-05 | `poll.feature` | Host に削除期限が表示され延長できる | 要件 P-11 |
 | SC-BINGO-01 | `bingo.feature` | ビンゴ達成＋日時（使い方表示あり） | 受け入れ2 |
 | SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題（使い方表示あり） | 受け入れ3 |
 | SC-TOOLS-01 | `tools.feature` | LP `#tools` から各ツールへ遷移 | TOOL-* 導線 / T-05 |
@@ -392,9 +408,7 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-TOOLS-07 | `tools.feature` | 当選の記録をコピーして共有できる（ルーレット） | 要件 T-08 |
 | SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
 | SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |
-| SC-LIVE-01 | `live.feature` | どっち？で Guest が投票し Admin が結果表示 | L-EITHER |
-| SC-LIVE-02 | `live.feature` | 早押しで最速ゲストが Screen に表示 | L-BUZZ |
-| SC-LIVE-03 | `live.feature` | リクエストボードに投稿できる | L-REQUEST |
+| SC-DRESS-01 | `live.feature` | ドレス Admin が投票を開き Guest が色を選べる | L-DRESS |
 
 ### 8.3 動画の見方
 
@@ -494,7 +508,7 @@ KV の扱い: 単体・API は **偽物／メモリ（方針 A）**。本物に�
 | ビンゴ／クイズは URL、アンケートはサーバー同期 | L3、将来の L1/L2 |
 | ルームは4文字 | L1（UT-ROOM）、将来 API テスト |
 | Host/Guest・結果の公開タイミング | L3（MAN）、L2b（SC-POLL-*） |
-| データの寿命（TTL） | 設計どおりの実装確認（自動は当面なし） |
+| データの寿命（TTL）・延長 | L1（UT-TTL / UT-STORE-03）、L2（SMK extend）、L2b（SC-POLL-05） |
 | CI でビルドできる・ローカルで開発できる | L1 の CI、L2/L3 の非本番 |
 
 ---

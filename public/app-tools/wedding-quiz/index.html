@@ -24,6 +24,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
     <script src="../shared/pack.js"></script>
+    <script src="../shared/ui.js"></script>
     <style>
         :root {
             --color-bg: #FCFBF9;
@@ -610,12 +611,18 @@
         <div class="room-gen-area">
             <h3>▶ 集計ルームを作る（任意）</h3>
             <p style="font-size:0.78em;color:var(--color-text-light);line-height:1.6;margin:0 0 0.6em;">ルームを作ると、ゲストがクイズ終了後に得点を送信でき、幹事が一覧で確認できます。</p>
+            <p id="host-ttl-notice" style="font-size:0.75em;color:var(--color-text-light);line-height:1.5;margin:0 0 0.7em;padding:0.5em 0.65em;border:1px solid var(--color-border);background:#fff;"></p>
             <button class="btn-share" id="btn-gen-room" type="button">ルームコードを生成する</button>
             <div id="room-gen-result" style="display:none;margin-top:0.8em;">
                 <p class="room-code-disp" id="room-code-disp"></p>
+                <p id="room-ttl-deadline" style="font-size:0.78em;color:var(--color-text-light);margin:0.35em 0;" hidden></p>
+                <button class="btn-share" id="btn-extend-ttl" type="button" style="margin-top:6px;" hidden>削除期限を1週間延長</button>
                 <div class="url-box-s" id="url-host-box"><span>Host URL（幹事用）</span><span id="url-host-text"></span></div>
-                <div class="url-box-s" id="url-guest-box"><span>Guest URL（ゲスト配布用）</span><span id="url-guest-text"></span></div>
-                <p style="font-size:0.72em;color:var(--color-text-light);margin:0.4em 0 0;line-height:1.5;">URLをタップ→長押しでコピーできます。Host URL は幹事が開き、Guest URL をゲストに配ってください。</p>
+                <button class="btn-share" id="btn-copy-host-url" type="button" style="margin-top:6px;">Host URLをコピー</button>
+                <div class="url-box-s" id="url-guest-box" style="margin-top:0.6em;"><span>Guest URL（ゲスト配布用）</span><span id="url-guest-text"></span></div>
+                <button class="btn-share" id="btn-copy-guest-url" type="button" style="margin-top:6px;">Guest URLをコピー</button>
+                <button class="btn-share" id="btn-copy-both-urls" type="button" style="margin-top:6px;">Host＋Guest URLをまとめてコピー</button>
+                <p style="font-size:0.72em;color:var(--color-text-light);margin:0.4em 0 0;line-height:1.5;">コピーボタンでURLを共有できます。Host URL は幹事が開き、Guest URL をゲストに配ってください。</p>
             </div>
         </div>
 
@@ -947,26 +954,37 @@
         }
 
         async function createRoom() {
-            const code = generateRoomCode();
-            try {
-                const res = await fetch(`/api/quiz/${encodeURIComponent(code)}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ action: "open" })
-                });
-                if (!res.ok) throw new Error("open failed");
-            } catch {
-                alert("ルームの作成に失敗しました。"); return;
+            for (let attempt = 0; attempt < 12; attempt++) {
+                const code = generateRoomCode();
+                try {
+                    const res = await fetch(`/api/quiz/${encodeURIComponent(code)}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "open" })
+                    });
+                    if (res.status === 409) continue;
+                    if (!res.ok) throw new Error("open failed");
+                    const data = await res.json().catch(() => ({}));
+                    const cParam = new URLSearchParams(location.search).get("c");
+                    const cPart = cParam ? `?c=${encodeURIComponent(cParam)}&room=${code}` : `?room=${code}`;
+                    const guestUrl = location.origin + location.pathname.replace("/index.html", "") + "/" + "index.html" + cPart;
+                    const hostUrl = guestUrl + "&mode=host";
+                    document.getElementById("room-code-disp").textContent = code;
+                    document.getElementById("url-guest-text").textContent = guestUrl;
+                    document.getElementById("url-host-text").textContent = hostUrl;
+                    document.getElementById("room-gen-result").style.display = "block";
+                    window.PartyUI.updateRoomTtlUi({
+                        deadlineEl: "room-ttl-deadline",
+                        extendBtn: "btn-extend-ttl",
+                        expiresAt: data.expiresAt,
+                    });
+                    state.room = code;
+                    return;
+                } catch {
+                    alert("ルームの作成に失敗しました。"); return;
+                }
             }
-            const base = location.origin + location.pathname;
-            const cParam = new URLSearchParams(location.search).get("c");
-            const cPart = cParam ? `?c=${encodeURIComponent(cParam)}&room=${code}` : `?room=${code}`;
-            const guestUrl = location.origin + location.pathname.replace("/index.html", "") + "/" + "index.html" + cPart;
-            const hostUrl = guestUrl + "&mode=host";
-            document.getElementById("room-code-disp").textContent = code;
-            document.getElementById("url-guest-text").textContent = guestUrl;
-            document.getElementById("url-host-text").textContent = hostUrl;
-            document.getElementById("room-gen-result").style.display = "block";
+            alert("空きルームコードを見つけられませんでした。もう一度お試しください。");
         }
 
         /* ── URLパラメータからルーム自動設定 ── */
@@ -1105,6 +1123,45 @@
                 document.getElementById("admin-panel").style.display = "none";
             });
             document.getElementById("btn-gen-room").addEventListener("click", createRoom);
+            document.getElementById("btn-extend-ttl").addEventListener("click", async () => {
+                if (!state.room) return;
+                try {
+                    const res = await fetch(`/api/quiz/${encodeURIComponent(state.room)}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "extend" })
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.error || "extend failed");
+                    window.PartyUI.updateRoomTtlUi({
+                        deadlineEl: "room-ttl-deadline",
+                        extendBtn: "btn-extend-ttl",
+                        expiresAt: data.expiresAt,
+                    });
+                    alert("削除期限を1週間延長しました");
+                } catch {
+                    alert("延長に失敗しました");
+                }
+            });
+            async function copyRoomUrl(kind) {
+                const guest = document.getElementById("url-guest-text").textContent || "";
+                const host = document.getElementById("url-host-text").textContent || "";
+                const text = kind === "guest" ? guest
+                    : kind === "host" ? host
+                    : `Host:\n${host}\n\nGuest:\n${guest}`;
+                const ok = kind === "guest" ? "Guest URLをコピーしました"
+                    : kind === "host" ? "Host URLをコピーしました"
+                    : "Host＋Guest URLをコピーしました";
+                try {
+                    await navigator.clipboard.writeText(text);
+                    alert(ok);
+                } catch {
+                    alert("コピーできませんでした。URLを長押ししてコピーしてください。");
+                }
+            }
+            document.getElementById("btn-copy-guest-url").addEventListener("click", () => copyRoomUrl("guest"));
+            document.getElementById("btn-copy-host-url").addEventListener("click", () => copyRoomUrl("host"));
+            document.getElementById("btn-copy-both-urls").addEventListener("click", () => copyRoomUrl("both"));
             document.getElementById("btn-submit-result").addEventListener("click", submitResult);
             document.getElementById("btn-host-clear").addEventListener("click", clearHostResults);
             document.getElementById("btn-host-copy-url").addEventListener("click", async () => {
@@ -1126,6 +1183,7 @@
         window.addEventListener("DOMContentLoaded", () => {
             loadQuestions();
             initEvents();
+            window.PartyUI.updateRoomTtlUi({ noticeEl: "host-ttl-notice" });
             bootFromUrl();
         });
     </script>

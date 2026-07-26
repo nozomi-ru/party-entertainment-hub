@@ -1,6 +1,6 @@
 import type { LiveGameId } from "@/lib/live/catalog";
 
-/** Admin が書く進行状態（単一キー・Admin のみ上書き） */
+/** Admin が書く進行状態（汎用 live API 用・現行ゲームなし） */
 export type LiveStateBase = {
   game: LiveGameId;
   room: string;
@@ -8,23 +8,8 @@ export type LiveStateBase = {
   updatedAt: number;
 };
 
-export type GradeState = LiveStateBase & {
-  game: "grade";
-  phase: "lobby" | "answering" | "results";
-  questions: { q: string; choices: string[]; answerIndex: number }[];
-  index: number;
-};
+export type LiveState = LiveStateBase;
 
-export type GraphState = LiveStateBase & {
-  game: "graph";
-  phase: "collect" | "show";
-  bride: string;
-  groom: string;
-};
-
-export type LiveState = GradeState | GraphState;
-
-/** ゲスト行動（一意キーで put） */
 export type LiveAction = {
   id: string;
   guestId: string;

@@ -303,14 +303,14 @@ export const affiliateBanners: AffiliateBanner[] = [
     alt: "parcy's（パーシーズ）恋愛・結婚のパーソナル診断",
   },
   {
-    id: "a8-100x100",
-    href: "https://px.a8.net/svt/ejp?a8mat=4B89KT+6YNIGI+5VGS+5ZMCH",
+    id: "a8-300x250-2",
+    href: "https://px.a8.net/svt/ejp?a8mat=4B89KT+6YNIGI+5VGS+61Z81",
     imageSrc:
-      "https://www28.a8.net/svt/bgt?aid=260726141421&wid=001&eno=01&mid=s00000027406001006000&mc=1",
-    imageWidth: 100,
-    imageHeight: 100,
+      "https://www29.a8.net/svt/bgt?aid=260726141421&wid=001&eno=01&mid=s00000027406001017000&mc=1",
+    imageWidth: 300,
+    imageHeight: 250,
     trackingPixelSrc:
-      "https://www10.a8.net/0.gif?a8mat=4B89KT+6YNIGI+5VGS+5ZMCH",
+      "https://www17.a8.net/0.gif?a8mat=4B89KT+6YNIGI+5VGS+61Z81",
     alt: "おすすめサービス（PR）",
   },
 ];

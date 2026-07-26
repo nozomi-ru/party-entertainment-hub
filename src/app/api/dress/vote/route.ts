@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { isDressColorId } from "@/lib/dress/colors";
+import { findDressColor } from "@/lib/dress/colors";
 import {
   getDressPublicSnapshot,
+  normalizeDressRoom,
+  readDressColors,
   readDressState,
   writeDressVote,
 } from "@/lib/dress/store";
@@ -16,7 +18,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const state = await readDressState();
+  const room = normalizeDressRoom(body.room);
+  if (room.length !== 4) {
+    return NextResponse.json({ error: "Invalid room" }, { status: 400 });
+  }
+
+  const state = await readDressState(room);
   if (!state || state.status !== "voting") {
     return NextResponse.json({ error: "Voting closed" }, { status: 403 });
   }
@@ -26,20 +33,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid user_id" }, { status: 400 });
   }
 
+  const colors = await readDressColors(room);
   const color = String(body.color ?? "");
-  if (!isDressColorId(color)) {
+  if (!findDressColor(colors, color)) {
     return NextResponse.json({ error: "Invalid color" }, { status: 400 });
   }
 
-  const name = String(body.name ?? "ゲスト").trim().slice(0, 20) || "ゲスト";
+  const name = String(body.name ?? "").trim().slice(0, 20);
+  if (!name) {
+    return NextResponse.json({ error: "name is required" }, { status: 400 });
+  }
 
-  await writeDressVote({
+  await writeDressVote(room, {
     user_id: userId,
     name,
     color,
     timestamp: Date.now(),
   });
 
-  const snapshot = await getDressPublicSnapshot();
+  const snapshot = await getDressPublicSnapshot(room);
   return NextResponse.json(snapshot);
 }

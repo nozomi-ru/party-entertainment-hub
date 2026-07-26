@@ -25,8 +25,8 @@ export type KvListOptions = {
   cursor?: string;
 };
 
-/** イベント用途の既定 TTL（24時間） */
-export const KV_EVENT_TTL_SECONDS = 60 * 60 * 24;
+/** イベント用途の既定 TTL（7日間） */
+export const KV_EVENT_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 type KvLike = {
   get(key: string): Promise<string | null>;
@@ -35,6 +35,7 @@ type KvLike = {
     value: string,
     options?: KvPutOptions,
   ): Promise<void>;
+  delete?(key: string): Promise<void>;
   list?(options?: KvListOptions): Promise<KvListResult>;
 };
 
@@ -84,6 +85,15 @@ export async function kvPut(
     return;
   }
   getMemoryStore().set(key, value);
+}
+
+export async function kvDelete(key: string): Promise<void> {
+  const kv = await getPollKv();
+  if (kv?.delete) {
+    await kv.delete(key);
+    return;
+  }
+  getMemoryStore().delete(key);
 }
 
 /**

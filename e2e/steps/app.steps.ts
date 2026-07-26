@@ -1,11 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { Given, When, Then } from "../fixtures";
 
-function makeTestRoom(): string {
-  const suffix = Math.random().toString(36).slice(2, 5).toUpperCase();
-  return `T${suffix}`.slice(0, 4).padEnd(4, "0");
-}
-
 async function fillBingoCell(page: Page, cellIndex: number, name: string) {
   await page.locator("#bingo-board .cell").nth(cellIndex).click();
   await expect(page.locator("#name-modal")).toBeVisible();
@@ -146,12 +141,12 @@ Then(
 );
 
 When("Hostとして新しいテストルームに入室する", async ({ page, world }) => {
-  world.room = makeTestRoom();
   await page.evaluate(() => localStorage.clear());
   await page.locator("#mode-host").click();
-  await page.locator("#room-input").fill(world.room);
-  await page.locator("#btn-enter").click();
+  await page.locator("#btn-create-room").click();
   await expect(page.locator("#view-session")).toBeVisible({ timeout: 20_000 });
+  world.room = (await page.locator("#room-badge").textContent())?.trim() ?? "";
+  expect(world.room).toMatch(/^[A-Z0-9]{4}$/);
 });
 
 Then("Hostのセッション画面が表示される", async ({ page }) => {
@@ -164,6 +159,30 @@ Then("ゲスト用URLが表示される", async ({ page, world }) => {
   await expect(input).not.toHaveValue("");
   world.guestUrl = await input.inputValue();
   expect(world.guestUrl).toContain("room=");
+});
+
+Then("削除期限が表示されている", async ({ page }) => {
+  const deadline = page.locator("#room-ttl-deadline");
+  await expect(deadline).toBeVisible({ timeout: 10_000 });
+  await expect(deadline).toContainText("削除期限");
+});
+
+When("Hostが削除期限を延長する", async ({ page, world }) => {
+  expect(world.room).toBeTruthy();
+  const before = await page.request.get(`/api/poll/${world.room}`);
+  expect(before.ok()).toBeTruthy();
+  const beforeData = (await before.json()) as { expiresAt?: number };
+  const beforeExp = beforeData.expiresAt ?? 0;
+
+  await page.locator("#btn-extend-ttl").click();
+  await expect
+    .poll(async () => {
+      const res = await page.request.get(`/api/poll/${world.room}`);
+      if (!res.ok()) return 0;
+      const data = (await res.json()) as { expiresAt?: number };
+      return data.expiresAt ?? 0;
+    }, { timeout: 15_000 })
+    .toBeGreaterThan(beforeExp);
 });
 
 When(
@@ -510,8 +529,19 @@ Then("抽選済みが0個に戻る", async ({ page }) => {
 
 When(
   "ドレスAdminを {string} 正解で開く",
-  async ({ page }, ans: string) => {
-    await page.goto(`/dress/admin?ans=${ans}`);
+  async ({ page, world }, ans: string) => {
+    await page.goto("/dress/admin");
+    await page.getByTestId("dress-create-room").click();
+    await expect(page.getByTestId("dress-room-result")).toBeVisible({
+      timeout: 15_000,
+    });
+    const code = (await page.getByTestId("room-code").innerText()).trim();
+    expect(code).toMatch(/^[A-Z0-9]{4}$/);
+    world.room = code;
+    await page.getByTestId("dress-correct-select").selectOption(ans);
+    await expect(page.getByTestId("url-guest-text")).toHaveValue(
+      new RegExp(`/dress/guest\\?room=${code}`),
+    );
   },
 );
 
@@ -524,9 +554,10 @@ When("AdminがVOTINGを押す", async ({ page }) => {
 
 When(
   "ゲストがドレスで {string} に投票する",
-  async ({ browser }, color: string) => {
+  async ({ browser, world }, color: string) => {
+    expect(world.room).toBeTruthy();
     const guest = await browser.newPage();
-    await guest.goto("/dress/guest");
+    await guest.goto(`/dress/guest?room=${world.room}`);
     await guest.getByTestId("dress-name").fill("E2Eゲスト");
     await expect(guest.getByTestId(`dress-color-${color}`)).toBeVisible({
       timeout: 15_000,
@@ -537,10 +568,13 @@ When(
   },
 );
 
-Then("ドレスの得票が1以上である", async ({ page }) => {
+Then("ドレスの得票が1以上である", async ({ page, world }) => {
+  expect(world.room).toBeTruthy();
   await expect
     .poll(async () => {
-      const res = await page.request.get("/api/dress/state");
+      const res = await page.request.get(
+        `/api/dress/state?room=${encodeURIComponent(world.room)}`,
+      );
       const data = (await res.json()) as { total?: number };
       return data.total ?? 0;
     })

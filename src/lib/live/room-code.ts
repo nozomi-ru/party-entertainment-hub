@@ -16,3 +16,24 @@ export function parseRoomParam(raw: string | null | undefined): string {
   if (!raw) return "";
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
 }
+
+export {
+  ROOM_TTL_EXTEND_LABEL,
+  ROOM_TTL_NOTICE,
+} from "@/lib/room-ttl";
+
+/**
+ * 既存ルームと衝突しないコードを確保する。
+ * `tryOpen` は成功時 true、衝突時 false、その他失敗は throw。
+ */
+export async function allocateUniqueRoomCode(
+  tryOpen: (code: string) => Promise<"ok" | "conflict">,
+  maxAttempts = 12,
+): Promise<string> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const code = makeRoomCode();
+    const result = await tryOpen(code);
+    if (result === "ok") return code;
+  }
+  throw new Error("空きルームコードを見つけられませんでした。もう一度お試しください");
+}

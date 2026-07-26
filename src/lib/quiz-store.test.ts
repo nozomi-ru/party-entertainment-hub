@@ -10,7 +10,9 @@ describe("quiz-store (メモリ)", () => {
   it("UT-QUIZ-STORE-01: 書き込んだセッションを読める", async () => {
     const session = { room: "Q001", entries: [], createdAt: 1 };
     await writeQuizSession(session);
-    await expect(readQuizSession("Q001")).resolves.toEqual(session);
+    const read = await readQuizSession("Q001");
+    expect(read).toMatchObject(session);
+    expect(typeof read?.expiresAt).toBe("number");
   });
 
   it("UT-QUIZ-STORE-02: 無いルームは null", async () => {

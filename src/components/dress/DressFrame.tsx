@@ -4,8 +4,25 @@ import Link from "next/link";
 function Ornament() {
   return (
     <div className="dress-ornament" aria-hidden>
-      <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5 Z" />
+      <svg viewBox="0 0 28 22" xmlns="http://www.w3.org/2000/svg" width="22" height="17">
+        <path
+          d="M4 10 L8 4 L14 8 L20 4 L24 10 L22 18 H6 Z"
+          fill="none"
+          stroke="#b4975a"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+        <text
+          x="14"
+          y="15.5"
+          textAnchor="middle"
+          fill="#b4975a"
+          fontFamily="Playfair Display, serif"
+          fontSize="8"
+          fontWeight="600"
+        >
+          Q
+        </text>
       </svg>
     </div>
   );

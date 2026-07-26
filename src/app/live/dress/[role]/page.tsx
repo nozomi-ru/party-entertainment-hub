@@ -8,7 +8,7 @@ type Props = {
 export default async function LegacyDressRedirect({ params }: Props) {
   const { role } = await params;
   if (role === "admin") {
-    redirect("/dress/admin?ans=orange");
+    redirect("/dress/admin");
   }
   redirect(`/dress/${role}`);
 }

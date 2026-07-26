@@ -29,19 +29,22 @@ async function main() {
     throw new Error(`LP GET failed: ${home.status}`);
   }
 
-  const upsert = await fetch(pollUrl, {
+  const open = await fetch(pollUrl, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      action: "upsert",
+      action: "open",
       questions: [{ q: "smoke?", choices: ["yes", "no"] }],
-      index: 0,
-      showResults: false,
     }),
   });
-  if (!upsert.ok) {
-    throw new Error(`upsert failed: ${upsert.status} ${await upsert.text()}`);
+  if (!open.ok) {
+    throw new Error(`open failed: ${open.status} ${await open.text()}`);
   }
+  const opened = await open.json();
+  if (!opened.expiresAt) {
+    throw new Error("open response missing expiresAt");
+  }
+  const beforeExpire = opened.expiresAt;
 
   const vote = await fetch(pollUrl, {
     method: "POST",
@@ -58,6 +61,21 @@ async function main() {
   const voted = await vote.json();
   if (voted.votes?.[0]?.[0] !== 1) {
     throw new Error(`unexpected votes: ${JSON.stringify(voted.votes)}`);
+  }
+
+  const extend = await fetch(pollUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ action: "extend" }),
+  });
+  if (!extend.ok) {
+    throw new Error(`extend failed: ${extend.status} ${await extend.text()}`);
+  }
+  const extended = await extend.json();
+  if (!(extended.expiresAt > beforeExpire)) {
+    throw new Error(
+      `expiresAt not extended: before=${beforeExpire} after=${extended.expiresAt}`,
+    );
   }
 
   const got = await fetch(pollUrl);

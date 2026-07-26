@@ -39,40 +39,6 @@ export async function handleLiveAdmin(
     return (await getLiveSnapshot(game, room))!;
   }
 
-  if (game === "grade") {
-    if (op === "start") {
-      state = {
-        ...(state as Extract<LiveState, { game: "grade" }>),
-        phase: "answering",
-        index: 0,
-        updatedAt: Date.now(),
-      };
-    } else if (op === "next") {
-      const s = state as Extract<LiveState, { game: "grade" }>;
-      const next = s.index + 1;
-      state = {
-        ...s,
-        index: next,
-        phase: next >= s.questions.length ? "results" : "answering",
-        updatedAt: Date.now(),
-      };
-    } else if (op === "results") {
-      state = {
-        ...(state as Extract<LiveState, { game: "grade" }>),
-        phase: "results",
-        updatedAt: Date.now(),
-      };
-    }
-  }
-
-  if (game === "graph" && (op === "collect" || op === "show")) {
-    state = {
-      ...(state as Extract<LiveState, { game: "graph" }>),
-      phase: op === "collect" ? "collect" : "show",
-      updatedAt: Date.now(),
-    };
-  }
-
   await writeLiveState(state);
   return (await getLiveSnapshot(game, room))!;
 }
@@ -82,7 +48,7 @@ export async function handleLiveGuest(
   room: string,
   body: Record<string, unknown>,
 ): Promise<LiveSnapshot> {
-  const state = await ensureLiveState(game, room);
+  await ensureLiveState(game, room);
   const guestId = String(body.guestId ?? "").trim();
   if (!guestId || guestId.length > 64) {
     throw new Error("Invalid guestId");
@@ -91,27 +57,8 @@ export async function handleLiveGuest(
   const kind = String(body.kind ?? "");
   const payload = (body.payload as Record<string, unknown>) ?? {};
 
-  let id = newActionId();
-  if (kind === "answer") {
-    id = `ans-${Number(payload.questionIndex)}`;
-  }
-  if (kind === "link") {
-    id = "link";
-  }
-
-  if (game === "grade") {
-    const s = state as Extract<LiveState, { game: "grade" }>;
-    if (kind === "answer" && s.phase !== "answering") {
-      throw new Error("Not answering");
-    }
-  }
-  if (game === "graph") {
-    const s = state as Extract<LiveState, { game: "graph" }>;
-    if (kind === "link" && s.phase !== "collect") throw new Error("Closed");
-  }
-
   const action: LiveAction = {
-    id,
+    id: newActionId(),
     guestId,
     name,
     kind,

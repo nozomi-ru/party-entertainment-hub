@@ -31,6 +31,16 @@ export interface PartyUiApi {
   createWakeLock(): WakeLockController;
   bindShortcuts(handlers: ShortcutHandlers): void;
   initFooterYear(id?: string): void;
+  ROOM_TTL_NOTICE: string;
+  ROOM_TTL_EXTEND_LABEL: string;
+  formatExpiresAtJa(expiresAt: number): string;
+  updateRoomTtlUi(options: {
+    noticeEl?: string | HTMLElement | null;
+    deadlineEl?: string | HTMLElement | null;
+    extendBtn?: string | HTMLElement | null;
+    expiresAt?: number | null;
+    busy?: boolean;
+  }): void;
 }
 
 declare const PartyUI: PartyUiApi;

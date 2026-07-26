@@ -167,7 +167,7 @@ npm run preview
 
 ### 注意
 
-- アンケートは本番で **Cloudflare KV** にルーム状態を保存します（TTL 24時間）
+- アンケートは本番で **Cloudflare KV** にルーム状態を保存します（TTL 約1週間）
 - 旧構成の「サーバーメモリ同期」は Cloudflare ではインスタンス間で共有されないため、KV に変更済みです
 - ローカル `npm run dev` では KV が無い場合メモリにフォールバックします
 - `images.unoptimized: true` のため、外部画像（Unsplash）も追加設定なしで表示できます

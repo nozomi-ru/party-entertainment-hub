@@ -181,7 +181,7 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 |----|------|
 | LP / API | Next.js 15, React 19, Tailwind CSS v4, Lucide |
 | 実行基盤 | Cloudflare Workers（`@opennextjs/cloudflare`） |
-| アンケート永続化 | Cloudflare KV（`POLL_KV`）、TTL 24h |
+| アンケート永続化 | Cloudflare KV（`POLL_KV`）、TTL 7日（168h）。`expiresAt` をセッションに保存し、Host は `action=extend` で延長可。共通ロジックは `src/lib/room-ttl.ts` |
 | 静的アプリ | HTML / CSS / Vanilla JS |
 | URL 圧縮 | LZ-String + `public/app-tools/shared/pack.js` |
 | Worker 名 | `kotohogi`（`wrangler.jsonc`） |
@@ -223,7 +223,13 @@ PRD の Guest / Screen / Admin に対応する入口を App Router に置く。`
 | 行動キー | `live:{game}:{room}:a:{guestId}:{actionId}` |
 | 集計 | `kvListAll(prefix)` → `summarizeLive`（純関数・単体テスト対象） |
 
-game ID: `buzz` / `digibingo` / `either` / `dress` / `treasure` / `grade` / `request` / `graph`
+game ID（現行実装）: `dress`（`/dress/*`） / `graph`（`/graph/*`）
+
+相関図 API: `GET|POST /api/graph/nodes?room=` · `POST /api/graph/admin`（open / reset / extend）。KV: `graph:{room}:meta` · `graph:{room}:node:{userId}`。  
+ドレス API: `/api/dress/state` · `/api/dress/vote` · `/api/dress/admin`（open / setColors / extend）。KV: `dress:{room}:meta|state|colors|vote:*`。  
+共通 TTL: `src/lib/room-ttl.ts` / UI: `RoomTtlBar` · `PartyUI.updateRoomTtlUi`。
+
+（削除済み・未実装の ID 例）: `buzz` / `digibingo` / `either` / `treasure` / `grade` / `request`
 
 ---
 
@@ -369,7 +375,7 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 ### 6.5 ビンゴ集計 API（B-09〜B-12）
 
 **API:** `src/app/api/bingo/[room]/route.ts`  
-**ストア:** `src/lib/bingo-store.ts`（KV キー `bingo:{room}`、TTL 24h）
+**ストア:** `src/lib/bingo-store.ts`（KV キー `bingo:{room}`、TTL 7日・`expiresAt`。延長は `action=extend`）
 
 | エンドポイント | method | action | 概要 |
 |--------------|--------|--------|------|
@@ -400,7 +406,7 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 ### 7.5 クイズ集計 API（Q-07〜Q-10）
 
 **API:** `src/app/api/quiz/[room]/route.ts`  
-**ストア:** `src/lib/quiz-store.ts`（KV キー `quiz:{room}`、TTL 24h）
+**ストア:** `src/lib/quiz-store.ts`（KV キー `quiz:{room}`、TTL 7日・`expiresAt`。延長は `action=extend`）
 
 | エンドポイント | method | action | 概要 |
 |--------------|--------|--------|------|
@@ -426,7 +432,7 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 
 | ロール | 責務 |
 |--------|------|
-| Host | ルーム upsert、質問切替、結果公開、票クリア、**質問・選択肢の編集**。**投票不可** |
+| Host | ルーム **open**（新規のみ・衝突は 409）、質問切替、結果公開、票クリア、質問編集、**削除期限の延長**。**投票不可** |
 | Guest | 投票のみ。結果は Host 公開後に表示 |
 
 ### 8.2 画面フロー
@@ -439,9 +445,12 @@ sequenceDiagram
   participant API as /api/poll/:room
   participant KV as POLL_KV
 
-  H->>UI: 入室（mode=host, room）
-  UI->>API: POST upsert
-  API->>KV: put poll:ROOM
+  H->>UI: 「ルームを作成して入室」
+  UI->>API: POST open（questions）
+  API->>KV: put poll:ROOM（expiresAt = now+7日）
+  alt 409 Conflict
+    UI->>API: 別コードで open 再試行
+  end
   H->>G: ゲスト用URL ?room=XXXX を共有
 
   G->>UI: URL を開く（自動 Guest 入室）
@@ -453,13 +462,15 @@ sequenceDiagram
   end
 
   G->>API: POST vote
-  API->>KV: 加算して保存
+  API->>KV: 加算して保存（expiresAt は維持）
   loop 約 2s
     UI->>API: GET（Host/Guest 同期）
   end
   H->>API: POST toggleResults
   UI-->>H: 結果表示
   UI-->>G: 結果表示
+  H->>API: POST extend
+  API->>KV: expiresAt を now+7日に更新
 ```
 
 ### 8.3 URL
@@ -467,11 +478,12 @@ sequenceDiagram
 | URL | 動作 |
 |-----|------|
 | `.../wedding-poll/index.html?room=XXXX` | Guest として自動入室 |
-| `...?room=XXXX&mode=host` | Host モードを選択（入室はボタン操作が必要） |
+| `...?room=XXXX&mode=host` | Host として既存ルームへ接続（無ければ open） |
 | `...?mode=guest` | Guest 選択（room があれば自動入室） |
 
-Host 画面の「ゲスト用 URL」は `guestInviteUrl(room)` で生成し、コピー可能。  
-質問文・選択肢の編集は Host の **「質問・選択肢を編集」**（入室前の開始画面にも同ボタン）。保存時は `upsert` でルームへ反映し、票はリセットする（要件 P-10）。
+Host 開始画面にルームコード入力は無い。「ルームを作成して入室」で自動発行する。  
+Host 画面の「ゲスト用 URL」「司会用 URL」はコピー可能。  
+質問文・選択肢の編集は Host の **「質問・選択肢を編集」**（入室前の開始画面にも同ボタン）。保存時は `upsert` でルームへ反映し、票はリセットする（要件 P-10）。削除期限は Host 画面に表示し、`extend` で1週間延長できる（P-11）。
 
 ### 8.4 クライアント状態
 
@@ -495,12 +507,14 @@ type PollSession = {
   votes: number[][];      // votes[q][choice]
   questions: PollQuestion[];
   updatedAt: number;      // 変更検知用
+  createdAt: number;      // ルーム作成時刻
+  expiresAt: number;      // 削除期限（延長で更新）
 };
 ```
 
 永続化キー: `poll:{ROOM}`  
-TTL: 24 時間（KV `expirationTtl`）  
-ローカル: `globalThis.__weddingPollMemory`（KV が無いとき）
+TTL: 7 日（KV `expirationTtl`。`KV_EVENT_TTL_SECONDS`）。削除期限は `expiresAt` で保持し、通常の書き込みでは期限を進めず、Host の延長操作だけが `expiresAt` を更新する（`src/lib/room-ttl.ts`）。  
+ローカル: `globalThis.__kotohogiKvMemory`（KV が無いとき）
 
 実装: `src/lib/poll-store.ts`
 
@@ -512,7 +526,9 @@ TTL: 24 時間（KV `expirationTtl`）
 | Method | action | 説明 |
 |--------|--------|------|
 | GET | — | セッション取得。無ければ 404 |
-| POST | `upsert` | 作成・更新（questions 必須） |
+| POST | `open` | **新規作成のみ**。既存なら 409。`expiresAt` を設定 |
+| POST | `extend` | 削除期限を now+7日に延長 |
+| POST | `upsert` | **既存ルームの更新**（questions 必須。無ければ 404） |
 | POST | `vote` | 票を +1 |
 | POST | `tally` | 票 +1 かつ `showResults=true`（互換用。現行 UI は主に `vote`） |
 | POST | `setIndex` | 質問 index 変更、`showResults=false` |
@@ -563,15 +579,17 @@ LP ヒーロー CTA → #tools（ToolsGrid）→ 各アプリ
 ## 8c. 祝福メッセージボード（WISH）設計
 
 **要件:** W-01〜W-09 / **UI:** `public/app-tools/wishboard/index.html`  
-**API:** `/api/wish/[room]` / **永続化:** `src/lib/wish-store.ts`（キー `wish:{room}`、TTL 24h、`POLL_KV`）
+**API:** `/api/wish/[room]` / **永続化:** `src/lib/wish-store.ts`（キー `wish:{room}`、TTL 7日・`expiresAt`、`POLL_KV`）
 
-Host/Guest モデルはアンケート（§8）に近い。違いは「選択肢投票」ではなく「短いテキスト投稿」であること。
+Host/Guest モデルはアンケート（§8）に近い。違いは「選択肢投票」ではなく「短いテキスト投稿」であること。Host はコード手入力せず「ルームを作成して入室」で `open` する。
 
 | Method | action / query | 説明 |
 |--------|----------------|------|
 | GET | `?role=guest` | ゲスト向け。`showWall=false` のとき本文を伏せる |
 | GET | （Host） | 全メッセージを返す |
-| POST | `upsert` | ルーム作成・タイトル更新 |
+| POST | `open` | **新規作成のみ**。既存なら 409 |
+| POST | `extend` | 削除期限を1週間延長 |
+| POST | `upsert` | 既存ルームのタイトル等更新（無ければ 404） |
 | POST | `post` | メッセージ追加（名前・本文必須、件数上限あり） |
 | POST | `toggleWall` / `setWall` | ゲストへの壁公開 |
 | POST | `clear` | メッセージ全消し |

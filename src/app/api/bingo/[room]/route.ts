@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { normalizeRoom } from "@/lib/poll";
 import {
+  extendBingoSession,
+  openBingoSession,
   readBingoSession,
   writeBingoSession,
   type BingoEntry,
-  type BingoSession,
 } from "@/lib/bingo-store";
 
 export const dynamic = "force-dynamic";
@@ -43,12 +44,21 @@ export async function POST(request: Request, context: RouteContext) {
   const action = String(body.action || "");
 
   if (action === "open") {
-    const session: BingoSession = {
-      room,
-      entries: [],
-      createdAt: Date.now(),
-    };
-    await writeBingoSession(session);
+    const session = await openBingoSession(room);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Room already exists" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json(session);
+  }
+
+  if (action === "extend") {
+    const session = await extendBingoSession(room);
+    if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(session);
   }
 

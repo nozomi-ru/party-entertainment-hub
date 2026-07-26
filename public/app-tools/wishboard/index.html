@@ -96,19 +96,28 @@
                 <button type="button" id="tab-host" class="active">Host（司会）</button>
                 <button type="button" id="tab-guest">Guest（ゲスト）</button>
             </div>
-            <div class="field">
-                <label for="room-input">ルームコード（4文字）</label>
-                <input id="room-input" maxlength="4" placeholder="例: WISH" autocomplete="off" spellcheck="false">
+            <div id="host-start-block">
+                <div class="field" id="title-field">
+                    <label for="title-input">ボードのタイトル</label>
+                    <input id="title-input" maxlength="40" value="お二人へのメッセージ" autocomplete="off">
+                </div>
+                <p id="host-ttl-notice" style="font-size:0.75em;color:var(--color-text-light);line-height:1.5;margin:0 0 0.7em;padding:0.5em 0.65em;border:1px solid var(--color-border);background:#fff;"></p>
+                <p class="inline-error" id="start-error" role="alert" hidden></p>
+                <p class="count-hint" id="start-status"></p>
+                <div class="stack">
+                    <button class="btn-gold" id="create-btn" type="button" data-testid="btn-create-room">ルームを作成して入室</button>
+                </div>
             </div>
-            <div class="field" id="title-field">
-                <label for="title-input">ボードのタイトル</label>
-                <input id="title-input" maxlength="40" value="お二人へのメッセージ" autocomplete="off">
-            </div>
-            <p class="inline-error" id="start-error" role="alert" hidden></p>
-            <p class="count-hint" id="start-status"></p>
-            <div class="stack">
-                <button class="btn-gold" id="enter-btn" type="button">入室する</button>
-                <button class="btn-ghost" id="gen-btn" type="button">新しいコードを作る</button>
+            <div id="guest-start-block" hidden>
+                <div class="field">
+                    <label for="room-input">ルームコード（4文字）</label>
+                    <input id="room-input" maxlength="4" placeholder="例: WISH" autocomplete="off" spellcheck="false">
+                </div>
+                <p class="inline-error" id="guest-start-error" role="alert" hidden></p>
+                <p class="count-hint" id="guest-start-status"></p>
+                <div class="stack">
+                    <button class="btn-gold" id="enter-btn" type="button">入室する</button>
+                </div>
             </div>
         </div>
 
@@ -119,10 +128,20 @@
             <div class="host-ops" id="host-ops" hidden>
                 <div class="guest-url-box">
                     <strong>ゲスト用URL</strong>
-                    <div id="guest-url"></div>
+                    <div class="invite-row" style="display:flex;gap:0.5em;align-items:center;margin-top:0.4em;">
+                        <input id="guest-url" type="text" readonly style="flex:1;min-width:0;font-size:0.78rem;">
+                        <button class="btn-ghost" id="copy-url-btn" type="button">コピー</button>
+                    </div>
+                    <strong style="display:block;margin-top:0.75em;">司会用URL（再入場用）</strong>
+                    <div class="invite-row" style="display:flex;gap:0.5em;align-items:center;margin-top:0.4em;">
+                        <input id="host-url" type="text" readonly style="flex:1;min-width:0;font-size:0.78rem;">
+                        <button class="btn-ghost" id="copy-host-url-btn" type="button">コピー</button>
+                    </div>
                 </div>
                 <div class="stack">
-                    <button class="btn-ghost" id="copy-url-btn" type="button">ゲスト用URLをコピー</button>
+                    <button class="btn-ghost" id="copy-both-urls-btn" type="button">ゲスト＋司会URLをまとめてコピー</button>
+                    <p id="room-ttl-deadline" class="count-hint" hidden></p>
+                    <button class="btn-ghost" id="btn-extend-ttl" type="button" hidden>削除期限を1週間延長</button>
                     <button class="btn-ghost" id="toggle-wall-btn" type="button">ゲストに壁を公開する</button>
                     <button class="btn-ghost" id="wall-fs-btn" type="button">大画面スポットライト</button>
                     <button class="btn-ghost" id="copy-all-btn" type="button">メッセージをすべてコピー</button>
@@ -192,6 +211,11 @@
             u.searchParams.set("room", r);
             return u.toString();
         }
+        function hostInviteUrl(r) {
+            const u = new URL(guestInviteUrl(r));
+            u.searchParams.set("mode", "host");
+            return u.toString();
+        }
         function randomRoom() {
             const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             let out = "";
@@ -208,12 +232,16 @@
             mode = next;
             document.getElementById("tab-host").classList.toggle("active", mode === "host");
             document.getElementById("tab-guest").classList.toggle("active", mode === "guest");
-            document.getElementById("title-field").hidden = mode !== "host";
-            document.getElementById("gen-btn").hidden = mode !== "host";
+            document.getElementById("host-start-block").hidden = mode !== "host";
+            document.getElementById("guest-start-block").hidden = mode !== "guest";
             U.clearError("start-error");
+            U.clearError("guest-start-error");
             U.setHint("start-status", mode === "host"
-                ? "司会は先にルームを開いてください"
-                : "司会から受け取ったコード、または共有URLで入れます");
+                ? "「ルームを作成して入室」でコードが自動発行されます"
+                : "");
+            U.setHint("guest-start-status", mode === "guest"
+                ? "司会から受け取ったコード、または共有URLで入れます"
+                : "");
         }
 
         async function apiGet(r) {
@@ -230,7 +258,11 @@
                 body: JSON.stringify(body),
             });
             const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || "API error");
+            if (!res.ok) {
+                const err = new Error(data.error || "API error");
+                err.status = res.status;
+                throw err;
+            }
             return data;
         }
 
@@ -282,9 +314,15 @@
             document.getElementById("host-ops").hidden = !isHost;
             document.getElementById("guest-form").hidden = isHost;
             if (isHost) {
-                document.getElementById("guest-url").textContent = guestInviteUrl(session.room);
+                document.getElementById("guest-url").value = guestInviteUrl(session.room);
+                document.getElementById("host-url").value = hostInviteUrl(session.room);
                 document.getElementById("toggle-wall-btn").textContent =
                     session.showWall ? "ゲストへの壁表示を止める" : "ゲストに壁を公開する";
+                U.updateRoomTtlUi({
+                    deadlineEl: "room-ttl-deadline",
+                    extendBtn: "btn-extend-ttl",
+                    expiresAt: session.expiresAt,
+                });
             }
             const already = postedKey && localStorage.getItem(postedKey) === "1";
             document.getElementById("thanks-box").hidden = !already;
@@ -315,42 +353,45 @@
             }, 5000);
         }
 
-        async function enterRoom() {
-            const r = normalizeRoom(document.getElementById("room-input").value);
-            if (r.length !== 4) {
-                U.setError("start-error", "ルームコードは4文字で入力してください");
-                return;
+        async function createAndEnterHost() {
+            U.clearError("start-error");
+            U.setHint("start-status", "ルームを作成しています…");
+            try {
+                for (let attempt = 0; attempt < 12; attempt++) {
+                    const r = randomRoom();
+                    try {
+                        session = await apiPost(r, {
+                            action: "open",
+                            title: document.getElementById("title-input").value,
+                        });
+                        room = r;
+                        postedKey = "wishPosted_" + r;
+                        showView("view-room");
+                        renderRoom();
+                        startPoll();
+                        U.setHint("start-status", "");
+                        return;
+                    } catch (e) {
+                        if (e.status === 409) continue;
+                        throw e;
+                    }
+                }
+                U.setError("start-error", "空きルームコードを見つけられませんでした。もう一度お試しください");
+            } catch (e) {
+                U.setError("start-error", e.message || "ルーム作成に失敗しました");
             }
+        }
+
+        async function joinHostRoom(r) {
             U.clearError("start-error");
             U.setHint("start-status", "接続中…");
             try {
-                if (mode === "host") {
+                session = await apiGet(r);
+                if (!session) {
                     session = await apiPost(r, {
-                        action: "upsert",
+                        action: "open",
                         title: document.getElementById("title-input").value,
-                        showWall: false,
                     });
-                } else {
-                    session = await apiGet(r);
-                    if (!session) {
-                        U.setHint("start-status", "司会の準備を待っています…");
-                        room = r;
-                        const wait = setInterval(async () => {
-                            try {
-                                const s = await apiGet(r);
-                                if (s) {
-                                    clearInterval(wait);
-                                    session = s;
-                                    room = r;
-                                    postedKey = "wishPosted_" + r;
-                                    showView("view-room");
-                                    renderRoom();
-                                    startPoll();
-                                }
-                            } catch { /* keep waiting */ }
-                        }, 2000);
-                        return;
-                    }
                 }
                 room = r;
                 postedKey = "wishPosted_" + r;
@@ -359,7 +400,58 @@
                 startPoll();
                 U.setHint("start-status", "");
             } catch (e) {
+                if (e.status === 409) {
+                    session = await apiGet(r);
+                    if (session) {
+                        room = r;
+                        postedKey = "wishPosted_" + r;
+                        showView("view-room");
+                        renderRoom();
+                        startPoll();
+                        return;
+                    }
+                }
                 U.setError("start-error", e.message || "入室に失敗しました");
+            }
+        }
+
+        async function enterRoom() {
+            const r = normalizeRoom(document.getElementById("room-input").value);
+            if (r.length !== 4) {
+                U.setError("guest-start-error", "ルームコードは4文字で入力してください");
+                return;
+            }
+            U.clearError("guest-start-error");
+            U.setHint("guest-start-status", "接続中…");
+            try {
+                session = await apiGet(r);
+                if (!session) {
+                    U.setHint("guest-start-status", "司会の準備を待っています…");
+                    room = r;
+                    const wait = setInterval(async () => {
+                        try {
+                            const s = await apiGet(r);
+                            if (s) {
+                                clearInterval(wait);
+                                session = s;
+                                room = r;
+                                postedKey = "wishPosted_" + r;
+                                showView("view-room");
+                                renderRoom();
+                                startPoll();
+                            }
+                        } catch { /* keep waiting */ }
+                    }, 2000);
+                    return;
+                }
+                room = r;
+                postedKey = "wishPosted_" + r;
+                showView("view-room");
+                renderRoom();
+                startPoll();
+                U.setHint("guest-start-status", "");
+            } catch (e) {
+                U.setError("guest-start-error", e.message || "入室に失敗しました");
             }
         }
 
@@ -392,9 +484,7 @@
 
         document.getElementById("tab-host").addEventListener("click", () => setMode("host"));
         document.getElementById("tab-guest").addEventListener("click", () => setMode("guest"));
-        document.getElementById("gen-btn").addEventListener("click", () => {
-            document.getElementById("room-input").value = randomRoom();
-        });
+        document.getElementById("create-btn").addEventListener("click", createAndEnterHost);
         document.getElementById("enter-btn").addEventListener("click", enterRoom);
         document.getElementById("leave-btn").addEventListener("click", () => {
             stopPoll();
@@ -405,6 +495,24 @@
         });
         document.getElementById("copy-url-btn").addEventListener("click", () => {
             U.copyWithToast(guestInviteUrl(room), "ゲスト用URLをコピーしました");
+        });
+        document.getElementById("copy-host-url-btn").addEventListener("click", () => {
+            U.copyWithToast(hostInviteUrl(room), "司会用URLをコピーしました");
+        });
+        document.getElementById("copy-both-urls-btn").addEventListener("click", () => {
+            U.copyWithToast(
+                `ゲスト用:\n${guestInviteUrl(room)}\n\n司会用:\n${hostInviteUrl(room)}`,
+                "ゲスト＋司会URLをコピーしました"
+            );
+        });
+        document.getElementById("btn-extend-ttl").addEventListener("click", async () => {
+            try {
+                session = await apiPost(room, { action: "extend" });
+                renderRoom();
+                U.toast("削除期限を1週間延長しました");
+            } catch (e) {
+                U.toast(e.message || "延長に失敗しました");
+            }
         });
         document.getElementById("toggle-wall-btn").addEventListener("click", async () => {
             try {
@@ -450,7 +558,7 @@
 
         U.initFooterYear();
         setMode("host");
-        document.getElementById("room-input").value = randomRoom();
+        U.updateRoomTtlUi({ noticeEl: "host-ttl-notice" });
 
         const params = new URLSearchParams(location.search);
         const urlRoom = normalizeRoom(params.get("room") || "");
@@ -458,6 +566,7 @@
             document.getElementById("room-input").value = urlRoom;
             if (params.get("mode") === "host") {
                 setMode("host");
+                joinHostRoom(urlRoom);
             } else {
                 setMode("guest");
                 enterRoom();

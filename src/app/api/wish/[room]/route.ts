@@ -6,6 +6,8 @@ import {
   normalizeWishTitle,
 } from "@/lib/wish";
 import {
+  extendWishSession,
+  openWishSession,
   readWishSession,
   toGuestView,
   writeWishSession,
@@ -55,19 +57,42 @@ export async function POST(request: Request, context: RouteContext) {
 
   const action = String(body.action || "");
 
+  if (action === "open") {
+    const session = await openWishSession(room, normalizeWishTitle(body.title));
+    if (!session) {
+      return NextResponse.json(
+        { error: "Room already exists" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json(session);
+  }
+
+  if (action === "extend") {
+    const session = await extendWishSession(room);
+    if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(session);
+  }
+
   if (action === "upsert") {
     const existing = await readWishSession(room);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const session: WishSession = {
       room,
-      title: normalizeWishTitle(body.title ?? existing?.title),
+      title: normalizeWishTitle(body.title ?? existing.title),
       showWall:
         body.showWall !== undefined
           ? Boolean(body.showWall)
-          : (existing?.showWall ?? false),
-      messages: existing?.messages ?? [],
+          : existing.showWall,
+      messages: existing.messages,
       updatedAt: Date.now(),
+      createdAt: existing.createdAt,
+      expiresAt: existing.expiresAt,
     };
-    // title だけ更新したいとき、messages を消さない
     if (body.clearMessages === true) {
       session.messages = [];
     }

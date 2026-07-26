@@ -1,15 +1,27 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DressIcon } from "@/components/DressIcon";
 import { DressFrame } from "@/components/dress/DressFrame";
 import { useDressState } from "@/hooks/use-dress-state";
+import { parseRoomParam } from "@/lib/live/room-code";
 
 export function DressScreenView() {
-  const { snapshot, error, isLoading } = useDressState();
+  const router = useRouter();
+  const search = useSearchParams();
+  const roomFromUrl = parseRoomParam(search.get("room"));
+  const [roomInput, setRoomInput] = useState(roomFromUrl);
+  const room = roomFromUrl.length === 4 ? roomFromUrl : "";
+
+  const { snapshot, error, isLoading } = useDressState(room || null);
   const [showWinners, setShowWinners] = useState(false);
   const [drumming, setDrumming] = useState(false);
+
+  useEffect(() => {
+    setRoomInput(roomFromUrl);
+  }, [roomFromUrl]);
 
   useEffect(() => {
     if (snapshot?.status !== "result") {
@@ -25,6 +37,39 @@ export function DressScreenView() {
       window.clearTimeout(t2);
     };
   }, [snapshot?.status, snapshot?.correct_color]);
+
+  if (!room) {
+    return (
+      <DressFrame
+        titleEn="Dress"
+        subtitle="Screen"
+        lead="幹事から受け取ったルームコードを入力してください"
+        wide
+      >
+        <label className="dress-field">
+          <span>ルームコード（4文字）</span>
+          <input
+            value={roomInput}
+            maxLength={4}
+            data-testid="room-input"
+            onChange={(e) => setRoomInput(parseRoomParam(e.target.value))}
+            placeholder="ABCD"
+            autoCapitalize="characters"
+          />
+        </label>
+        <button
+          type="button"
+          className="dress-btn"
+          style={{ width: "100%", marginTop: "0.75rem" }}
+          disabled={roomInput.length !== 4}
+          data-testid="enter-room"
+          onClick={() => router.replace(`/dress/screen?room=${roomInput}`)}
+        >
+          入室する
+        </button>
+      </DressFrame>
+    );
+  }
 
   if (isLoading && !snapshot) {
     return (
@@ -78,17 +123,31 @@ export function DressScreenView() {
               className="flex flex-col items-center"
             >
               <div className="dress-ornament" aria-hidden>
-                <svg viewBox="0 0 12 12" width="12" height="12">
+                <svg viewBox="0 0 28 22" width="22" height="17">
                   <path
-                    fill="#b4975a"
-                    d="M6 0 L7.5 4.5 L12 6 L7.5 7.5 L6 12 L4.5 7.5 L0 6 L4.5 4.5 Z"
+                    d="M4 10 L8 4 L14 8 L20 4 L24 10 L22 18 H6 Z"
+                    fill="none"
+                    stroke="#b4975a"
+                    strokeWidth="1.4"
+                    strokeLinejoin="round"
                   />
+                  <text
+                    x="14"
+                    y="15.5"
+                    textAnchor="middle"
+                    fill="#b4975a"
+                    fontFamily="Playfair Display, serif"
+                    fontSize="8"
+                    fontWeight="600"
+                  >
+                    Q
+                  </text>
                 </svg>
               </div>
               <p className="dress-subtitle">Correct Color</p>
               <DressIcon
                 color={correct.fill}
-                className="mt-4 h-[42vh] max-h-[380px] w-auto"
+                className="mt-4 h-[46vh] max-h-[420px] w-auto"
                 style={{ color: "#1a1a1a" }}
               />
               <p
@@ -140,11 +199,11 @@ export function DressScreenView() {
       <DressFrame
         titleEn="Dress"
         subtitle="Raise your lights"
-        lead="ペンライト（スマホ）を上げて新郎新婦を迎えましょう！"
+        lead="スマホ画面を投票色にして、新婦を迎えましょう！"
         wide
       >
         <p className="dress-status" data-testid="dress-screen-closed">
-          最終得票 <strong>{snapshot.total}</strong> 票
+          最終得票 <strong>{snapshot.total}</strong> 票 · ゲストはペンライト点灯中
         </p>
         <ul className="dress-color-grid" style={{ marginTop: "1.5rem" }}>
           {snapshot.colors.map((c) => (
@@ -152,11 +211,19 @@ export function DressScreenView() {
               <div className="dress-color-btn" style={{ cursor: "default" }}>
                 <DressIcon
                   color={c.fill}
-                  className="h-24 w-16"
+                  className="h-36 w-auto"
                   style={{ color: "#1a1a1a" }}
                 />
                 <span className="label">{c.label}</span>
                 <span className="count">{snapshot.counts[c.id] ?? 0}</span>
+                {(snapshot.voters_by_color[c.id] ?? []).length > 0 && (
+                  <p
+                    className="dress-voter-names"
+                    data-testid={`dress-voters-${c.id}`}
+                  >
+                    {(snapshot.voters_by_color[c.id] ?? []).join("、")}
+                  </p>
+                )}
               </div>
             </li>
           ))}
@@ -167,9 +234,8 @@ export function DressScreenView() {
 
   return (
     <DressFrame
-      titleEn="Dress"
-      subtitle="Color Guess"
-      lead="お色直しの後のドレスは何色？"
+      titleEn="お色直しの後のドレスは何色？"
+      subtitle="What Color Do You Think?"
       wide
     >
       <p className="dress-status" data-testid="dress-screen-total">
@@ -187,7 +253,7 @@ export function DressScreenView() {
             <div className="dress-color-btn" style={{ cursor: "default" }}>
               <DressIcon
                 color={c.fill}
-                className="h-28 w-20"
+                className="h-44 w-auto"
                 style={{ color: "#1a1a1a" }}
               />
               <span className="label">{c.label}</span>
@@ -200,6 +266,14 @@ export function DressScreenView() {
               >
                 {snapshot.counts[c.id] ?? 0}
               </motion.span>
+              {(snapshot.voters_by_color[c.id] ?? []).length > 0 && (
+                <p
+                  className="dress-voter-names"
+                  data-testid={`dress-voters-${c.id}`}
+                >
+                  {(snapshot.voters_by_color[c.id] ?? []).join("、")}
+                </p>
+              )}
             </div>
           </li>
         ))}

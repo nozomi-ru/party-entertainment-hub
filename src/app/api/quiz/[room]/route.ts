@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { normalizeRoom } from "@/lib/poll";
 import {
+  extendQuizSession,
+  openQuizSession,
   readQuizSession,
   writeQuizSession,
   type QuizEntry,
-  type QuizSession,
 } from "@/lib/quiz-store";
 
 export const dynamic = "force-dynamic";
@@ -43,12 +44,21 @@ export async function POST(request: Request, context: RouteContext) {
   const action = String(body.action || "");
 
   if (action === "open") {
-    const session: QuizSession = {
-      room,
-      entries: [],
-      createdAt: Date.now(),
-    };
-    await writeQuizSession(session);
+    const session = await openQuizSession(room);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Room already exists" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json(session);
+  }
+
+  if (action === "extend") {
+    const session = await extendQuizSession(room);
+    if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(session);
   }
 

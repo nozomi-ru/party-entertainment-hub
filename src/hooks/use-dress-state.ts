@@ -9,25 +9,27 @@ const fetcher = async (url: string): Promise<DressPublicSnapshot> => {
   return res.json();
 };
 
-export function useDressState() {
-  const { data, error, isLoading, mutate } = useSWR(
-    "/api/dress/state",
-    fetcher,
-    {
-      refreshInterval: 1500,
-      revalidateOnFocus: true,
-    },
-  );
+export function useDressState(room: string | null) {
+  const key =
+    room && room.length === 4
+      ? `/api/dress/state?room=${encodeURIComponent(room)}`
+      : null;
+
+  const { data, error, isLoading, mutate } = useSWR(key, fetcher, {
+    refreshInterval: 1500,
+    revalidateOnFocus: true,
+  });
 
   return {
     snapshot: data ?? null,
     error,
-    isLoading,
+    isLoading: Boolean(key) && isLoading,
     mutate,
   };
 }
 
 export async function postDressVote(body: {
+  room: string;
   user_id: string;
   name: string;
   color: string;
@@ -45,8 +47,11 @@ export async function postDressVote(body: {
 }
 
 export async function postDressAdmin(body: {
-  status: "voting" | "closed" | "result";
+  room: string;
+  op?: "open" | "setColors" | "extend";
+  status?: "voting" | "closed" | "result";
   correct_color?: string;
+  colors?: { id?: string; label: string; fill: string; glow?: string }[];
 }): Promise<DressPublicSnapshot> {
   const res = await fetch("/api/dress/admin", {
     method: "POST",
@@ -55,7 +60,11 @@ export async function postDressAdmin(body: {
   });
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? "Admin failed");
+    const error = new Error(err.error ?? "Admin failed") as Error & {
+      status: number;
+    };
+    error.status = res.status;
+    throw error;
   }
   return res.json();
 }

@@ -21,14 +21,14 @@ export function Affiliate() {
           </p>
         </header>
 
-        <div className="mt-16 flex flex-wrap items-center justify-center gap-8 sm:gap-10">
+        <div className="mt-16 grid grid-cols-1 justify-items-center gap-8 sm:grid-cols-3 sm:gap-6">
           {affiliateBanners.map((banner) => (
-            <div key={banner.id}>
+            <div key={banner.id} className="w-full max-w-[300px]">
               <a
                 href={banner.href}
                 target="_blank"
                 rel="nofollow sponsored noopener noreferrer"
-                className="block transition-opacity duration-300 hover:opacity-90"
+                className="flex aspect-[6/5] w-full items-center justify-center overflow-hidden border border-[var(--line)] bg-[var(--surface)] transition-opacity duration-300 hover:opacity-90"
               >
                 {/* A8 計測タグ互換のため next/image ではなく素の img を使う */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -37,6 +37,7 @@ export function Affiliate() {
                   width={banner.imageWidth}
                   height={banner.imageHeight}
                   alt={banner.alt}
+                  className="max-h-full max-w-full object-contain"
                 />
               </a>
               {/* eslint-disable-next-line @next/next/no-img-element */}

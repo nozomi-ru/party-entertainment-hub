@@ -284,6 +284,58 @@
     if (node) node.textContent = String(new Date().getFullYear());
   }
 
+  const ROOM_TTL_NOTICE =
+    "ルームのデータは削除期限を過ぎると自動削除されます。Host は「削除期限を1週間延長」で延ばせます。同じコードのルームは、有効な間は再作成できません。";
+  const ROOM_TTL_EXTEND_LABEL = "削除期限を1週間延長";
+
+  function formatExpiresAtJa(expiresAt) {
+    const ms = Number(expiresAt);
+    if (!Number.isFinite(ms) || ms <= 0) return "";
+    try {
+      return new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(ms));
+    } catch {
+      return new Date(ms).toLocaleString("ja-JP");
+    }
+  }
+
+  /**
+   * Host 画面の削除期限表示を更新する。
+   * deadlineEl / extendBtn は省略可。expiresAt が無いときは期限行を隠す。
+   */
+  function updateRoomTtlUi(options) {
+    const opts = options || {};
+    const noticeEl = typeof opts.noticeEl === "string" ? el(opts.noticeEl) : opts.noticeEl;
+    const deadlineEl =
+      typeof opts.deadlineEl === "string" ? el(opts.deadlineEl) : opts.deadlineEl;
+    const extendBtn =
+      typeof opts.extendBtn === "string" ? el(opts.extendBtn) : opts.extendBtn;
+    if (noticeEl) noticeEl.textContent = ROOM_TTL_NOTICE;
+    const expiresAt = Number(opts.expiresAt);
+    const has = Number.isFinite(expiresAt) && expiresAt > 0;
+    if (deadlineEl) {
+      deadlineEl.hidden = !has;
+      if (has) {
+        deadlineEl.textContent =
+          "削除期限: " + formatExpiresAtJa(expiresAt) + "（日本時間）";
+      }
+    }
+    if (extendBtn) {
+      extendBtn.hidden = !has;
+      extendBtn.disabled = Boolean(opts.busy) || !has;
+      if (!extendBtn.dataset.ttlLabelSet) {
+        extendBtn.textContent = ROOM_TTL_EXTEND_LABEL;
+        extendBtn.dataset.ttlLabelSet = "1";
+      }
+    }
+  }
+
   return {
     escapeHtml,
     parseLines,
@@ -301,5 +353,9 @@
     createWakeLock,
     bindShortcuts,
     initFooterYear,
+    ROOM_TTL_NOTICE,
+    ROOM_TTL_EXTEND_LABEL,
+    formatExpiresAtJa,
+    updateRoomTtlUi,
   };
 });

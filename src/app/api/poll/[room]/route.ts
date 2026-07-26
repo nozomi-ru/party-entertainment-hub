@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { normalizeRoom, normalizeVotes } from "@/lib/poll";
 import {
+  extendPollSession,
+  openPollSession,
   readPollSession,
   writePollSession,
   type PollQuestion,
@@ -43,7 +45,38 @@ export async function POST(request: Request, context: RouteContext) {
 
   const action = String(body.action || "");
 
+  if (action === "open") {
+    const questions = body.questions as PollQuestion[] | undefined;
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      return NextResponse.json({ error: "questions required" }, { status: 400 });
+    }
+    const session = await openPollSession(
+      room,
+      questions,
+      normalizeVotes(questions, undefined),
+    );
+    if (!session) {
+      return NextResponse.json(
+        { error: "Room already exists" },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json(session);
+  }
+
+  if (action === "extend") {
+    const session = await extendPollSession(room);
+    if (!session) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json(session);
+  }
+
   if (action === "upsert") {
+    const existing = await readPollSession(room);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     const questions = body.questions as PollQuestion[] | undefined;
     const votes = body.votes as number[][] | undefined;
     if (!questions || !Array.isArray(questions) || questions.length === 0) {
@@ -65,6 +98,8 @@ export async function POST(request: Request, context: RouteContext) {
       votes: normalizeVotes(questions, votes),
       questions,
       updatedAt: Date.now(),
+      createdAt: existing.createdAt,
+      expiresAt: existing.expiresAt,
     };
     await writePollSession(session);
     return NextResponse.json(session);
@@ -89,7 +124,6 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Invalid vote" }, { status: 400 });
     }
 
-    // 読み取り→加算→書き込み（同時投票で稀に取りこぼす可能性あり。会場規模では実用十分）
     current.votes[questionIndex][choiceIndex] += 1;
     if (action === "tally") current.showResults = true;
     current.updatedAt = Date.now();

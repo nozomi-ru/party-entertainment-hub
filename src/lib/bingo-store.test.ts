@@ -10,7 +10,9 @@ describe("bingo-store (メモリ)", () => {
   it("UT-BINGO-STORE-01: 書き込んだセッションを読める", async () => {
     const session = { room: "B001", entries: [], createdAt: 1 };
     await writeBingoSession(session);
-    await expect(readBingoSession("B001")).resolves.toEqual(session);
+    const read = await readBingoSession("B001");
+    expect(read).toMatchObject(session);
+    expect(typeof read?.expiresAt).toBe("number");
   });
 
   it("UT-BINGO-STORE-02: 無いルームは null", async () => {
