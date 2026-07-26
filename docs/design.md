@@ -39,7 +39,10 @@
 | リンク・文言設定 | `src/config/site.ts` | §4.2 |
 | アンケート API | `src/app/api/poll/[room]/route.ts` | §8.6 |
 | ルーム／票の正規化 | `src/lib/poll.ts` | §8.6（単体テスト対象） |
-| KV / メモリ永続化 | `src/lib/poll-store.ts` | §8.5 |
+| KV 共通（get/put/list） | `src/lib/kv.ts` | §3.1 |
+| ゲスト匿名セッション | `src/lib/guest-session.ts`, `src/hooks/use-guest-session.ts` | §3.1 |
+| ロール入口（Guest/Screen/Admin） | `src/app/{guest,screen,admin}/` | §3.1 |
+| KV / メモリ永続化 | `src/lib/poll-store.ts` ほか（`kv.ts` 経由） | §8.5 |
 | ビンゴ | `public/app-tools/wedding-bingo/index.html` | §6 |
 | クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
 | アンケート UI | `public/app-tools/wedding-poll/index.html` | §8 |
@@ -122,19 +125,24 @@ party-entertainment-hub/
 ├── e2e/                       # シナリオ E2E（ガーキン + Playwright）
 ├── scripts/                   # smoke.mjs など
 ├── src/
-│   ├── app/                   # LP・API
+│   ├── app/                   # LP・API・ロール入口
 │   │   ├── page.tsx           # ランディング
 │   │   ├── layout.tsx
+│   │   ├── guest/             # Guest ロール入口（匿名セッション）
+│   │   ├── screen/            # Screen ロール入口（会場映し出し）
+│   │   ├── admin/             # Admin ロール入口（司会・幹事）
 │   │   └── api/poll/[room]/  # アンケート API
 │   ├── components/landing/    # LP セクション（Hero / ToolsGrid 等）
 │   ├── config/site.ts         # リンク・文言の単一設定源
 │   └── lib/
+│       ├── kv.ts              # POLL_KV 共通 get/put/list（単体テスト対象）
+│       ├── guest-session.ts   # 匿名 UUID（localStorage + Cookie）
 │       ├── poll.ts            # ルーム／票の正規化（単体テスト対象）
-│       ├── poll-store.ts      # KV / メモリ永続化
-│       ├── bingo-store.ts     # ビンゴ集計（KV / メモリ）
-│       ├── quiz-store.ts      # クイズ集計（KV / メモリ）
+│       ├── poll-store.ts      # アンケート永続化（kv.ts 経由）
+│       ├── bingo-store.ts     # ビンゴ集計（kv.ts 経由）
+│       ├── quiz-store.ts      # クイズ集計（kv.ts 経由）
 │       ├── wish.ts            # 寄せ書き正規化（単体テスト対象）
-│       └── wish-store.ts      # 寄せ書き（KV / メモリ）
+│       └── wish-store.ts      # 寄せ書き（kv.ts 経由）
 ├── public/
 │   ├── _headers
 │   └── app-tools/
@@ -178,6 +186,27 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 | 単体テスト | Vitest（`npm test`） |
 | シナリオ E2E | Playwright + playwright-bdd（ガーキン、`npm run test:e2e`） |
 
+### 3.1 ロール入口・KV 共通・匿名セッション
+
+PRD の Guest / Screen / Admin に対応する入口を App Router に置く。`/` は従来どおり LP のままにし、余興本体は `public/app-tools/` を維持する。
+
+| パス | 役割 |
+|------|------|
+| `/` | ランディング（既存） |
+| `/guest` | ゲスト向け入口。UUID を localStorage + Cookie（`kotohogi_guest_id`）に保存 |
+| `/screen` | 会場スクリーン向け入口（操作最小） |
+| `/admin` | 司会・幹事向け入口 |
+
+**KV 共通ユーティリティ**（`src/lib/kv.ts`）:
+
+| 関数 | 用途 |
+|------|------|
+| `kvGet` / `kvPut` | 単一キーの読み書き。本番は `getCloudflareContext().env.POLL_KV` |
+| `kvList` | `prefix` 付き一覧（ゲスト行動を一意キーで put → 集計側 list する設計向け） |
+| （ローカル） | KV が無いときはプロセス内メモリへフォールバック |
+
+既存の `*-store.ts` はすべて `kv.ts` 経由。バインディング名は **`POLL_KV`** 固定（`@cloudflare/next-on-pages` の `getRequestContext` は使わない。本リポジトリは OpenNext）。
+
 ---
 
 ## 4. ランディングページ設計
@@ -200,9 +229,22 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 
 | キー | 用途 |
 |------|------|
+| `siteConfig.tagline` / `description` | ヒーロー・SEO・OGP |
+| `problemSolutionIntro` / `problemSolutions` | Problem & Solution セクション（LP-02） |
 | `toolItems` / `toolCategories` | ToolsGrid セクション（カテゴリ別ツール一覧） |
-| `affiliateBanners` | Affiliate セクション（A8 バナー） |
-| `appLinks` | ヒーロー CTA（`#tools` へスクロール） |
+| `affiliateBanners` | Affiliate セクション（A8 バナー。余興本体の価値提案とは別枠） |
+| `appLinks` | ヒーロー CTA（`#tools` / `#solutions`） |
+
+**コピーの正（2026-07）**
+
+| 項目 | 文言 |
+|------|------|
+| タグライン | インストール不要。会場のスマホで余興がつながる |
+| 主 CTA | 余興ツールを見る → `#tools` |
+| 副 CTA | 課題と解決を見る → `#solutions` |
+| Problem 3柱 | 余興の準備 / ゲストの参加 / 会場の一体感 |
+
+旧コピー（景品選び・進行可視化・「アプリを体験する」など）は実在機能と不一致のため使用しない。
 
 主要アプリのリンク例:
 

@@ -20,10 +20,10 @@ export const cfBeaconToken = (
 export const siteConfig = {
   name: "ことほぎ",
   nameEn: "Kotohogi",
-  tagline: "幹事の負担を減らし、会場の一体感を最大化する",
+  tagline: "インストール不要。会場のスマホで余興がつながる",
   /** LP 用（検索・OGP。おおよそ100〜120文字） */
   description:
-    "結婚式・パーティーの余興を支えるWebアプリ。人間ビンゴ・クイズ・アンケート・祝福メッセージ・トークカード・フォトミッションで、幹事の負担を減らし会場の一体感をつくります。",
+    "結婚式・二次会向けの余興Webアプリ。人間ビンゴ・新郎新婦クイズ・リアルタイムアンケート・祝福メッセージに加え、抽選やタイマーなど幹事用ツールもブラウザだけで使えます。",
   copyrightYear: 2026,
   author: "Kotohogi",
   /** SNS共有カード用画像（public/og.jpg） */
@@ -93,12 +93,12 @@ export const pageSeo = {
 /** アプリ・セクションへの遷移先 */
 export const appLinks = {
   primaryCta: {
-    label: "アプリを体験する",
+    label: "余興ツールを見る",
     href: "#tools",
   },
   secondaryCta: {
-    label: "余興ツールを見る",
-    href: "#tools",
+    label: "課題と解決を見る",
+    href: "#solutions",
   },
 } as const;
 
@@ -107,32 +107,41 @@ export type ProblemSolutionItem = {
   title: string;
   problem: string;
   solution: string;
-  icon: "clipboard" | "gift" | "users";
+  icon: "clipboard" | "smartphone" | "users";
 };
+
+/** Problem & Solution セクション見出し（LP-05） */
+export const problemSolutionIntro = {
+  eyebrow: "Problem & Solution",
+  title: "余興の悩みに、その場で使えるアプリで応える",
+  description:
+    "特別な機材もインストールも不要。ブラウザだけで始まる余興と、幹事向けの進行ツールをまとめています。",
+} as const;
 
 export const problemSolutions: ProblemSolutionItem[] = [
   {
-    id: "flow",
-    title: "進行の準備",
-    problem: "台本づくりや時間配分に追われ、本番まで気が抜けない。",
+    id: "ready",
+    title: "余興の準備",
+    problem:
+      "余興用の道具を揃えたり、ゲストへ配る手順を整えたりするのに手間がかかる。",
     solution:
-      "余興の流れをアプリで可視化。進行を迷いなく進められます。",
+      "人間ビンゴ・クイズ・アンケートなどをURLひとつで共有。設定はその場で編集できます。",
     icon: "clipboard",
   },
   {
-    id: "prizes",
-    title: "景品選び",
-    problem: "何を用意すれば盛り上がるか、判断に時間がかかる。",
+    id: "join",
+    title: "ゲストの参加",
+    problem: "ゲストが受け身になりがちで、手元から参加するきっかけが少ない。",
     solution:
-      "おすすめ景品の導線を用意。選ぶ負担を軽くします。",
-    icon: "gift",
+      "スマホのブラウザから投票・回答・ビンゴ記入。アプリのインストールは不要です。",
+    icon: "smartphone",
   },
   {
     id: "unity",
     title: "会場の一体感",
     problem: "ゲスト同士がよそよそしく、空気が硬くなりがち。",
     solution:
-      "クイズやアンケートで、会場全体がひとつになる体験を。",
+      "ビンゴ・トークカード・ライブアンケートで、会場が同じ時間を共有できます。",
     icon: "users",
   },
 ];

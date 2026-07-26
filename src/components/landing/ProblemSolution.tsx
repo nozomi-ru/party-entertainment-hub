@@ -1,13 +1,13 @@
-import { ClipboardList, Gift, Users, type LucideIcon } from "lucide-react";
+import { ClipboardList, Smartphone, Users, type LucideIcon } from "lucide-react";
 import {
+  problemSolutionIntro,
   problemSolutions,
-  siteConfig,
   type ProblemSolutionItem,
 } from "@/config/site";
 
 const iconMap: Record<ProblemSolutionItem["icon"], LucideIcon> = {
   clipboard: ClipboardList,
-  gift: Gift,
+  smartphone: Smartphone,
   users: Users,
 };
 
@@ -20,14 +20,13 @@ export function ProblemSolution() {
       <div className="relative mx-auto max-w-5xl">
         <header className="mx-auto max-w-2xl text-center">
           <p className="font-[family-name:var(--font-display)] text-[0.7rem] tracking-[0.35em] text-[var(--champagne-deep)] uppercase">
-            Problem & Solution
+            {problemSolutionIntro.eyebrow}
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-wide text-[var(--ink)] sm:text-[2.5rem] sm:leading-tight">
-            幹事さんの不安に、そっと寄り添う
+            {problemSolutionIntro.title}
           </h2>
           <p className="mt-5 text-sm leading-relaxed text-[var(--muted)] sm:text-[0.95rem] sm:leading-7">
-            準備の忙しさと本番の緊張。その両方をやわらげるために、
-            {siteConfig.name}は生まれました。
+            {problemSolutionIntro.description}
           </p>
         </header>
 

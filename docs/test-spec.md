@@ -3,8 +3,8 @@
 | 項目 | 内容 |
 |------|------|
 | プロダクト名 | ことほぎ（Kotohogi） |
-| 文書バージョン | 1.4 |
-| 最終更新 | 2026-07-23 |
+| 文書バージョン | 1.5 |
+| 最終更新 | 2026-07-26 |
 | この文書の役割 | **「何を・どの基準で自動テストするか」の正本** |
 | 実行の仕方 | コマンドや push 時の動き・関係ファイルは [ops/testing.md](./ops/testing.md) |
 
@@ -31,7 +31,7 @@
 
 | 層 | 仕様 | 実装・設定 | 手順 |
 |----|------|------------|------|
-| L1 単体 | この文書 §6（poll）・§6.3b（party-logic）・§6.3c（app-ui）・§6.5（quiz-store）・§6.6（bingo-store） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
+| L1 単体 | この文書 §6（poll）・§6.3b（party-logic）・§6.3c（app-ui）・§6.3d（site）・§6.5（quiz-store）・§6.6（bingo-store） | `src/lib/*.test.ts`, `src/config/site.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
 | L2 スモーク | この文書 §7 | `scripts/smoke.mjs` | `npm run smoke` |
 | L2b E2E | [scenario-spec.md](./scenario-spec.md) | `e2e/`, `playwright.config.ts` | [ops/testing.md](./ops/testing.md) |
 | CI | この文書 §9 | `.github/workflows/quality.yml` ほか | [ops/testing.md](./ops/testing.md) |
@@ -163,6 +163,7 @@ L4   本番                会場用。上を通ってからだけ
 | 対象 | ファイル | 何を見ているか |
 |------|----------|----------------|
 | ルームコード・票の整え方 | `src/lib/poll.ts` | API が使う「きれいにする」処理 |
+| LP コピー（site.ts） | `src/config/site.ts` | タグライン・CTA・Problem & Solution の正 |
 | セッションの保存（メモリ経路） | `src/lib/poll-store.ts` | KV が無いときの読み書き |
 
 コードを変えるときは、できれば **この節の期待結果も一緒に直す**（仕様と実装がずれないように）。
@@ -241,9 +242,22 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 
 `escapeHtml` は表示崩れ対策（要件 T-10）そのものなので、ここが落ちたら参加者名の表示を疑う。
 
+### 6.3d LP 設定 `site.ts`（UT-SITE-\*）
+
+`src/config/site.ts` のコピーが実在機能と一致しているかを見る。文言を変えるときは **design §4.2 の表も同時に更新**する。
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-SITE-01 | タグライン・description | インストール不要・余興名・ブラウザ利用を示す |
+| UT-SITE-02 | `appLinks` | 主 CTA → `#tools`、副 CTA → `#solutions` |
+| UT-SITE-03 | `problemSolutions` | 3柱（余興の準備 / ゲストの参加 / 会場の一体感） |
+| UT-SITE-04 | 旧コピー検出 | 景品選び・流れ可視化・「アプリを体験する」を含まない |
+
+実装されたテスト: `src/config/site.test.ts`
+
 ### 6.4 保存 `poll-store`（メモリ）
 
-本物の Cloudflare KV ではなく、**プロセス内の一時メモ**に書いたり読んだりできるかを見ます。
+本物の Cloudflare KV ではなく、**プロセス内の一時メモ**に書いたり読んだりできるかを見ます（`src/lib/kv.ts` 経由）。
 
 | ID | 操作 | 期待 |
 |----|------|------|
@@ -251,6 +265,28 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | UT-STORE-02 | 存在しないルームを読む | `null`（無い） |
 
 実装されたテスト: `src/lib/poll-store.test.ts`
+
+### 6.4b KV 共通 `kv.ts`（メモリ）
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-KV-01 | put して get | 同じ文字列が返る |
+| UT-KV-02 | 無いキーを get | `null` |
+| UT-KV-03 | list に prefix | 該当キーだけ |
+| UT-KV-04 | list を limit + cursor | ページ分割できる |
+
+実装されたテスト: `src/lib/kv.test.ts`
+
+### 6.4c ゲスト匿名セッション
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-GUEST-01 | `createGuestId` | UUID 形式 |
+| UT-GUEST-02 | 不正文字列 | `isValidGuestId` が false |
+| UT-GUEST-03 | Cookie ヘッダから読む | 正しい ID |
+| UT-GUEST-04 | Cookie 無し／不正 | `null` |
+
+実装されたテスト: `src/lib/guest-session.test.ts`
 
 ### 6.5 保存 `quiz-store`（メモリ）
 
@@ -333,6 +369,8 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 |----|----------|------------------|--------|
 | SC-LP-01 | `landing.feature` | ブランド名「ことほぎ」が見える | 紹介ページの基本 |
 | SC-LP-02 | `landing.feature` | Party Tools（ToolsGrid）から3アプリへ遷移 | 受け入れ1 |
+| SC-LP-03 | `landing.feature` | ヒーローにタグラインと CTA（余興ツール / 課題と解決） | LP-01 / LP-05 |
+| SC-LP-04 | `landing.feature` | Problem & Solution の3柱タイトルが見える | LP-02 |
 | SC-POLL-01 | `poll.feature` | Host 入室→Guest 投票 | アンケート最小経路 |
 | SC-POLL-02 | `poll.feature` | Host が結果表示 | 結果公開 |
 | SC-POLL-03 | `poll.feature` | Host は投票不可 | 受け入れ5 |

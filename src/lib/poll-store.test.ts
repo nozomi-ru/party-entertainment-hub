@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { resetKvMemoryForTests } from "@/lib/kv";
 import { readPollSession, writePollSession } from "@/lib/poll-store";
-
-type GlobalPollMemory = typeof globalThis & {
-  __weddingPollMemory?: Map<string, string>;
-};
 
 describe("poll-store (メモリ)", () => {
   beforeEach(() => {
-    const g = globalThis as GlobalPollMemory;
-    g.__weddingPollMemory = new Map();
+    resetKvMemoryForTests();
   });
 
   it("UT-STORE-01: 書き込んだセッションを読める", async () => {

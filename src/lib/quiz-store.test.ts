@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { resetKvMemoryForTests } from "@/lib/kv";
 import { readQuizSession, writeQuizSession } from "@/lib/quiz-store";
-
-type GlobalQuizMemory = typeof globalThis & {
-  __weddingQuizMemory?: Map<string, string>;
-};
 
 describe("quiz-store (メモリ)", () => {
   beforeEach(() => {
-    const g = globalThis as GlobalQuizMemory;
-    g.__weddingQuizMemory = new Map();
+    resetKvMemoryForTests();
   });
 
   it("UT-QUIZ-STORE-01: 書き込んだセッションを読める", async () => {

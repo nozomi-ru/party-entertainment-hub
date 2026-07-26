@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { resetKvMemoryForTests } from "@/lib/kv";
 import { readBingoSession, writeBingoSession } from "@/lib/bingo-store";
-
-type GlobalBingoMemory = typeof globalThis & {
-  __weddingBingoMemory?: Map<string, string>;
-};
 
 describe("bingo-store (メモリ)", () => {
   beforeEach(() => {
-    const g = globalThis as GlobalBingoMemory;
-    g.__weddingBingoMemory = new Map();
+    resetKvMemoryForTests();
   });
 
   it("UT-BINGO-STORE-01: 書き込んだセッションを読める", async () => {
