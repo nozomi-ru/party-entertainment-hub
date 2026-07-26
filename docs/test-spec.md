@@ -31,7 +31,7 @@
 
 | 層 | 仕様 | 実装・設定 | 手順 |
 |----|------|------------|------|
-| L1 単体 | この文書 §6（poll）・§6.3b（party-logic）・§6.3c（app-ui） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
+| L1 単体 | この文書 §6（poll）・§6.3b（party-logic）・§6.3c（app-ui）・§6.5（quiz-store）・§6.6（bingo-store） | `src/lib/*.test.ts`, `vitest.config.ts` | `npm test` · `.husky/pre-push` |
 | L2 スモーク | この文書 §7 | `scripts/smoke.mjs` | `npm run smoke` |
 | L2b E2E | [scenario-spec.md](./scenario-spec.md) | `e2e/`, `playwright.config.ts` | [ops/testing.md](./ops/testing.md) |
 | CI | この文書 §9 | `.github/workflows/quality.yml` ほか | [ops/testing.md](./ops/testing.md) |
@@ -237,7 +237,33 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 
 実装されたテスト: `src/lib/poll-store.test.ts`
 
-### 6.5 L1 の合否
+### 6.5 保存 `quiz-store`（メモリ）
+
+クイズ集計ストア（`src/lib/quiz-store.ts`）の基本動作を確認する。poll-store と同パターンで KV の代わりにメモリを使う。
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-QUIZ-STORE-01 | セッションを書いてから読む | 同じ内容が返る |
+| UT-QUIZ-STORE-02 | 存在しないルームを読む | `null` |
+| UT-QUIZ-STORE-03 | エントリを追加して再読する | 1件ある・名前が一致 |
+| UT-QUIZ-STORE-04 | エントリを空にして再読する | 0件 |
+
+実装されたテスト: `src/lib/quiz-store.test.ts`
+
+### 6.6 保存 `bingo-store`（メモリ）
+
+ビンゴ集計ストア（`src/lib/bingo-store.ts`）の基本動作を確認する。
+
+| ID | 操作 | 期待 |
+|----|------|------|
+| UT-BINGO-STORE-01 | セッションを書いてから読む | 同じ内容が返る |
+| UT-BINGO-STORE-02 | 存在しないルームを読む | `null` |
+| UT-BINGO-STORE-03 | ビンゴ報告を追加して再読する | 1件ある・名前が一致 |
+| UT-BINGO-STORE-04 | エントリを空にして再読する | 0件 |
+
+実装されたテスト: `src/lib/bingo-store.test.ts`
+
+### 6.7 L1 の合否
 
 - すべてのケースが成功（PASS）すること
 - `npm test` が正常終了すること（失敗コードを出さない）

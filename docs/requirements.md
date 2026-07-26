@@ -39,7 +39,9 @@
 |------------|--------------|----------|----------|
 | LP | `src/app/page.tsx`, `src/components/landing/`, `src/config/site.ts` | design §4 | SC-LP-* |
 | ビンゴ | `public/app-tools/wedding-bingo/` | design §6 | SC-BINGO-01 |
+| ビンゴ集計 API | `src/app/api/bingo/`, `src/lib/bingo-store.ts` | design §6.5 | UT-BINGO-STORE-* |
 | クイズ | `public/app-tools/wedding-quiz/` | design §7 | SC-QUIZ-01 |
+| クイズ集計 API | `src/app/api/quiz/`, `src/lib/quiz-store.ts` | design §7.5 | UT-QUIZ-STORE-* |
 | アンケート UI | `public/app-tools/wedding-poll/` | design §8 | SC-POLL-* |
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
 | 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html` | design §8b | UT-PARTY-* / SC-TOOLS-* |
@@ -85,8 +87,8 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | ID | 名称 | 種別 | 概要 | 主なパス |
 |----|------|------|------|----------|
 | LP | ランディングページ | Next.js | ブランド紹介・機能導線・アフィリエイト | `src/app/` |
-| BINGO | 人間ビンゴ | 静的 HTML | 3×3 交流ビンゴ | `public/app-tools/wedding-bingo/` |
-| QUIZ | 新郎新婦クイズ | 静的 HTML | 4択クイズ | `public/app-tools/wedding-quiz/` |
+| BINGO | 人間ビンゴ | 静的 HTML + API | 3×3 交流ビンゴ（任意ルームでビンゴ達成を集計） | `public/app-tools/wedding-bingo/` + `/api/bingo` |
+| QUIZ | 新郎新婦クイズ | 静的 HTML + API | 4択クイズ（任意ルームで得点を集計） | `public/app-tools/wedding-quiz/` + `/api/quiz` |
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
 | HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ | `public/app-tools/index.html` |
 | TOOL-* | 幹事・進行ツール群（10種） | 静的 HTML | 抽選・くじ・進行などの単機能アプリ | `public/app-tools/{slug}/` |
@@ -98,7 +100,6 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 - ユーザー認証・アカウント管理
 - 永続的なイベント履歴の管理画面
 - ネイティブアプリ
-- ビンゴ／クイズ結果のサーバー集約（優先テーマ2として検討中）
 
 ---
 
@@ -128,8 +129,12 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | B-06 | マス設定を URL（`?c=`）に圧縮して共有できる（名前は共有しない） | 必須 |
 | B-07 | 端末内にラベル・入力名を保存し、再訪時に復元できる | 必須 |
 | B-08 | リセットで設定・名前を初期化できる | 必須 |
+| B-09 | 幹事は管理パネルから4文字ルームを生成し Host/Guest URL を取得できる | 推奨 |
+| B-10 | ゲストはビンゴ達成後に名前を入力してルームへ達成を報告できる | 推奨 |
+| B-11 | ホストビュー（`?room=XXXX&mode=host`）でビンゴ達成者一覧（名前・達成順）を約3秒ポーリングで確認できる | 推奨 |
+| B-12 | ホストは達成一覧をクリアできる | 推奨 |
 
-**補足:** 名前は端末の localStorage のみ。共有 URL にはラベル（マス文言）だけを載せ、プライバシーを守ります。
+**補足:** 名前は端末の localStorage のみ。共有 URL にはラベル（マス文言）だけを載せ、プライバシーを守ります。B-09〜B-12 はルームを作らなくても B-01〜B-08 は単独で動きます。集計は `/api/bingo/[room]` 経由で Cloudflare KV（`POLL_KV`、キー `bingo:{room}`）に保存、24時間で自動削除。
 
 ### 4.3 新郎新婦クイズ（QUIZ）
 
@@ -141,8 +146,12 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | Q-04 | 問題・正解を編集・追加・削除できる（最低1問） | 必須 |
 | Q-05 | 問題セットを URL（`?c=`）に圧縮して共有できる | 必須 |
 | Q-06 | 端末内に問題を保存し、再訪時に復元できる | 必須 |
+| Q-07 | 幹事は管理パネルから4文字ルームを生成し Host/Guest URL を取得できる | 推奨 |
+| Q-08 | ゲストはクイズ終了後に名前を入力してルームへ得点を送信できる | 推奨 |
+| Q-09 | ホストビュー（`?room=XXXX&mode=host`）で得点ランキング（名前・得点・正答率）を約3秒ポーリングで確認できる | 推奨 |
+| Q-10 | ホストは得点一覧をクリアできる | 推奨 |
 
-**補足:** ビンゴと同様、DB なしで `?c=` により別端末へ同じ問題セットを配れます。
+**補足:** ビンゴと同様、DB なしで `?c=` により別端末へ同じ問題セットを配れます。Q-07〜Q-10 はルームを作らなくても Q-01〜Q-06 は単独で動きます。集計は `/api/quiz/[room]` 経由で Cloudflare KV（`POLL_KV`、キー `quiz:{room}`）に保存、24時間で自動削除。
 
 ### 4.4 リアルタイムアンケート（POLL）
 

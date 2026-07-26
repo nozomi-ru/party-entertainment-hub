@@ -395,6 +395,22 @@
             padding: 1.2em; width: 100%; font-size: 1em; font-weight: 600; letter-spacing: 0.15em; 
             cursor: pointer;
         }
+
+        /* ── 集計・ホストビュー ── */
+        .host-table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.88em; }
+        .host-table th { border-bottom: 2px solid var(--color-gold); color: var(--color-gold); padding: 0.5em 0.5em; text-align: left; font-weight: 600; font-family: 'Playfair Display', serif; }
+        .host-table td { padding: 0.55em 0.5em; border-bottom: 1px solid var(--color-border); color: var(--color-text); }
+        .host-refresh-label { font-size: 0.72em; color: var(--color-text-light); text-align: right; margin-bottom: 0.3em; }
+        .host-count { font-size: 0.82em; color: var(--color-text-light); margin: 0.3em 0 0.8em; }
+        /* ── ビンゴ報告モーダル ── */
+        #report-modal .report-hint { font-size: 0.85em; color: var(--color-text-light); line-height: 1.6; margin: 0 0 0.3em; }
+        #report-status { font-size: 0.8em; color: var(--color-gold); min-height: 1.2em; text-align: center; margin-top: 0.4em; }
+        /* ── 管理者ルーム生成 ── */
+        .room-gen-area { background: #FAF9F7; border: 1px solid var(--color-border); padding: 1em; margin-bottom: 1.2em; }
+        .room-gen-area h3 { margin: 0 0 0.6em; font-size: 0.88em; font-family: 'Playfair Display', serif; letter-spacing: 0.1em; color: var(--color-text); }
+        .room-code-disp { font-family: 'Playfair Display', serif; font-size: 2em; letter-spacing: 0.35em; color: var(--color-gold); text-align: center; margin: 0.3em 0; }
+        .url-box-s { font-size: 0.7em; color: var(--color-text-light); word-break: break-all; background: #fff; border: 1px solid var(--color-border); padding: 0.3em 0.5em; margin: 0.25em 0; cursor: pointer; user-select: all; }
+        .url-box-s span { display: block; font-weight: 600; color: var(--color-text); margin-bottom: 0.1em; }
     </style>
 </head>
 <body>
@@ -437,11 +453,36 @@
         <div id="bingo-msg">
             <p class="bingo-text" id="bingo-count-text">1 BINGO</p>
             <span class="bingo-time" id="display-time"></span>
+            <!-- ルーム報告ボタン（?room= がある場合のみ表示） -->
+            <button class="btn-share" id="btn-open-report" type="button" style="display:none;margin-top:1em;">ビンゴを幹事に報告する</button>
         </div>
 
         <div class="footer-actions">
             <button class="btn-share" id="open-editor" type="button">マスを編集・共有URL作成</button>
             <button class="btn-reset-trigger" id="show-reset-confirm">リセットする (Reset)</button>
+        </div>
+
+        <!-- HOST VIEW（?mode=host のときのみ表示） -->
+        <div id="view-host" style="display:none;width:100%;text-align:left;">
+            <p style="font-family:'Playfair Display',serif;font-size:0.78em;letter-spacing:0.2em;color:var(--color-gold);text-transform:uppercase;">Host View</p>
+            <h2 style="margin:0.2em 0 0.1em;font-family:'Playfair Display',serif;font-size:1.4em;">ビンゴ集計</h2>
+            <p id="host-room-label" style="font-size:0.8em;color:var(--color-text-light);margin:0 0 0.8em;"></p>
+            <p class="host-refresh-label" id="host-refresh-label">自動更新中…</p>
+            <p class="host-count" id="host-count"></p>
+            <div id="host-table-wrap"></div>
+            <button class="btn-main" id="btn-host-clear" style="margin-top:1em;">集計をクリアする</button>
+        </div>
+    </div>
+
+    <!-- ビンゴ報告モーダル -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 style="margin-top:0; color:var(--color-gold); font-family:'Playfair Display',serif;">ビンゴを報告する</h3>
+            <p class="report-hint">あなたのお名前を入力して幹事に報告します。</p>
+            <input type="text" id="report-name-input" placeholder="お名前" maxlength="20">
+            <button class="btn-main" id="btn-report-submit">報告する</button>
+            <p id="report-status"></p>
+            <button class="btn-reset-trigger" id="close-report-modal" style="margin-top:10px;width:100%;">閉じる</button>
         </div>
     </div>
 
@@ -468,6 +509,20 @@
 
     <div id="admin-panel">
         <h2>Bingo Settings</h2>
+
+        <!-- 集計ルーム -->
+        <div class="room-gen-area">
+            <h3>▶ 集計ルームを作る（任意）</h3>
+            <p style="font-size:0.78em;color:var(--color-text-light);line-height:1.6;margin:0 0 0.6em;">ルームを作ると、ゲストがビンゴ達成時に幹事へ報告でき、幹事が達成順位を一覧で確認できます。</p>
+            <button class="btn-share" id="btn-gen-room" type="button">ルームコードを生成する</button>
+            <div id="room-gen-result" style="display:none;margin-top:0.8em;">
+                <p class="room-code-disp" id="room-code-disp"></p>
+                <div class="url-box-s" id="url-host-box"><span>Host URL（幹事用）</span><span id="url-host-text"></span></div>
+                <div class="url-box-s" id="url-guest-box"><span>Guest URL（ゲスト配布用）</span><span id="url-guest-text"></span></div>
+                <p style="font-size:0.72em;color:var(--color-text-light);margin:0.4em 0 0;line-height:1.5;">Host URL は幹事が開き、Guest URL をゲストに配ってください。ゲスト URL はマスの共有URL（?c=…）と組み合わせて配布できます。</p>
+            </div>
+        </div>
+
         <div class="howto-note">
             <strong>使い方の要点（幹事向け）</strong>
             マス文言を編集し「共有URLをコピー」でゲストに配ります（内容はURLに圧縮。DB不要）。ゲストの名前は各端末内のみ保存されます。最初からやり直すときは盤面の「リセットする」を使ってください。
@@ -493,7 +548,12 @@
         ];
         const WIN_PATTERNS = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
-        const state = { names: [], labels: [], currentIdx: null, clickCount: 0, clickTimer: null };
+        const state = {
+            names: [], labels: [], currentIdx: null,
+            clickCount: 0, clickTimer: null,
+            room: "", mode: "", hostTimer: null,
+            reported: false
+        };
 
         function packPayload(labels) {
             return { v: 1, l: labels };
@@ -570,6 +630,7 @@
                     timeArea.innerText = `達成: ${stamped}`;
                 }
                 msgArea.style.display = 'block';
+                showReportButton();
             } else {
                 msgArea.style.display = 'none';
                 timeArea.innerText = '';
@@ -642,6 +703,129 @@
                 : 'コピーできないため、下のURLを長押しでコピーしてください';
         }
 
+        /* ── ルーム: ビンゴ達成時に報告ボタンを表示 ── */
+        function showReportButton() {
+            if (state.room && !state.reported) {
+                document.getElementById('btn-open-report').style.display = 'inline-block';
+            }
+        }
+
+        /* ── ルーム: 報告モーダル ── */
+        async function submitReport() {
+            const name = document.getElementById('report-name-input').value.trim();
+            const statusEl = document.getElementById('report-status');
+            if (!name) { statusEl.textContent = 'お名前を入力してください'; return; }
+            const btn = document.getElementById('btn-report-submit');
+            btn.disabled = true;
+            statusEl.textContent = '送信中…';
+            try {
+                const res = await fetch(`/api/bingo/${encodeURIComponent(state.room)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'report', name })
+                });
+                if (res.ok) {
+                    statusEl.textContent = '✓ 報告しました！';
+                    btn.textContent = '報告済み';
+                    state.reported = true;
+                    document.getElementById('btn-open-report').style.display = 'none';
+                } else {
+                    throw new Error('server error');
+                }
+            } catch {
+                statusEl.textContent = '送信に失敗しました。もう一度お試しください。';
+                btn.disabled = false;
+            }
+        }
+
+        /* ── ルーム: ホストビュー ── */
+        function escapeHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function renderHostTable(entries) {
+            const wrap = document.getElementById('host-table-wrap');
+            const count = document.getElementById('host-count');
+            count.textContent = `ビンゴ達成 ${entries.length} 名`;
+            if (entries.length === 0) {
+                wrap.innerHTML = "<p style='font-size:0.85em;color:var(--color-text-light);'>まだ報告がありません。</p>";
+                return;
+            }
+            const rows = entries.map((e, i) => {
+                const t = new Date(e.reportedAt);
+                const time = `${t.getHours()}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')}`;
+                return `<tr><td>${i + 1}</td><td>${escapeHtml(e.name)}</td><td>${time}</td></tr>`;
+            }).join('');
+            wrap.innerHTML = `<table class="host-table">
+                <thead><tr><th>#</th><th>名前</th><th>達成時刻</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>`;
+        }
+
+        async function refreshHostView() {
+            try {
+                const res = await fetch(`/api/bingo/${encodeURIComponent(state.room)}`, { cache: 'no-store' });
+                if (!res.ok) { document.getElementById('host-refresh-label').textContent = '取得失敗'; return; }
+                const data = await res.json();
+                renderHostTable(data.entries || []);
+                document.getElementById('host-refresh-label').textContent =
+                    '最終更新: ' + new Date().toLocaleTimeString('ja-JP');
+            } catch {
+                document.getElementById('host-refresh-label').textContent = '取得失敗';
+            }
+        }
+
+        async function openHostView() {
+            document.getElementById('main-box').style.display = 'none';
+            document.getElementById('view-host').style.display = 'block';
+            document.getElementById('host-room-label').textContent = `Room: ${state.room}`;
+            await refreshHostView();
+            clearInterval(state.hostTimer);
+            state.hostTimer = setInterval(refreshHostView, 3000);
+        }
+
+        /* ── ルーム: 管理者ルーム生成 ── */
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        }
+
+        async function createRoom() {
+            const code = generateRoomCode();
+            try {
+                const res = await fetch(`/api/bingo/${encodeURIComponent(code)}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'open' })
+                });
+                if (!res.ok) throw new Error('open failed');
+            } catch {
+                alert('ルームの作成に失敗しました。'); return;
+            }
+            const base = location.origin + location.pathname;
+            const cParam = new URLSearchParams(location.search).get('c');
+            const cPart = cParam ? `?c=${encodeURIComponent(cParam)}&room=${code}` : `?room=${code}`;
+            const guestUrl = base + cPart;
+            const hostUrl = guestUrl + '&mode=host';
+            document.getElementById('room-code-disp').textContent = code;
+            document.getElementById('url-guest-text').textContent = guestUrl;
+            document.getElementById('url-host-text').textContent = hostUrl;
+            document.getElementById('room-gen-result').style.display = 'block';
+        }
+
+        /* ── URLパラメータからルーム自動設定 ── */
+        function bootFromUrl() {
+            const params = new URLSearchParams(location.search);
+            const room = (params.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+            const mode = params.get('mode') || '';
+            if (!room) return;
+            state.room = room;
+            state.mode = mode;
+            if (mode === 'host') {
+                openHostView();
+            }
+        }
+
         function initEvents() {
             document.getElementById('main-title').addEventListener('click', () => {
                 state.clickCount++;
@@ -668,15 +852,39 @@
             document.getElementById('admin-close').addEventListener('click', () => {
                 document.getElementById('admin-panel').style.display = 'none';
             });
+            document.getElementById('btn-gen-room').addEventListener('click', createRoom);
+            document.getElementById('btn-open-report').addEventListener('click', () => {
+                document.getElementById('report-name-input').value = '';
+                document.getElementById('report-status').textContent = '';
+                document.getElementById('btn-report-submit').disabled = false;
+                document.getElementById('btn-report-submit').textContent = '報告する';
+                document.getElementById('report-modal').style.display = 'flex';
+            });
+            document.getElementById('btn-report-submit').addEventListener('click', submitReport);
+            document.getElementById('close-report-modal').addEventListener('click', () => {
+                document.getElementById('report-modal').style.display = 'none';
+            });
+            document.getElementById('btn-host-clear').addEventListener('click', async () => {
+                if (!confirm('集計をクリアしますか？')) return;
+                try {
+                    await fetch(`/api/bingo/${encodeURIComponent(state.room)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'clear' })
+                    });
+                    await refreshHostView();
+                } catch { /* ignore */ }
+            });
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     closeModals();
                     document.getElementById('admin-panel').style.display = 'none';
+                    document.getElementById('report-modal').style.display = 'none';
                 }
             });
         }
 
-        window.addEventListener('DOMContentLoaded', () => { loadData(); initEvents(); renderBoard(); });
+        window.addEventListener('DOMContentLoaded', () => { loadData(); initEvents(); renderBoard(); bootFromUrl(); });
     </script>
 
     <footer style="margin-top:2.5em; padding:1.5em 1em 2.5em; text-align:center;">

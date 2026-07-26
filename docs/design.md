@@ -290,6 +290,23 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 | 永続化 | `localStorage`: `bingoLabels`, `bingoNames` |
 | 管理 | タイトル 3 連打、または編集 UI からラベル編集・共有 URL |
 
+### 6.5 ビンゴ集計 API（B-09〜B-12）
+
+**API:** `src/app/api/bingo/[room]/route.ts`  
+**ストア:** `src/lib/bingo-store.ts`（KV キー `bingo:{room}`、TTL 24h）
+
+| エンドポイント | method | action | 概要 |
+|--------------|--------|--------|------|
+| `/api/bingo/[room]` | GET | — | 達成一覧を返す（404 = ルームなし） |
+| `/api/bingo/[room]` | POST | `open` | ルームを新規作成（エントリ空） |
+| `/api/bingo/[room]` | POST | `report` | `{name}` を達成者として追加 |
+| `/api/bingo/[room]` | POST | `clear` | エントリを全削除 |
+
+**フロント動作:**
+- 幹事が管理パネルで「ルームコードを生成する」→ POST `open` → Host URL / Guest URL を表示
+- Guest が `?room=XXXX` で開き、ビンゴ達成 → 「ビンゴを幹事に報告する」ボタン → モーダルで名前入力 → POST `report`
+- Host が `?room=XXXX&mode=host` で開く → ホストビュー（3秒ポーリング）→ 達成者を順番に表示
+
 ---
 
 ## 7. 新郎新婦クイズ設計
@@ -303,6 +320,23 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 | フィードバック | 即時正誤 → 最終スコア・レビュー |
 | 永続化 | `localStorage`: `weddingQuizQuestions` |
 | 管理 | 問題追加・削除・正解設定・共有 URL |
+
+### 7.5 クイズ集計 API（Q-07〜Q-10）
+
+**API:** `src/app/api/quiz/[room]/route.ts`  
+**ストア:** `src/lib/quiz-store.ts`（KV キー `quiz:{room}`、TTL 24h）
+
+| エンドポイント | method | action | 概要 |
+|--------------|--------|--------|------|
+| `/api/quiz/[room]` | GET | — | 得点一覧を返す（404 = ルームなし） |
+| `/api/quiz/[room]` | POST | `open` | ルームを新規作成（エントリ空） |
+| `/api/quiz/[room]` | POST | `submit` | `{name, score, total}` を得点として追加 |
+| `/api/quiz/[room]` | POST | `clear` | エントリを全削除 |
+
+**フロント動作:**
+- 幹事が管理パネルで「ルームコードを生成する」→ POST `open` → Host URL / Guest URL を表示
+- Guest が `?room=XXXX` で開き、クイズ完了 → 結果画面に「得点を幹事に共有する」が表示 → 名前入力 → POST `submit`
+- Host が `?room=XXXX&mode=host` で開く → ホストビュー（3秒ポーリング）→ 得点ランキング表示（正答率降順）
 
 ---
 
