@@ -340,6 +340,19 @@ https://kotohogi.nozoisfun.workers.dev/sitemap.xml
 
 ---
 
+## 4.1 Google AdSense（サイト認証）
+
+LP（`src/app/layout.tsx`）に AdSense スクリプトと `google-adsense-account` メタを載せています。
+
+| 項目 | 場所 |
+|------|------|
+| パブリッシャー ID | `src/config/site.ts` の `adsenseClientId`（または `NEXT_PUBLIC_ADSENSE_CLIENT_ID`） |
+| スクリプト | `src/components/GoogleAdSense.tsx` |
+
+デプロイ後、AdSense 管理画面でサイトの確認を進めてください（コード反映だけでは Google 側の承認は完了しません）。
+
+---
+
 ## 5. 次に読むもの
 
 | 目的 | 文書 |

@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond } from "next/font/google";
 import { CloudflareAnalytics } from "@/components/CloudflareAnalytics";
-import { pageSeo, siteConfig, siteUrl } from "@/config/site";
+import { GoogleAdSense } from "@/components/GoogleAdSense";
+import {
+  adsenseClientId,
+  pageSeo,
+  siteConfig,
+  siteUrl,
+} from "@/config/site";
 import "./globals.css";
 
 /** 欧文ディスプレイのみ Google Fonts。本文は OS の日本語ゴシック（多数の woff2 分割を避ける） */
@@ -63,6 +69,13 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  ...(adsenseClientId
+    ? {
+        other: {
+          "google-adsense-account": adsenseClientId,
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({
@@ -83,6 +96,7 @@ export default function RootLayout({
       </head>
       <body className={`${display.variable} antialiased`}>
         {children}
+        <GoogleAdSense />
         <CloudflareAnalytics />
       </body>
     </html>

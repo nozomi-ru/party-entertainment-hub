@@ -17,6 +17,14 @@ export const cfBeaconToken = (
   process.env.NEXT_PUBLIC_CF_BEACON_TOKEN ?? ""
 ).trim();
 
+/**
+ * Google AdSense のパブリッシャー ID（サイト認証・広告用）。
+ * 空ならスクリプトを出さない。差し替え時はここか環境変数を更新。
+ */
+export const adsenseClientId = (
+  process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID ?? "ca-pub-4114564041726790"
+).trim();
+
 export const siteConfig = {
   name: "ことほぎ",
   nameEn: "Kotohogi",
