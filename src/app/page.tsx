@@ -12,6 +12,9 @@ const ProblemSolution = dynamic(
 const Features = dynamic(() =>
   import("@/components/landing/Features").then((m) => m.Features),
 );
+const ToolsGrid = dynamic(() =>
+  import("@/components/landing/ToolsGrid").then((m) => m.ToolsGrid),
+);
 const Affiliate = dynamic(() =>
   import("@/components/landing/Affiliate").then((m) => m.Affiliate),
 );
@@ -36,6 +39,7 @@ export default function HomePage() {
       <Hero />
       <ProblemSolution />
       <Features />
+      <ToolsGrid />
       <Affiliate />
       <Footer />
     </main>

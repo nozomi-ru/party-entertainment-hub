@@ -406,7 +406,11 @@ Then("ビンゴ数字抽選機の画面が表示される", async ({ page }) => 
 
 Given("ビンゴ数字抽選機を開いている", async ({ page }) => {
   await page.goto("/app-tools/bingo-machine/index.html");
-  await page.evaluate(() => localStorage.removeItem("bingoMachineDrawn"));
+  await page.evaluate(() => {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("bingoMachine"))
+      .forEach((k) => localStorage.removeItem(k));
+  });
   await page.reload();
   await expect(page.locator("#draw-btn")).toBeVisible();
 });
@@ -431,75 +435,39 @@ Then("数字が1つ抽選される", async ({ page }) => {
 
 Given("割り勘計算機を開いている", async ({ page }) => {
   await page.goto("/app-tools/warikan/index.html");
-  await expect(page.locator("#calc-btn")).toBeVisible();
+  await page.evaluate(() => {
+    Object.keys(localStorage)
+      .filter((k) => k.startsWith("warikan"))
+      .forEach((k) => localStorage.removeItem(k));
+  });
+  await page.reload();
+  await expect(page.locator("#main-amount")).toBeVisible();
 });
 
 Then("一人当たりの金額が表示される", async ({ page }) => {
-  await expect(page.locator("#warikan-result")).toContainText("¥");
-  await expect(page.locator("#warikan-result .result-big")).toBeVisible();
+  await expect(page.locator("#main-amount")).toContainText("¥");
 });
 
-Given("グループ分けを開いている", async ({ page }) => {
-  await page.goto("/app-tools/group-maker/index.html");
-  await expect(page.locator("#split-btn")).toBeVisible();
-});
-
-When("チーム分けを実行する", async ({ page }) => {
-  await page.locator("#split-btn").click();
-});
-
-Then("チームが2つ以上作られる", async ({ page }) => {
-  await expect(page.locator("#groups .group-card").nth(1)).toBeVisible({
-    timeout: 15_000,
-  });
-});
-
-Given("あみだくじを開いている", async ({ page }) => {
-  await page.goto("/app-tools/amidakuji/index.html");
-  await expect(page.locator("#reveal-btn")).toBeVisible();
-});
-
-When("あみだの結果を見る", async ({ page }) => {
-  await page.locator("#reveal-btn").click();
-});
-
-Then("あみだの結果一覧が表示される", async ({ page }) => {
-  await expect(page.locator("#result-list")).toHaveClass(/show/, {
-    timeout: 15_000,
-  });
-  await expect(page.locator("#result-list .result-row").first()).toBeVisible();
-});
-
-Given("順番決めを開いている", async ({ page }) => {
-  await page.goto("/app-tools/order-picker/index.html");
-  await page.evaluate(() => localStorage.removeItem("orderPickerNames"));
+Given("抽選ルーレットを開いている", async ({ page }) => {
+  await page.goto("/app-tools/roulette/index.html");
+  await page.evaluate(() => localStorage.removeItem("rouletteNames"));
   await page.reload();
-  await expect(page.locator("#shuffle-btn")).toBeVisible();
+  await expect(page.locator("#spin-btn")).toBeVisible();
 });
 
 When("候補を {string} だけにする", async ({ page }, name: string) => {
   await page.locator("#names-input").fill(name);
 });
 
-Then("順番を決めるボタンは押せない", async ({ page }) => {
-  await expect(page.locator("#shuffle-btn")).toBeDisabled();
+Then("回すボタンは押せない", async ({ page }) => {
+  await expect(page.locator("#spin-btn")).toBeDisabled();
 });
 
 Then("入力欄に {string} と表示される", async ({ page }, text: string) => {
   await expect(page.locator("#names-count")).toContainText(text);
 });
 
-When("順番を決める", async ({ page }) => {
-  await page.locator("#shuffle-btn").click();
-});
-
-Then("順番の一覧が表示される", async ({ page }) => {
-  await expect(page.locator("#order-list .order-item").first()).toBeVisible({
-    timeout: 15_000,
-  });
-});
-
-When("結果をコピーする", async ({ page }) => {
+When("集金メモをコピーする", async ({ page }) => {
   await page
     .context()
     .grantPermissions(["clipboard-read", "clipboard-write"])

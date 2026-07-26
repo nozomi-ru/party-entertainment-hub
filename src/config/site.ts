@@ -54,47 +54,24 @@ export const pageSeo = {
   tools: {
     title: "余興アプリ一覧 | ことほぎ",
     description:
-      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・抽選・あみだくじ・割り勘などをスマホから今すぐ。",
+      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・抽選・割り勘などをスマホから今すぐ。",
   },
   bingoMachine: {
     title: "ビンゴ数字抽選機 | ことほぎ",
     description:
-      "1〜75の数字をランダムに抽選するビンゴマシン。出た数字を自動記録、大画面表示OK。結婚式・二次会のビンゴ大会に。",
+      "数字の範囲を選んでランダム抽選（1〜30・50・75・100）。出た数字を自動記録、大画面表示OK。結婚式・二次会のビンゴ大会に。",
   },
   roulette: {
     title: "抽選ルーレット | ことほぎ",
     description:
       "名前や景品を入れて回すだけ。当選者をランダムに1人選べる抽選ルーレット。二次会やパーティーのプレゼント抽選に。",
   },
-  amidakuji: {
-    title: "あみだくじメーカー | ことほぎ",
-    description:
-      "参加者と結果を入れるだけで作れるオンラインあみだくじ。役割分担・景品決め・順番決めを線をたどるアニメで発表。",
-  },
-  groupMaker: {
-    title: "グループ分け・チーム分けメーカー | ことほぎ",
-    description:
-      "名前を入れて押すだけで公平にランダムなチーム分け。人数指定でもグループ数指定でもOK。イベントやゲームの班分けに。",
-  },
-  orderPicker: {
-    title: "順番決め・くじ引き | ことほぎ",
-    description:
-      "名前をシャッフルして、発表・スピーチ・出し物の順番をランダムに決定。公平な順番決めをその場で。",
-  },
+
+
   warikan: {
     title: "割り勘計算機 | ことほぎ",
     description:
       "合計金額と人数から一人当たりを自動計算。100円・500円単位で切り上げて端数もキレイに。二次会・飲み会の割り勘に。",
-  },
-  kingGame: {
-    title: "王様ゲーム | ことほぎ",
-    description:
-      "スマホ1台で番号を配り、王様と指令をその場で決定。二次会・パーティー・飲み会の盛り上げに。",
-  },
-  talkTheme: {
-    title: "トークテーマガチャ | ことほぎ",
-    description:
-      "押すだけで会話ネタ・質問がランダムに出るガチャ。初対面のアイスブレイクや沈黙対策に。カテゴリ・自作リスト対応。",
   },
   countdown: {
     title: "カウントダウンタイマー | ことほぎ",
@@ -214,116 +191,6 @@ export const features: FeatureItem[] = [
     href: "/app-tools/wedding-poll/index.html",
   },
   {
-    id: "bingo-machine",
-    title: "ビンゴ数字抽選機",
-    description:
-      "1〜75の数字をランダムに抽選するビンゴマシン。出た数字は自動記録、大画面表示にも対応します。",
-    howto:
-      "幹事が「抽選する」を押すたびに未出の数字が1つ出る → 会場の大画面に映して読み上げ → 履歴は自動保存。",
-    icon: "circle-dot",
-    href: "/app-tools/bingo-machine/index.html",
-  },
-  {
-    id: "roulette",
-    title: "抽選ルーレット",
-    description:
-      "名前や景品を入れて回すだけ。当選者をランダムに1人選べます。プレゼント抽選や指名決めに。",
-    howto:
-      "幹事が候補を1行ずつ入力 → 「回す」で当選を1つ選出 → 「当選を除いて続ける」で連続抽選もできる。",
-    icon: "target",
-    href: "/app-tools/roulette/index.html",
-  },
-  {
-    id: "amidakuji",
-    title: "あみだくじ",
-    description:
-      "参加者と結果を入れるだけのオンラインあみだくじ。役割分担・景品決め・順番決めに使えます。",
-    howto:
-      "幹事が参加者と結果を入力 → 「あみだを作る」で横線をランダム生成 → 「結果を見る」で担当を発表。",
-    icon: "route",
-    href: "/app-tools/amidakuji/index.html",
-  },
-  {
-    id: "group-maker",
-    title: "グループ分け・チーム分け",
-    description:
-      "名前を入れて押すだけで、公平にランダムなチーム分け。人数指定でもグループ数指定でもOKです。",
-    howto:
-      "幹事が参加者を1行ずつ入力 → グループ数か1組の人数を選ぶ → 「チーム分けする」で均等に配分。",
-    icon: "users",
-    href: "/app-tools/group-maker/index.html",
-  },
-  {
-    id: "order-picker",
-    title: "順番決め・くじ引き",
-    description:
-      "発表・スピーチ・出し物の順番を、その場で公平にシャッフルして決められます。",
-    howto:
-      "幹事が候補を1行ずつ入力 → 「順番を決める」でランダムに並び替え → 上から順に発表。",
-    icon: "list-ordered",
-    href: "/app-tools/order-picker/index.html",
-  },
-  {
-    id: "warikan",
-    title: "割り勘計算機",
-    description:
-      "合計金額と人数から一人当たりを自動計算。100円・500円単位で切り上げて端数もキレイに調整します。",
-    howto:
-      "幹事が合計金額・人数・切り上げ単位を入力 → 多く払う人／少なく払う人の内訳と余りを確認。",
-    icon: "calculator",
-    href: "/app-tools/warikan/index.html",
-  },
-  {
-    id: "king-game",
-    title: "王様ゲーム",
-    description:
-      "スマホ1台で番号を配り、王様と指令をその場で決定。二次会・パーティーの盛り上げに。",
-    howto:
-      "司会が人数を入れて番号を配る → スマホを回して各自が自分の番号を確認 → 「王様と指令を決める」で発表。",
-    icon: "crown",
-    href: "/app-tools/king-game/index.html",
-  },
-  {
-    id: "talk-theme",
-    title: "トークテーマガチャ",
-    description:
-      "押すだけで会話ネタ・質問がランダムに出るガチャ。初対面のアイスブレイクや沈黙対策に。",
-    howto:
-      "司会がカテゴリを選ぶ（自作リストも可）→ 「テーマを引く」で1つ表示 → テーブルごとに順番に話す。",
-    icon: "message-circle",
-    href: "/app-tools/talk-theme/index.html",
-  },
-  {
-    id: "countdown",
-    title: "カウントダウンタイマー",
-    description:
-      "残り時間を大きく表示するタイマー。入場・開演・スピーチの持ち時間管理に。全画面表示に対応します。",
-    howto:
-      "司会が時間をプリセットか分秒で設定 → 「スタート」で開始 → 「全画面」で会場の大画面に投影。",
-    icon: "timer",
-    href: "/app-tools/countdown/index.html",
-  },
-  {
-    id: "scoreboard",
-    title: "得点板・スコアボード",
-    description:
-      "チーム対抗ゲームの得点をその場で加算・減算。順位表示と自動保存で進行がスムーズになります。",
-    howto:
-      "司会がチーム名を編集 → ＋／−で得点を動かす → トップは金枠で強調、点数は自動保存。",
-    icon: "trophy",
-    href: "/app-tools/scoreboard/index.html",
-  },
-  {
-    id: "tools-hub",
-    title: "余興アプリ一覧を見る",
-    description:
-      "ここで紹介したアプリをまとめた一覧ページ。当日その場で開いて、必要な余興をすぐに選べます。",
-    howto:
-      "幹事・司会が一覧をブックマーク → 当日は開くだけで、ビンゴ・抽選・進行ツールにすぐアクセス。",
-    icon: "layout-grid",
-    href: "/app-tools/index.html",
-  },
-  {
     id: "mobile",
     title: "スマホ完結の参加",
     description:
@@ -336,6 +203,92 @@ export const features: FeatureItem[] = [
     description:
       "余興のテンポを整え、幹事さんは進行に集中。会場は自然と温かくなります。",
     icon: "sparkles",
+  },
+];
+
+export type ToolItem = {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  href: string;
+  category: "together" | "lottery" | "manage";
+};
+
+export const toolCategories: Record<
+  ToolItem["category"],
+  { label: string; labelEn: string }
+> = {
+  together: { label: "会場でみんなと", labelEn: "Together" },
+  lottery: { label: "抽選・くじ引き", labelEn: "Lottery" },
+  manage: { label: "幹事の準備・進行", labelEn: "Manage" },
+};
+
+export const toolItems: ToolItem[] = [
+  {
+    id: "human-bingo",
+    title: "人間ビンゴ",
+    titleEn: "Bingo",
+    description: "声をかけ合ってマスを埋める交流ビンゴ。アイスブレイクに。",
+    href: "/app-tools/wedding-bingo/index.html",
+    category: "together",
+  },
+  {
+    id: "quiz",
+    title: "新郎新婦クイズ",
+    titleEn: "Quiz",
+    description: "二人のエピソードを4択に。URL共有で別端末でも同じ問題。",
+    href: "/app-tools/wedding-quiz/index.html",
+    category: "together",
+  },
+  {
+    id: "poll",
+    title: "リアルタイムアンケート",
+    titleEn: "Poll",
+    description: "司会がルームを開き、ゲストがスマホから投票・結果表示。",
+    href: "/app-tools/wedding-poll/index.html",
+    category: "together",
+  },
+  {
+    id: "bingo-machine",
+    title: "ビンゴ数字抽選機",
+    titleEn: "Machine",
+    description: "範囲を選んでランダム抽選（1〜30/50/75/100）。自動記録、大画面OK。",
+    href: "/app-tools/bingo-machine/index.html",
+    category: "lottery",
+  },
+  {
+    id: "roulette",
+    title: "抽選ルーレット",
+    titleEn: "Roulette",
+    description: "名前や景品を入れて回すだけ。当選者を1人選びます。",
+    href: "/app-tools/roulette/index.html",
+    category: "lottery",
+  },
+
+  {
+    id: "warikan",
+    title: "割り勘計算機",
+    titleEn: "Warikan",
+    description: "参加者リストと合計から一人当たりを即時計算。集金メモ付き。",
+    href: "/app-tools/warikan/index.html",
+    category: "manage",
+  },
+  {
+    id: "countdown",
+    title: "カウントダウンタイマー",
+    titleEn: "Countdown",
+    description: "残り時間を大きく表示。入場・開演・持ち時間管理に。",
+    href: "/app-tools/countdown/index.html",
+    category: "manage",
+  },
+  {
+    id: "scoreboard",
+    title: "得点板・スコアボード",
+    titleEn: "Score",
+    description: "チーム対抗ゲームの点数をその場で加減算・自動保存。",
+    href: "/app-tools/scoreboard/index.html",
+    category: "manage",
   },
 ];
 

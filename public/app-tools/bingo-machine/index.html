@@ -73,6 +73,9 @@
         }
         .hist-cell.latest { border-color: var(--color-gold); color: var(--color-gold); background: #fff; }
         .shortcut-hint { font-size: 0.72rem; color: #9a948b; margin-top: 10px; }
+        .range-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 1.2em; }
+        .range-btn { font-size: 0.82rem; padding: 5px 14px; }
+        .range-btn.active { border-color: var(--color-gold); color: var(--color-gold); font-weight: 700; }
     </style>
 </head>
 <body>
@@ -90,11 +93,18 @@
         <div class="howto-note" id="app-howto">
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
+                <li>上のボタンで抽選範囲（1〜30 / 50 / 75 / 100）を選びます。</li>
                 <li>「抽選する」を押すと、まだ出ていない数字が1つ出ます（スペースキーでも抽選）。</li>
                 <li>出た数字は下の履歴に記録され、リロードしても残ります。</li>
                 <li>読み間違えたときは「1つ取り消す」で直前の抽選をなかったことにできます。</li>
-                <li>会場の大画面につないで表示すると盛り上がります（表示中は画面を消しません）。</li>
             </ol>
+        </div>
+
+        <div class="range-row" id="range-btns" role="group" aria-label="抽選範囲">
+            <button class="btn-ghost range-btn" data-max="30" type="button">1〜30</button>
+            <button class="btn-ghost range-btn" data-max="50" type="button">1〜50</button>
+            <button class="btn-ghost range-btn active" data-max="75" type="button">1〜75（標準）</button>
+            <button class="btn-ghost range-btn" data-max="100" type="button">1〜100</button>
         </div>
 
         <div class="draw-display">
@@ -126,9 +136,10 @@
         "use strict";
         const P = window.PartyLogic;
         const U = window.PartyUI;
-        const MAX = 75;
-        const KEY = "bingoMachineDrawn";
-        const state = { drawn: [] };
+        const MAX_KEY = "bingoMachineMax";
+        const DRAWN_KEY = "bingoMachineDrawn";
+        const PRESETS = [30, 50, 75, 100];
+        const state = { max: 75, drawn: [] };
         const wakeLock = U.createWakeLock();
         const drawBtn = document.getElementById("draw-btn");
         const undoBtn = document.getElementById("undo-btn");
@@ -136,17 +147,28 @@
         let drawing = false;
         let resetArmed = false;
         let resetTimer = null;
+        let pendingRange = null;
+        let pendingRangeTimer = null;
+
+        function drawnKey() { return DRAWN_KEY + "_" + state.max; }
 
         function load() {
-            try { state.drawn = JSON.parse(localStorage.getItem(KEY)) || []; }
+            try { state.max = parseInt(localStorage.getItem(MAX_KEY), 10) || 75; }
+            catch { state.max = 75; }
+            if (!PRESETS.includes(state.max)) state.max = 75;
+            try { state.drawn = JSON.parse(localStorage.getItem(drawnKey())) || []; }
             catch { state.drawn = []; }
             if (!Array.isArray(state.drawn)) state.drawn = [];
         }
-        function save() { localStorage.setItem(KEY, JSON.stringify(state.drawn)); }
+
+        function save() {
+            localStorage.setItem(MAX_KEY, String(state.max));
+            localStorage.setItem(drawnKey(), JSON.stringify(state.drawn));
+        }
 
         function remaining() {
             const set = new Set(state.drawn);
-            return P.bingoNumbers(MAX).filter((n) => !set.has(n));
+            return P.bingoNumbers(state.max).filter((n) => !set.has(n));
         }
 
         function disarmReset() {
@@ -155,18 +177,26 @@
             resetBtn.textContent = "リセット（最初から）";
         }
 
+        function updateRangeBtns() {
+            document.querySelectorAll(".range-btn").forEach((btn) => {
+                const active = parseInt(btn.dataset.max, 10) === state.max;
+                btn.classList.toggle("active", active);
+            });
+        }
+
         function render(latest) {
             document.getElementById("drawn-count").textContent = String(state.drawn.length);
-            document.getElementById("remaining-count").textContent = String(MAX - state.drawn.length);
+            document.getElementById("max-count").textContent = String(state.max);
+            document.getElementById("remaining-count").textContent = String(state.max - state.drawn.length);
             const numEl = document.getElementById("current-number");
             const letterEl = document.getElementById("current-letter");
             if (latest != null) {
                 numEl.textContent = String(latest);
-                letterEl.textContent = P.bingoLetter(latest);
+                letterEl.textContent = P.bingoLetter(latest) || "–";
             } else if (state.drawn.length) {
                 const last = state.drawn[state.drawn.length - 1];
                 numEl.textContent = String(last);
-                letterEl.textContent = P.bingoLetter(last);
+                letterEl.textContent = P.bingoLetter(last) || "–";
             } else {
                 numEl.textContent = "–";
                 letterEl.textContent = "READY";
@@ -179,6 +209,7 @@
             drawBtn.disabled = drawing || remaining().length === 0;
             undoBtn.disabled = drawing || state.drawn.length === 0;
             document.getElementById("copy-btn").disabled = state.drawn.length === 0;
+            updateRangeBtns();
         }
 
         function draw() {
@@ -217,10 +248,34 @@
             U.toast(removed + " を取り消しました");
         }
 
-        function reset() {
+        function resetDrawn() {
             state.drawn = [];
             save();
             render(null);
+        }
+
+        function clearPendingRange() {
+            pendingRange = null;
+            if (pendingRangeTimer) { clearTimeout(pendingRangeTimer); pendingRangeTimer = null; }
+        }
+
+        function changeRange(newMax) {
+            if (newMax === state.max) return;
+            // 履歴があるときは confirm ではなく「同じ範囲をもう一度」で確定する
+            if (state.drawn.length > 0 && pendingRange !== newMax) {
+                pendingRange = newMax;
+                if (pendingRangeTimer) clearTimeout(pendingRangeTimer);
+                pendingRangeTimer = setTimeout(clearPendingRange, 5000);
+                U.toast("履歴があります。もう一度押すと 1〜" + newMax + " に切り替えます");
+                return;
+            }
+            clearPendingRange();
+            disarmReset();
+            state.max = newMax;
+            state.drawn = [];
+            save();
+            render(null);
+            U.toast("1〜" + newMax + " に切り替えました");
         }
 
         drawBtn.addEventListener("click", draw);
@@ -239,8 +294,13 @@
                 return;
             }
             disarmReset();
-            reset();
+            resetDrawn();
             U.toast("抽選履歴を消しました");
+        });
+        document.getElementById("range-btns").addEventListener("click", (e) => {
+            const btn = e.target.closest(".range-btn");
+            if (!btn) return;
+            changeRange(parseInt(btn.dataset.max, 10));
         });
         U.bindShortcuts({ " ": draw, u: undo });
         U.initFooterYear();

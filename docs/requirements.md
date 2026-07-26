@@ -44,9 +44,9 @@
 | クイズ集計 API | `src/app/api/quiz/`, `src/lib/quiz-store.ts` | design §7.5 | UT-QUIZ-STORE-* |
 | アンケート UI | `public/app-tools/wedding-poll/` | design §8 | SC-POLL-* |
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
-| 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html` | design §8b | UT-PARTY-* / SC-TOOLS-* |
+| 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html`, LP `ToolsGrid.tsx` | design §8b | UT-PARTY-* / SC-TOOLS-* |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
-| 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-06〜10 |
+| 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-08〜10 |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 | （目視） |
 | Cloudflare / KV | `wrangler.jsonc` | design §9 | 手動 L3・preview |
 | URL 圧縮共有 | `public/app-tools/shared/pack.js` | design §5.2 | （将来 UT-PACK） |
@@ -90,10 +90,10 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | BINGO | 人間ビンゴ | 静的 HTML + API | 3×3 交流ビンゴ（任意ルームでビンゴ達成を集計） | `public/app-tools/wedding-bingo/` + `/api/bingo` |
 | QUIZ | 新郎新婦クイズ | 静的 HTML + API | 4択クイズ（任意ルームで得点を集計） | `public/app-tools/wedding-quiz/` + `/api/quiz` |
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
-| HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ | `public/app-tools/index.html` |
-| TOOL-* | 幹事・進行ツール群（10種） | 静的 HTML | 抽選・くじ・進行などの単機能アプリ | `public/app-tools/{slug}/` |
+| HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ（LP にも一覧を掲載） | `public/app-tools/index.html` |
+| TOOL-* | 幹事・進行ツール群（5種） | 静的 HTML | 抽選・進行などの単機能アプリ | `public/app-tools/{slug}/` |
 
-**TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・あみだくじ・グループ分け・順番決め・割り勘計算機・王様ゲーム・トークテーマガチャ・カウントダウンタイマー・得点板。
+**TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・割り勘計算機・カウントダウンタイマー・得点板。
 
 対象外（将来候補。詳細は [roadmap.md](./roadmap.md)）:
 
@@ -182,14 +182,9 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 
 | ID | 名称 | パス（slug） | 概要 |
 |----|------|--------------|------|
-| T-BINGOM | ビンゴ数字抽選機 | `bingo-machine` | 1〜75 をランダム抽選し出目を記録 |
-| T-ROUL | 抽選ルーレット | `roulette` | 名前・景品から当選を1つ選ぶ（回転演出） |
-| T-AMIDA | あみだくじ | `amidakuji` | 参加者と結果からあみだを生成し結果をたどる |
-| T-GROUP | グループ分け | `group-maker` | 人数／グループ数で均等ランダム配分 |
-| T-ORDER | 順番決め | `order-picker` | 候補をシャッフルして順番を決定 |
-| T-WARI | 割り勘計算機 | `warikan` | 合計・人数・切り上げ単位から一人当たり算出 |
-| T-KING | 王様ゲーム | `king-game` | 番号配布・王様・指令を決定 |
-| T-TALK | トークテーマガチャ | `talk-theme` | 会話ネタ／質問をランダム表示 |
+| T-BINGOM | ビンゴ数字抽選機 | `bingo-machine` | 1〜75（または 30/50/100）をランダム抽選し出目を記録 |
+| T-ROUL | 抽選ルーレット | `roulette` | 名前・景品から当選を1つ選ぶ（コンフェッティ演出） |
+| T-WARI | 割り勘計算機 | `warikan` | 参加者リスト＋合計・切り上げ単位から一人当たりを即時算出 |
 | T-CD | カウントダウンタイマー | `countdown` | 残り時間の大画面表示・全画面・アラート |
 | T-SCORE | 得点板 | `scoreboard` | チーム得点の加減算・順位・自動保存 |
 
@@ -207,7 +202,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | T-10 | 参加者名などの入力は、表示時にエスケープして画面が壊れないようにする | 必須 |
 | T-11 | 会場で映すツール（抽選機・タイマー）は表示中に画面を消さず、キーボードでも操作できる | 推奨 |
 
-**補足:** 個人情報や共有同期は扱わない（端末内のみ）。集客の観点から、検索意図の広いツール（ルーレット・あみだくじ・割り勘・グループ分けなど）を優先的に用意している。
+**補足:** 個人情報や共有同期は扱わない（端末内のみ）。ツール一覧は LP（`src/components/landing/ToolsGrid.tsx`）と hub ページ（`public/app-tools/index.html`）の両方から閲覧できる。
 
 **T-07〜T-11 の背景:** 当日の使い手は「片手にマイク、片手にスマホ」の幹事・司会である。モーダルダイアログは進行を止め、押し間違いはやり直しが効かず、会場の大画面はスリープで暗くなる。共通の実装は `public/app-tools/shared/ui.js`（design §5.3b）に置く。
 

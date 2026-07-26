@@ -26,17 +26,36 @@
     <script src="../shared/party-logic.js"></script>
     <script src="../shared/ui.js"></script>
     <style>
-        .wheel-wrap { position: relative; width: 280px; max-width: 82vw; margin: 0.6em auto 1em; }
+        .wheel-wrap {
+            position: relative; width: 280px; max-width: 82vw; margin: 0.6em auto 1em;
+            transition: filter 0.3s;
+        }
+        .wheel-wrap.spinning {
+            filter: drop-shadow(0 0 14px rgba(180,151,90,0.7));
+        }
         #wheel { width: 100%; height: auto; display: block; }
         .wheel-pointer {
             position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent;
             border-top: 20px solid var(--color-text); z-index: 2;
+            transition: border-top-color 0.05s;
+        }
+        .wheel-pointer.tick {
+            border-top-color: var(--color-gold);
+            animation: pointer-tick 0.12s ease-out forwards;
+        }
+        @keyframes pointer-tick {
+            0%   { transform: translateX(-50%) scaleY(1.5); }
+            100% { transform: translateX(-50%) scaleY(1); }
         }
         .wheel-hub {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             width: 44px; height: 44px; border-radius: 50%; background: var(--color-surface);
             border: 2px solid var(--color-gold); z-index: 2;
+            transition: box-shadow 0.3s;
+        }
+        .wheel-wrap.spinning .wheel-hub {
+            box-shadow: 0 0 0 4px rgba(180,151,90,0.3);
         }
         #winner-history { margin-top: 1.2em; text-align: left; }
         #winner-history h2 {
@@ -45,6 +64,28 @@
         }
         #winner-history ol { margin: 0; padding-left: 1.4em; font-size: 0.9rem; font-weight: 600; }
         #winner-history li { margin-bottom: 4px; }
+
+        /* 当選発表 */
+        .result-box.winner-reveal {
+            animation: winner-pop 0.55s cubic-bezier(0.17, 0.89, 0.32, 1.28) both;
+        }
+        @keyframes winner-pop {
+            from { opacity: 0; transform: scale(0.5); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+        .result-big.winner-glow {
+            animation: winner-name-glow 0.7s ease 3;
+        }
+        @keyframes winner-name-glow {
+            0%, 100% { text-shadow: none; }
+            50%      { text-shadow: 0 0 20px rgba(180,151,90,0.9); color: var(--color-gold); }
+        }
+
+        /* コンフェッティ */
+        #confetti-canvas {
+            position: fixed; inset: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; display: none;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +143,7 @@
         </div>
     </main>
 
+    <canvas id="confetti-canvas" aria-hidden="true"></canvas>
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
 
     <script>
@@ -111,16 +153,26 @@
         const KEY = "rouletteNames";
         const MIN = 2;
         const COLORS = ["#B4975A", "#1A1A1A", "#C9B37E", "#4A4A4A", "#E0D3AE", "#7A6A44"];
+        const CONFETTI_COLORS = ["#B4975A", "#FFD700", "#FFFFFF", "#C9B37E", "#E0D3AE", "#4A4A4A", "#F5E6C8"];
         const canvas = document.getElementById("wheel");
         const ctx = canvas.getContext("2d");
         const ta = document.getElementById("names-input");
         const spinBtn = document.getElementById("spin-btn");
         const removeBtn = document.getElementById("remove-btn");
+        const wheelWrap = document.querySelector(".wheel-wrap");
+        const pointer = document.querySelector(".wheel-pointer");
         let angle = 0;
         let spinning = false;
+        let currentWinnerIdx = -1;
         // 抽選後にリストを編集されても取り違えないよう、位置ではなく当選した値を覚える
         let lastWinner = null;
         let history = [];
+
+        /* ── イージング ── */
+        // quintic ease-out: ラスト30%が極端に遅くなり「ドキドキ感」が出る
+        function spinEase(t) {
+            return 1 - Math.pow(1 - t, 5);
+        }
 
         function items() { return U.parseLines(ta.value).items; }
 
@@ -140,6 +192,7 @@
                 history.map((name) => `<li>${U.escapeHtml(name)}</li>`).join("");
         }
 
+        /* ── キャンバス描画 ── */
         function draw() {
             const list = items();
             const size = canvas.width;
@@ -165,27 +218,124 @@
                 ctx.translate(cx, cy);
                 ctx.rotate(start + seg / 2);
                 ctx.textAlign = "right";
-                ctx.fillStyle = i % 2 === 0 ? "#fff" : "#fff";
+                ctx.fillStyle = "#fff";
                 ctx.font = "bold 13px 'Noto Serif JP', serif";
                 const label = name.length > 8 ? name.slice(0, 8) + "…" : name;
                 ctx.fillText(label, r - 12, 5);
                 ctx.restore();
             });
+
+            // 停止後は当選セグメントをゴールドでオーバーレイ
+            if (!spinning && currentWinnerIdx >= 0 && currentWinnerIdx < list.length) {
+                const start = angle + currentWinnerIdx * seg;
+                ctx.save();
+                ctx.shadowColor = "#FFD700";
+                ctx.shadowBlur = 18;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, start + seg);
+                ctx.closePath();
+                ctx.fillStyle = "rgba(255, 215, 0, 0.28)";
+                ctx.fill();
+                ctx.strokeStyle = "#FFD700";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.restore();
+            }
+
             ctx.strokeStyle = "#DCD7D0"; ctx.lineWidth = 2;
             ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
         }
 
+        /* ── ポインターをティック ── */
+        function flashPointer() {
+            pointer.classList.remove("tick");
+            void pointer.offsetWidth; // reflow
+            pointer.classList.add("tick");
+        }
+
+        /* ── コンフェッティ ── */
+        function launchConfetti() {
+            const overlay = document.getElementById("confetti-canvas");
+            overlay.style.display = "block";
+            overlay.width = window.innerWidth;
+            overlay.height = window.innerHeight;
+            const oc = overlay.getContext("2d");
+            const W = overlay.width, H = overlay.height;
+            const particles = Array.from({ length: 90 }, () => ({
+                x: W * 0.2 + Math.random() * W * 0.6,
+                y: -20 - Math.random() * 80,
+                vx: (Math.random() - 0.5) * 6,
+                vy: Math.random() * 4 + 2,
+                w: Math.random() * 12 + 5,
+                h: Math.random() * 7 + 3,
+                rot: Math.random() * Math.PI * 2,
+                rotV: (Math.random() - 0.5) * 0.25,
+                color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+            }));
+            const start = performance.now();
+            const duration = 2800;
+
+            function confettiFrame(now) {
+                const t = Math.min((now - start) / duration, 1);
+                oc.clearRect(0, 0, W, H);
+                const alpha = t > 0.65 ? 1 - (t - 0.65) / 0.35 : 1;
+                particles.forEach((p) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.12;
+                    p.rot += p.rotV;
+                    oc.save();
+                    oc.globalAlpha = alpha;
+                    oc.translate(p.x, p.y);
+                    oc.rotate(p.rot);
+                    oc.fillStyle = p.color;
+                    oc.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    oc.restore();
+                });
+                if (t < 1) {
+                    requestAnimationFrame(confettiFrame);
+                } else {
+                    overlay.style.display = "none";
+                }
+            }
+            requestAnimationFrame(confettiFrame);
+        }
+
+        /* ── 当選確定 ── */
         function finishSpin(list, winnerIdx) {
             spinning = false;
+            currentWinnerIdx = winnerIdx;
             lastWinner = list[winnerIdx];
             history.push(lastWinner);
-            document.getElementById("winner").textContent = lastWinner;
-            document.getElementById("winner-box").style.display = "block";
+            wheelWrap.classList.remove("spinning");
+            draw(); // 当選ハイライト描画
+
+            // 当選ボックスをアニメーションで表示
+            const box = document.getElementById("winner-box");
+            const nameEl = document.getElementById("winner");
+            nameEl.textContent = lastWinner;
+            box.style.display = "block";
+            box.classList.remove("winner-reveal");
+            void box.offsetWidth;
+            box.classList.add("winner-reveal");
+
+            // 名前テキストをグロー
+            nameEl.classList.remove("winner-glow");
+            void nameEl.offsetWidth;
+            nameEl.classList.add("winner-glow");
+
             removeBtn.style.display = "block";
             renderHistory();
             syncInputState();
+
+            // コンフェッティ（reduced motion は除く）
+            if (!U.prefersReducedMotion()) {
+                setTimeout(launchConfetti, 150);
+            }
         }
 
+        /* ── スピン開始 ── */
         function spin() {
             if (spinning) return;
             const list = items();
@@ -197,24 +347,39 @@
             U.clearError("names-error");
             localStorage.setItem(KEY, ta.value);
             spinning = true;
+            currentWinnerIdx = -1;
             spinBtn.disabled = true;
             document.getElementById("winner-box").style.display = "none";
             removeBtn.style.display = "none";
+            wheelWrap.classList.add("spinning");
 
             const seg = (Math.PI * 2) / list.length;
             const winnerIdx = Math.floor(Math.random() * list.length);
             // ポインタ（真上 = -90度）に winner の中央が来るように最終角度を決める
             const target = (-Math.PI / 2) - (winnerIdx * seg + seg / 2);
-            const turns = 5 + Math.floor(Math.random() * 3);
+            const turns = 6 + Math.floor(Math.random() * 4); // 6〜9周
             const finalAngle = target - turns * Math.PI * 2;
             const startAngle = angle;
-            const duration = U.prefersReducedMotion() ? 400 : 4200;
+            const duration = U.prefersReducedMotion() ? 400 : 5000;
             const t0 = performance.now();
+
+            let lastTickSeg = -1;
 
             function frame(now) {
                 const p = Math.min(1, (now - t0) / duration);
-                const eased = 1 - Math.pow(1 - p, 3);
+                const eased = spinEase(p);
                 angle = startAngle + (finalAngle - startAngle) * eased;
+
+                // セグメント境界を跨いだときポインターをティック
+                if (list.length > 1) {
+                    const normalizedAngle = (((-angle - Math.PI / 2) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+                    const curSeg = Math.floor(normalizedAngle / seg) % list.length;
+                    if (curSeg !== lastTickSeg && lastTickSeg !== -1) {
+                        flashPointer();
+                    }
+                    lastTickSeg = curSeg;
+                }
+
                 draw();
                 if (p < 1) {
                     requestAnimationFrame(frame);
@@ -225,6 +390,7 @@
             requestAnimationFrame(frame);
         }
 
+        /* ── 当選を除いて続ける ── */
         function removeWinner() {
             if (lastWinner == null) return;
             const list = items();
@@ -237,6 +403,7 @@
                 localStorage.setItem(KEY, ta.value);
             }
             lastWinner = null;
+            currentWinnerIdx = -1;
             angle = 0;
             document.getElementById("winner-box").style.display = "none";
             removeBtn.style.display = "none";
@@ -245,7 +412,7 @@
         }
 
         ta.addEventListener("input", () => {
-            if (!spinning) draw();
+            if (!spinning) { currentWinnerIdx = -1; draw(); }
             syncInputState();
             localStorage.setItem(KEY, ta.value);
         });

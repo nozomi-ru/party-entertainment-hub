@@ -125,29 +125,27 @@ party-entertainment-hub/
 │   │   ├── page.tsx           # ランディング
 │   │   ├── layout.tsx
 │   │   └── api/poll/[room]/  # アンケート API
-│   ├── components/landing/    # LP セクション
+│   ├── components/landing/    # LP セクション（Hero / Features / ToolsGrid 等）
 │   ├── config/site.ts         # リンク・文言の単一設定源
 │   └── lib/
 │       ├── poll.ts            # ルーム／票の正規化（単体テスト対象）
-│       └── poll-store.ts      # KV / メモリ永続化
+│       ├── poll-store.ts      # KV / メモリ永続化
+│       ├── bingo-store.ts     # ビンゴ集計（KV / メモリ）
+│       └── quiz-store.ts      # クイズ集計（KV / メモリ）
 ├── public/
 │   ├── _headers
 │   └── app-tools/
 │       ├── index.html         # 余興アプリ一覧（ハブ）
 │       ├── shared/pack.js     # URL 圧縮共有
 │       ├── shared/party-logic.js  # 余興共通ロジック（単体テスト対象）
+│       ├── shared/ui.js       # 余興共通 UI 部品
 │       ├── shared/app.css     # 余興共通スタイル
 │       ├── wedding-bingo/     # 人間ビンゴ
 │       ├── wedding-quiz/      # 新郎新婦クイズ
 │       ├── wedding-poll/      # リアルタイムアンケート
-│       ├── bingo-machine/     # ビンゴ数字抽選機
-│       ├── roulette/          # 抽選ルーレット
-│       ├── amidakuji/         # あみだくじ
-│       ├── group-maker/       # グループ分け
-│       ├── order-picker/      # 順番決め
-│       ├── warikan/           # 割り勘計算機
-│       ├── king-game/         # 王様ゲーム
-│       ├── talk-theme/        # トークテーマガチャ
+│       ├── bingo-machine/     # ビンゴ数字抽選機（範囲選択対応）
+│       ├── roulette/          # 抽選ルーレット（コンフェッティ演出）
+│       ├── warikan/           # 割り勘計算機（参加者リスト形式）
 │       ├── countdown/         # カウントダウンタイマー
 │       └── scoreboard/        # 得点板
 ├── wrangler.jsonc             # Workers / KV バインディング
@@ -185,16 +183,24 @@ Git に含めない生成物: `node_modules/`, `.next/`, `.open-next/`, `.wrangl
 
 1. Hero
 2. ProblemSolution
-3. Features（各アプリへのリンク）
-4. Affiliate
-5. Footer
+3. Features（主要3アプリの詳細＋使い方）
+4. ToolsGrid（余興・進行ツールのカテゴリ別一覧）
+5. Affiliate
+6. Footer
 
 コンポーネント実体は `src/components/landing/` 配下です。
 
 ### 4.2 設定
 
-`src/config/site.ts` がコピー・URL の単一ソース（要件 LP-04 / LP-05）。  
-機能リンク例:
+`src/config/site.ts` がコピー・URL の単一ソース（要件 LP-04 / LP-05）。
+
+| キー | 用途 |
+|------|------|
+| `features` | Features セクション（主要3アプリ＋説明項目） |
+| `toolItems` / `toolCategories` | ToolsGrid セクション（カテゴリ別ツール一覧） |
+| `affiliateBanners` | Affiliate セクション（A8 バナー） |
+
+主要アプリのリンク例:
 
 - `/app-tools/wedding-bingo/index.html`
 - `/app-tools/wedding-quiz/index.html`
@@ -239,7 +245,7 @@ TOOL-\*（§8b）で使う乱数系の純粋関数を `public/app-tools/shared/p
 - 主な関数: `mulberry32`（種つき乱数）, `shuffle`, `drawOne`, `drawDifferent`, `splitIntoGroups`, `splitBySize`, `bingoNumbers`, `bingoLetter`, `splitBill`, `generateLadder`, `resolveLadder`, `kingGame`, `rankScores`
 - テスト: `src/lib/party-logic.test.ts`（[test-spec.md §6](./test-spec.md)）
 
-`drawDifferent` は「直前と同じものを引かない」抽選（トークテーマ・王様の指令）、`rankScores` は同点を同順位にする順位付け（得点板）に使う。
+`drawDifferent` は「直前と同じものを引かない」抽選、`rankScores` は同点を同順位にする順位付け（得点板）に使う。
 
 ### 5.3b 共通 UI 部品（ui.js）
 
@@ -455,14 +461,9 @@ TTL: 24 時間（KV `expirationTtl`）
 
 | slug | 主な要素 ID（E2E 目印） | 使うロジック | 固有の操作性 |
 |------|--------------------------|--------------|--------------|
-| `bingo-machine` | `#draw-btn` `#undo-btn` `#current-number` `#drawn-count` `#remaining-count` | `bingoNumbers` `bingoLetter` `drawOne` | 1つ取り消す・残数表示・Wake Lock・スペース/U キー |
-| `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` | Canvas 描画（乱数は当選 index） | 当選を**値**で保持（回転後の編集で取り違えない）・当選履歴 |
-| `amidakuji` | `#names-input` `#reveal-btn` `#result-list` `#amida-error` | `generateLadder` `resolveLadder` | 参加者数と結果数の不一致を警告・人数が変わったときだけ引き直す |
-| `group-maker` | `#names-input` `#split-btn` `#groups` `#names-count` | `splitIntoGroups` `splitBySize` | 分けた後のチーム数を押す前に予告・結果コピー |
-| `order-picker` | `#names-input` `#shuffle-btn` `#order-list` `#names-count` | `shuffle` | 候補が足りなければボタン無効＋理由表示・結果コピー |
-| `warikan` | `#total-input` `#people-input` `#calc-btn` `#warikan-result` | `splitBill` | きっちり割った額の併記・集金メモのコピー |
-| `king-game` | `#count-input` `#deal-btn` `#king-btn` `#reorder-btn` | `kingGame` `drawOne` `drawDifferent` | すべて表示／隠す・指令だけ引き直す |
-| `talk-theme` | `#category-select` `#draw-btn` `#theme-display` | `drawDifferent` | 直前と同じテーマを出さない・直近3件の履歴 |
+| `bingo-machine` | `#draw-btn` `#undo-btn` `#range-btns` `#current-number` `#drawn-count` | `bingoNumbers` `bingoLetter` `drawOne` | 範囲選択（1〜30/50/75/100）・1つ取り消す・Wake Lock・スペース/U キー |
+| `roulette` | `#names-input` `#spin-btn` `#winner` `#winner-history` | Canvas 描画（乱数は当選 index） | 減速演出・当選ハイライト・コンフェッティ・当選を**値**で保持・当選履歴 |
+| `warikan` | `#total-input` `#main-amount` `#people-list` `#copy-btn` | `splitBill` | 参加者リスト＋/−・金額ステッパー・一人当たり大表示・集金メモのコピー |
 | `countdown` | `#minutes-input` `#start-btn` `#timer-display` `#exit-fs-btn` | （タイマー） | Wake Lock・タブ見出しに残り時間・全画面の離脱手段・終了音3回 |
 | `scoreboard` | `#scoreboard` `#add-team-btn` `#undo-btn` | `rankScores` | 同点は同順位・1つ元に戻す・44px のタップ領域 |
 | 一覧 `index.html` | `#tool-filter` `#no-match` | — | キーワードでの絞り込み（`data-keywords` に同義語） |
@@ -471,7 +472,7 @@ TTL: 24 時間（KV `expirationTtl`）
 
 - 画面上部に「使い方の要点」（`#app-howto`）を表示（要件 T-03）
 - 各ページに固有の `title` / `description` / `canonical` / OGP を持ち、**sitemap（`src/app/sitemap.ts`）に登録**（要件 T-04）
-- LP（`src/config/site.ts` の `features`）と一覧ページから導線（要件 T-05）
+- LP（`ToolsGrid`＝`toolItems`）と一覧ページ（`app-tools/index.html`）から導線（要件 T-05）
 - 入力は必要に応じて localStorage 保存（要件 T-06）
 - 共通 UI 部品 `shared/ui.js`（§5.3b）を読み込み、次を守る
   - **`alert` / `confirm` を使わない**（要件 T-07）。不足は `.inline-error`、取り返しのつく形は「2回押し」

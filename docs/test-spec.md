@@ -215,7 +215,7 @@ L4   本番                会場用。上を通ってからだけ
 
 TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM を触らない純粋関数**を検証する。対象は `public/app-tools/shared/ui.js`、テストは `src/lib/app-ui.test.ts`。
 
-トースト・コピー・Wake Lock などブラウザ API に依存する部分はここでは扱わず、E2E（SC-TOOLS-07）で確認する。
+トースト・コピー・Wake Lock などブラウザ API に依存する部分はここでは扱わず、E2E（SC-TOOLS-07：集金メモのコピー）で確認する。
 
 | ID | 対象 | 期待 |
 |----|------|------|
@@ -328,10 +328,8 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-TOOLS-01 | `tools.feature` | 一覧から各ツールへ遷移 | TOOL-* 導線 |
 | SC-TOOLS-02 | `tools.feature` | ビンゴ数字抽選機で1つ抽選（使い方表示あり） | T-BINGOM |
 | SC-TOOLS-03 | `tools.feature` | 割り勘計算機が一人当たりを計算 | T-WARI |
-| SC-TOOLS-04 | `tools.feature` | グループ分けがチームを作る | T-GROUP |
-| SC-TOOLS-05 | `tools.feature` | あみだくじが結果を出す | T-AMIDA |
-| SC-TOOLS-06 | `tools.feature` | 入力不足はダイアログではなく画面上で理由が分かる | 要件 T-07 |
-| SC-TOOLS-07 | `tools.feature` | 決まった順番をコピーして共有できる | 要件 T-08 |
+| SC-TOOLS-06 | `tools.feature` | 入力不足はダイアログではなく画面上で理由が分かる（ルーレット） | 要件 T-07 |
+| SC-TOOLS-07 | `tools.feature` | 集金メモをコピーして共有できる（割り勘） | 要件 T-08 |
 | SC-TOOLS-08 | `tools.feature` | 一覧をキーワードで絞り込める | 要件 T-05 |
 | SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
 | SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |

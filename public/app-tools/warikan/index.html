@@ -26,12 +26,193 @@
     <script src="../shared/party-logic.js"></script>
     <script src="../shared/ui.js"></script>
     <style>
-        .yen { font-family: 'Playfair Display', serif; }
-        #warikan-result { margin-top: 1.4em; }
-        .split-detail { display: flex; flex-direction: column; gap: 8px; margin-top: 1em; text-align: left; }
-        .split-row { display: flex; justify-content: space-between; padding: 10px 14px; border: 1px solid var(--color-border); background: var(--color-panel); font-weight: 700; }
-        .split-row .amount { color: var(--color-gold); }
-        .note-small { font-size: 0.78rem; color: var(--color-text-light); margin-top: 10px; }
+        /* ── 一人当たり大表示 ── */
+        .per-person-card {
+            background: var(--color-surface);
+            border: 2px solid var(--color-gold);
+            padding: 1.2em 1em 1em;
+            text-align: center;
+            margin: 0.8em 0 1.4em;
+        }
+        .per-person-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.2em;
+            color: var(--color-text-light);
+            text-transform: uppercase;
+            font-family: 'Playfair Display', serif;
+        }
+        .per-person-amount {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--color-gold);
+            line-height: 1.15;
+        }
+        .per-person-sub {
+            font-size: 0.78rem;
+            color: var(--color-text-light);
+            margin-top: 2px;
+        }
+
+        /* ── 合計金額ステッパー ── */
+        .total-stepper {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .total-stepper input {
+            grid-column: 2;
+            width: 7em;
+            text-align: center;
+            font-size: 1.3rem;
+            font-family: 'Playfair Display', serif;
+            padding: 10px 6px;
+        }
+        .step-group { display: flex; flex-direction: column; gap: 4px; }
+        .step-group.left { align-items: flex-end; }
+        .step-group.right { align-items: flex-start; }
+        .step-btn {
+            font-size: 0.78rem;
+            padding: 5px 10px;
+            border: 1px solid var(--color-border);
+            background: var(--color-panel);
+            cursor: pointer;
+            color: var(--color-text);
+            white-space: nowrap;
+            transition: border-color 0.15s;
+        }
+        .step-btn:hover { border-color: var(--color-gold); color: var(--color-gold); }
+
+        /* ── 参加者リスト ── */
+        .people-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1.2em 0 0.5em;
+        }
+        .people-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            color: var(--color-gold);
+            text-transform: uppercase;
+        }
+        .people-counter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .counter-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--color-border);
+            background: var(--color-panel);
+            font-size: 1.2rem;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.15s;
+        }
+        .counter-btn:hover { border-color: var(--color-gold); color: var(--color-gold); }
+        .counter-val {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            min-width: 2em;
+            text-align: center;
+        }
+
+        #people-list { list-style: none; margin: 0; padding: 0; }
+        .person-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--color-border);
+            animation: fade-in 0.2s ease;
+        }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+        .person-badge {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--color-gold);
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .person-name-input {
+            flex: 1;
+            border: none;
+            border-bottom: 1px solid transparent;
+            background: transparent;
+            padding: 4px 2px;
+            font-size: 0.95rem;
+            color: var(--color-text);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .person-name-input:focus { border-bottom-color: var(--color-gold); }
+        .person-name-input::placeholder { color: var(--color-text-light); }
+        .person-amount-tag {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--color-gold);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .person-amount-tag.higher { color: var(--color-text); }
+        .person-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-text-light);
+            font-size: 1.1rem;
+            padding: 2px 6px;
+            line-height: 1;
+            flex-shrink: 0;
+            opacity: 0.5;
+            transition: opacity 0.15s;
+        }
+        .person-remove:hover { opacity: 1; color: #c0392b; }
+
+        /* ── 単位選択 ── */
+        .unit-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1.2em;
+        }
+        .unit-row label { font-size: 0.85rem; white-space: nowrap; }
+        .unit-row select { flex: 1; }
+
+        /* ── 集計サマリー ── */
+        .summary-box {
+            margin-top: 1.2em;
+            border-top: 1px solid var(--color-border);
+            padding-top: 1em;
+            font-size: 0.88rem;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row .val { font-weight: 700; }
+        .summary-row .val.accent { color: var(--color-gold); }
+        .note-small { font-size: 0.78rem; color: var(--color-text-light); margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -44,49 +225,95 @@
         <div class="ornament"><svg viewBox="0 0 24 24"><path d="M12 2L22 12L12 22L2 12L12 2Z"/></svg></div>
         <h1 class="app-title">Warikan</h1>
         <p class="app-subtitle">割り勘計算機</p>
-        <p class="app-lead">合計金額と人数から、一人当たりの金額と端数の負担をすぐ計算します。</p>
+        <p class="app-lead">合計と人数を入れると、一人当たりがすぐ出ます。名前を付けて集金メモも作れます。</p>
 
         <div class="howto-note" id="app-howto">
             <strong>使い方の要点（幹事・司会向け）</strong>
             <ol>
-                <li>合計金額と人数を入力します（入力するそばから計算されます）。</li>
-                <li>集めやすい「切り上げ単位」（100円など）を選びます。</li>
-                <li>多く払う人／少なく払う人の内訳と、余り（幹事プール）が出ます。</li>
+                <li>合計金額を入力（±ボタンでも調整できます）。</li>
+                <li>＋／−で参加者を増減し、必要なら名前を入力します。</li>
+                <li>切り上げ単位を選ぶと、集めやすい金額に整えます。</li>
                 <li>「集金メモをコピー」でグループチャットにそのまま貼れます。</li>
             </ol>
         </div>
 
+        <!-- 一人当たり大表示 -->
+        <div class="per-person-card">
+            <p class="per-person-label">一人当たり（最大）</p>
+            <p class="per-person-amount" id="main-amount">¥–</p>
+            <p class="per-person-sub" id="main-sub"></p>
+        </div>
+
+        <!-- 合計金額 -->
         <div class="field">
             <label for="total-input">合計金額（円）</label>
-            <input type="number" id="total-input" min="0" step="100" value="30000" inputmode="numeric">
+            <div class="total-stepper">
+                <div class="step-group left">
+                    <button class="step-btn" data-step="-10000">－10,000</button>
+                    <button class="step-btn" data-step="-1000">－1,000</button>
+                    <button class="step-btn" data-step="-100">－100</button>
+                </div>
+                <input type="number" id="total-input" min="0" step="100" value="30000" inputmode="numeric">
+                <div class="step-group right">
+                    <button class="step-btn" data-step="10000">＋10,000</button>
+                    <button class="step-btn" data-step="1000">＋1,000</button>
+                    <button class="step-btn" data-step="100">＋100</button>
+                </div>
+            </div>
             <p class="count-hint" id="exact-hint"></p>
         </div>
-        <div class="row">
-            <div class="field">
-                <label for="people-input">人数</label>
-                <input type="number" id="people-input" min="1" value="7" inputmode="numeric">
+
+        <!-- 参加者リスト -->
+        <div class="people-header">
+            <span class="people-title">Participants</span>
+            <div class="people-counter">
+                <button class="counter-btn" id="dec-btn" aria-label="参加者を1人減らす">－</button>
+                <span class="counter-val" id="counter-val">7</span>
+                <button class="counter-btn" id="inc-btn" aria-label="参加者を1人増やす">＋</button>
             </div>
-            <div class="field">
-                <label for="unit-select">切り上げ単位</label>
-                <select id="unit-select">
-                    <option value="100">100円</option>
-                    <option value="500">500円</option>
-                    <option value="1000">1000円</option>
-                    <option value="1">1円（きっちり）</option>
-                </select>
-            </div>
+        </div>
+        <ul id="people-list" aria-label="参加者リスト"></ul>
+
+        <!-- 切り上げ単位 -->
+        <div class="unit-row">
+            <label for="unit-select">切り上げ単位</label>
+            <select id="unit-select">
+                <option value="100">100円</option>
+                <option value="500">500円</option>
+                <option value="1000">1000円</option>
+                <option value="1">1円（きっちり）</option>
+            </select>
         </div>
 
         <p class="inline-error" id="input-error" role="alert" hidden></p>
 
-        <button class="btn-gold" id="calc-btn" type="button">計算する</button>
+        <!-- サマリー -->
+        <div class="summary-box" id="summary-box" hidden>
+            <div class="summary-row">
+                <span>集金合計</span>
+                <span class="val accent" id="s-collected"></span>
+            </div>
+            <div class="summary-row">
+                <span>お店の合計</span>
+                <span class="val" id="s-total"></span>
+            </div>
+            <div class="summary-row">
+                <span>余り（幹事プール）</span>
+                <span class="val accent" id="s-change"></span>
+            </div>
+            <p class="note-small" id="s-note"></p>
+        </div>
 
-        <div id="warikan-result" aria-live="polite"></div>
-
-        <div class="result-actions">
+        <div class="result-actions" style="margin-top:1.2em;">
             <button class="btn-ghost" id="copy-btn" type="button">集金メモをコピー</button>
         </div>
     </main>
+
+    <footer style="margin-top:2.5em; padding:1.5em 1em 2.5em; text-align:center;">
+        <a href="/" style="font-family:'Playfair Display',serif; font-size:0.78em; letter-spacing:0.22em; color:#B4975A; text-decoration:none; text-transform:uppercase;">
+            ことほぎ について
+        </a>
+    </footer>
 
     <p class="app-footer">© <span id="year"></span> ことほぎ / <a href="/">Kotohogi</a></p>
 
@@ -94,75 +321,212 @@
         "use strict";
         const P = window.PartyLogic;
         const U = window.PartyUI;
+        const KEY_TOTAL = "warikanTotal";
+        const KEY_PEOPLE = "warikanPeople";
+        const KEY_UNIT = "warikanUnit";
+        const MIN_PEOPLE = 2;
+        const MAX_PEOPLE = 30;
+
         const yen = (n) => "¥" + n.toLocaleString("ja-JP");
+
+        const totalInput = document.getElementById("total-input");
+        const unitSelect = document.getElementById("unit-select");
+        const counterVal = document.getElementById("counter-val");
+        const decBtn = document.getElementById("dec-btn");
+        const incBtn = document.getElementById("inc-btn");
+        const peopleList = document.getElementById("people-list");
+        const summaryBox = document.getElementById("summary-box");
+
+        // 参加者名リスト（文字列配列）
+        let names = [];
         let last = null;
 
+        /* ── 参加者リスト管理 ── */
+        function peopleCount() { return names.length; }
+
+        function addPerson() {
+            if (names.length >= MAX_PEOPLE) return;
+            names.push("");
+            renderList();
+            calc();
+        }
+
+        function removePerson(idx) {
+            if (names.length <= MIN_PEOPLE) return;
+            names.splice(idx, 1);
+            renderList();
+            calc();
+        }
+
+        function setCount(n) {
+            n = Math.max(MIN_PEOPLE, Math.min(MAX_PEOPLE, n));
+            while (names.length < n) names.push("");
+            while (names.length > n) names.pop();
+            renderList();
+            calc();
+        }
+
+        function renderList() {
+            const total = parseInt(totalInput.value, 10) || 0;
+            const unit = parseInt(unitSelect.value, 10) || 1;
+            const r = total > 0 && names.length >= 1
+                ? P.splitBill(total, names.length, unit)
+                : null;
+
+            counterVal.textContent = String(names.length);
+            decBtn.disabled = names.length <= MIN_PEOPLE;
+            incBtn.disabled = names.length >= MAX_PEOPLE;
+
+            peopleList.innerHTML = names.map((name, i) => {
+                let amountTag = "";
+                if (r) {
+                    const isHigher = i < r.payingUp;
+                    const amt = isHigher ? r.baseUp : r.base;
+                    amountTag = `<span class="person-amount-tag${isHigher ? "" : " higher"}">${yen(amt)}</span>`;
+                }
+                return `
+                <li class="person-item" data-idx="${i}">
+                    <div class="person-badge">${i + 1}</div>
+                    <input class="person-name-input" type="text" placeholder="名前（任意）"
+                        value="${U.escapeHtml(name)}" maxlength="20"
+                        aria-label="${i + 1}番目の参加者の名前">
+                    ${amountTag}
+                    <button class="person-remove" aria-label="この参加者を除く" data-remove="${i}">✕</button>
+                </li>`;
+            }).join("");
+
+            // イベント付与
+            peopleList.querySelectorAll(".person-name-input").forEach((inp) => {
+                inp.addEventListener("input", (e) => {
+                    const idx = parseInt(inp.closest("[data-idx]").dataset.idx, 10);
+                    names[idx] = inp.value;
+                    save();
+                });
+            });
+            peopleList.querySelectorAll("[data-remove]").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    removePerson(parseInt(btn.dataset.remove, 10));
+                });
+            });
+        }
+
+        /* ── 計算 ── */
         function calc() {
-            const total = parseInt(document.getElementById("total-input").value, 10) || 0;
-            const rawPeople = parseInt(document.getElementById("people-input").value, 10);
-            const people = Number.isFinite(rawPeople) ? rawPeople : 1;
-            const unit = parseInt(document.getElementById("unit-select").value, 10) || 1;
+            const total = parseInt(totalInput.value, 10) || 0;
+            const people = names.length;
+            const unit = parseInt(unitSelect.value, 10) || 1;
 
             if (total <= 0) {
                 U.setError("input-error", "合計金額を1円以上で入力してください。");
-            } else if (people < 1) {
-                U.setError("input-error", "人数は1名以上で入力してください。");
-            } else {
-                U.clearError("input-error");
+                document.getElementById("main-amount").textContent = "¥–";
+                document.getElementById("main-sub").textContent = "";
+                summaryBox.hidden = true;
+                last = null;
+                return;
             }
-            U.setHint("exact-hint", total > 0 && people >= 1
-                ? "きっちり割ると 1人 ¥" + (total / Math.max(1, people)).toFixed(1)
-                : "");
+            U.clearError("input-error");
+
+            const exactPer = total / people;
+            U.setHint("exact-hint", "きっちり割ると 1人 ¥" + exactPer.toFixed(1));
 
             const r = P.splitBill(total, people, unit);
             last = r;
-            const box = document.getElementById("warikan-result");
+            last.names = [...names];
 
-            let rows = "";
+            // 一人当たり大表示
+            document.getElementById("main-amount").textContent = yen(r.baseUp);
             if (r.cheaperCount > 0 && r.base !== r.baseUp) {
-                rows += `<div class="split-row"><span>${r.payingUp}名</span><span class="amount">${yen(r.baseUp)} / 人</span></div>`;
-                rows += `<div class="split-row"><span>${r.cheaperCount}名</span><span class="amount">${yen(r.base)} / 人</span></div>`;
+                document.getElementById("main-sub").textContent =
+                    r.payingUp + "名が " + yen(r.baseUp) + " ／ " + r.cheaperCount + "名が " + yen(r.base);
             } else {
-                rows += `<div class="split-row"><span>${r.people}名 全員</span><span class="amount">${yen(r.baseUp)} / 人</span></div>`;
+                document.getElementById("main-sub").textContent = people + "名 全員";
             }
 
-            box.innerHTML = `
-                <div class="result-box">
-                    <p class="tag">一人当たり（多い人）</p>
-                    <p class="result-big yen">${yen(r.baseUp)}</p>
-                </div>
-                <div class="split-detail">
-                    ${rows}
-                    <div class="split-row"><span>集金合計</span><span class="amount">${yen(r.totalCollected)}</span></div>
-                    <div class="split-row"><span>お店の合計</span><span>${yen(r.total)}</span></div>
-                    <div class="split-row"><span>余り（プール）</span><span class="amount">${yen(r.change)}</span></div>
-                </div>
-                <p class="note-small">${r.change > 0
-                    ? "余りは幹事プールやチップ、二次会の足しにできます。"
-                    : "ぴったり割り切れました。"}</p>
-            `;
+            // サマリー
+            summaryBox.hidden = false;
+            document.getElementById("s-collected").textContent = yen(r.totalCollected);
+            document.getElementById("s-total").textContent = yen(r.total);
+            document.getElementById("s-change").textContent = yen(r.change);
+            document.getElementById("s-note").textContent = r.change > 0
+                ? "余りは幹事プールやチップ、次の機会の足しにできます。"
+                : "ぴったり割り切れました。";
+
+            // リストの金額表示を更新（名前を変えないよう name input の値は触らない）
+            peopleList.querySelectorAll(".person-amount-tag").forEach((el, i) => {
+                const isHigher = i < r.payingUp;
+                el.textContent = yen(isHigher ? r.baseUp : r.base);
+                el.className = "person-amount-tag" + (isHigher ? "" : " higher");
+            });
+            if (peopleList.querySelectorAll(".person-amount-tag").length === 0) {
+                renderList();
+            }
+
+            save();
         }
 
+        /* ── 集金メモ ── */
         function memoText() {
             if (!last) return "";
-            const lines = ["【割り勘】お店の合計 " + yen(last.total) + " / " + last.people + "名"];
-            if (last.cheaperCount > 0 && last.base !== last.baseUp) {
-                lines.push(last.payingUp + "名: " + yen(last.baseUp) + " / 人");
-                lines.push(last.cheaperCount + "名: " + yen(last.base) + " / 人");
-            } else {
-                lines.push("全員: " + yen(last.baseUp) + " / 人");
+            const r = last;
+            const ns = last.names || [];
+            const displayName = (i) => ns[i] && ns[i].trim() ? ns[i].trim() + "さん" : (i + 1) + "番";
+            const lines = ["【割り勘】合計 " + yen(r.total) + " / " + r.people + "名"];
+            for (let i = 0; i < r.people; i++) {
+                const isHigher = i < r.payingUp;
+                lines.push(displayName(i) + ": " + yen(isHigher ? r.baseUp : r.base));
             }
-            lines.push("集金合計 " + yen(last.totalCollected) + "（余り " + yen(last.change) + "）");
+            lines.push("集金合計 " + yen(r.totalCollected) + "（余り " + yen(r.change) + "）");
             return lines.join("\n");
         }
 
-        ["total-input", "people-input", "unit-select"].forEach((id) =>
-            document.getElementById(id).addEventListener("input", calc));
-        document.getElementById("calc-btn").addEventListener("click", calc);
+        /* ── 保存 ── */
+        function save() {
+            try {
+                localStorage.setItem(KEY_TOTAL, totalInput.value);
+                localStorage.setItem(KEY_PEOPLE, JSON.stringify(names));
+                localStorage.setItem(KEY_UNIT, unitSelect.value);
+            } catch {}
+        }
+
+        function load() {
+            const savedTotal = localStorage.getItem(KEY_TOTAL);
+            if (savedTotal) totalInput.value = savedTotal;
+            const savedUnit = localStorage.getItem(KEY_UNIT);
+            if (savedUnit) unitSelect.value = savedUnit;
+            try {
+                const savedPeople = JSON.parse(localStorage.getItem(KEY_PEOPLE));
+                if (Array.isArray(savedPeople) && savedPeople.length >= MIN_PEOPLE) {
+                    names = savedPeople.slice(0, MAX_PEOPLE);
+                    return;
+                }
+            } catch {}
+            // デフォルト7名
+            names = Array(7).fill("");
+        }
+
+        /* ── イベント ── */
+        totalInput.addEventListener("input", () => { calc(); });
+
+        document.querySelectorAll(".step-btn").forEach((btn) => {
+            btn.addEventListener("click", () => {
+                const step = parseInt(btn.dataset.step, 10);
+                const current = parseInt(totalInput.value, 10) || 0;
+                totalInput.value = Math.max(0, current + step);
+                calc();
+            });
+        });
+
+        decBtn.addEventListener("click", () => setCount(names.length - 1));
+        incBtn.addEventListener("click", () => setCount(names.length + 1));
+        unitSelect.addEventListener("change", () => { calc(); renderList(); });
+
         document.getElementById("copy-btn").addEventListener("click", () => {
             U.copyWithToast(memoText(), "集金メモをコピーしました");
         });
+
         U.initFooterYear();
+        load();
+        renderList();
         calc();
     </script>
     <script src="/cf-web-analytics.js" defer></script>
