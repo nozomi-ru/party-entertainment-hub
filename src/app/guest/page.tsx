@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { RoleShell } from "@/components/role/RoleShell";
 import { GuestSessionPanel } from "@/components/session/GuestSessionPanel";
-import { LIVE_GAMES } from "@/lib/live/catalog";
+import { LIVE_GAMES, liveRolePath } from "@/lib/live/catalog";
 
 export const metadata: Metadata = {
   title: "ゲスト",
@@ -40,7 +40,7 @@ export default function GuestPage() {
         {LIVE_GAMES.map((item) => (
           <li key={item.id}>
             <Link
-              href={`/live/${item.id}/guest`}
+              href={liveRolePath(item.id, "guest")}
               className="block border-b border-[var(--line)] py-3 text-lg text-[var(--ink)] transition-colors hover:text-[var(--champagne-deep)]"
             >
               {item.title}

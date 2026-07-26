@@ -51,7 +51,7 @@
 | 祝福メッセージ | `public/app-tools/wishboard/`, `src/app/api/wish/`, `src/lib/wish*.ts` | §8c |
 | 幹事・進行ツール群 | `public/app-tools/{slug}/`（一覧は LP `#tools`） | §8b |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | §5.3 |
-| 余興共通スタイル | `public/app-tools/shared/app.css` | §5.4 |
+| 余興共通スタイル | `public/app-tools/shared/app.css` | §5.4 · [ui-design.md](./ui-design.md) |
 | URL 圧縮 | `public/app-tools/shared/pack.js` | §5.2 |
 | Workers / KV 設定 | `wrangler.jsonc` | §9.1 |
 | OpenNext | `open-next.config.ts`, `next.config.ts` | §9 |
@@ -338,6 +338,8 @@ TOOL-\* の**操作感**にあたる部分を `public/app-tools/shared/ui.js` �
 ### 5.4 共通スタイル（app.css）
 
 余興アプリの見た目（紙×金トーン・カード・ボタン・モーダル・使い方ノート）は `public/app-tools/shared/app.css` に集約し、各アプリは固有分のみ個別 `<style>` で足す。favicon も `shared/favicon.svg` を共有。
+
+**見た目の方針の正本は [ui-design.md](./ui-design.md)。** トークン・レイアウト・禁止事項はそちらを更新してから CSS を揃える。
 
 操作性に関わる共通ルールもここに置く。ビンゴ・クイズ・アンケートを含む **`app.css` を読む全ページに一律で効く**。
 

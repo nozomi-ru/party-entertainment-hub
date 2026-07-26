@@ -4,56 +4,6 @@ import type { LiveState } from "@/lib/live/types";
 export function createDefaultState(game: LiveGameId, room: string): LiveState {
   const updatedAt = Date.now();
   switch (game) {
-    case "buzz":
-      return {
-        game,
-        room,
-        phase: "lobby",
-        question: "新郎の趣味は？",
-        answer: "釣り",
-        round: 1,
-        updatedAt,
-      };
-    case "digibingo":
-      return {
-        game,
-        room,
-        phase: "lobby",
-        drawn: [],
-        max: 75,
-        updatedAt,
-      };
-    case "either":
-      return {
-        game,
-        room,
-        phase: "lobby",
-        question: "どっちが好き？",
-        left: "甘いもの",
-        right: "しょっぱいもの",
-        updatedAt,
-      };
-    case "dress":
-      return {
-        game,
-        room,
-        phase: "lobby",
-        colors: ["アイボリー", "シャンパン", "ローズ", "ネイビー"],
-        correctIndex: null,
-        updatedAt,
-      };
-    case "treasure":
-      return {
-        game,
-        room,
-        phase: "lobby",
-        spots: [
-          { id: "A", label: "受付", points: 10 },
-          { id: "B", label: "高砂", points: 20 },
-          { id: "C", label: "ケーキ", points: 15 },
-        ],
-        updatedAt,
-      };
     case "grade":
       return {
         game,
@@ -77,14 +27,6 @@ export function createDefaultState(game: LiveGameId, room: string): LiveState {
           },
         ],
         index: 0,
-        updatedAt,
-      };
-    case "request":
-      return {
-        game,
-        room,
-        phase: "open",
-        title: "やってほしいこと",
         updatedAt,
       };
     case "graph":

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RoleShell } from "@/components/role/RoleShell";
-import { LIVE_GAMES } from "@/lib/live/catalog";
+import { LIVE_GAMES, liveRolePath } from "@/lib/live/catalog";
 
 export const metadata: Metadata = {
   title: "スクリーン",
@@ -20,7 +20,7 @@ export default function ScreenPage() {
         {LIVE_GAMES.map((item) => (
           <li key={item.id}>
             <Link
-              href={`/live/${item.id}/screen`}
+              href={liveRolePath(item.id, "screen")}
               className="block text-xl text-[var(--ink)] transition-colors hover:text-[var(--champagne-deep)]"
             >
               {item.title}

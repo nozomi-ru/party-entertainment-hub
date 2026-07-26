@@ -506,107 +506,43 @@ Then("抽選済みが0個に戻る", async ({ page }) => {
   await expect(page.locator("#current-number")).not.toHaveText(/\d/);
 });
 
-// --- ライブ余興（SC-LIVE-*） ---
-
-When("ライブAdminの {string} を開く", async ({ page }, game: string) => {
-  await page.goto(`/live/${game}/admin`);
-});
-
-When("ルームを作成して入室する", async ({ page, world }) => {
-  await page.getByTestId("create-room").click();
-  await expect(page.getByTestId("room-code")).toBeVisible({ timeout: 15_000 });
-  const code = (await page.getByTestId("room-code").innerText()).trim();
-  world.room = code;
-});
-
-When("Adminが投票を開始する", async ({ page }) => {
-  await page.getByTestId("either-open").click();
-});
+// --- ドレス色当て（SC-DRESS-*） ---
 
 When(
-  "ゲストがそのルームの {string} を開いて左に投票する",
-  async ({ browser, world }, game: string) => {
-    const guest = await browser.newPage();
-    await guest.goto(`/live/${game}/guest?room=${world.room}`);
-    await guest.getByTestId("name-input").fill("E2Eゲスト");
-    const enter = guest.getByTestId("enter-room");
-    if (await enter.isVisible().catch(() => false)) {
-      await enter.click();
-    }
-    await expect(guest.getByTestId("either-left")).toBeVisible({
-      timeout: 15_000,
-    });
-    await guest.getByTestId("either-left").click();
-    await guest.close();
+  "ドレスAdminを {string} 正解で開く",
+  async ({ page }, ans: string) => {
+    await page.goto(`/dress/admin?ans=${ans}`);
   },
 );
 
-When("Adminが結果を表示する", async ({ page }) => {
-  await page.getByTestId("either-results").click();
-});
-
-Then("票の合計が1以上である", async ({ page }) => {
-  await expect(page.getByText(/票\s*[1-9]/)).toBeVisible({ timeout: 15_000 });
-});
-
-When("Adminが早押しを開始する", async ({ page }) => {
-  await page.getByTestId("buzz-arm").click();
-  await expect(page.getByTestId("buzz-phase")).toContainText("armed");
-});
-
-When(
-  "ゲストがそのルームの {string} で早押しする",
-  async ({ browser, world }, game: string) => {
-    const guest = await browser.newPage();
-    await guest.goto(`/live/${game}/guest?room=${world.room}`);
-    await guest.getByTestId("name-input").fill("早押し太郎");
-    const enter = guest.getByTestId("enter-room");
-    if (await enter.isVisible().catch(() => false)) {
-      await enter.click();
-    }
-    await expect(guest.getByTestId("buzz-button")).toBeEnabled({
-      timeout: 15_000,
-    });
-    await guest.getByTestId("buzz-button").click();
-    await guest.close();
-  },
-);
-
-Then("スクリーンに最速ゲストが表示される", async ({ page, world }) => {
-  await page.goto(`/live/buzz/screen?room=${world.room}`);
-  const enter = page.getByTestId("enter-room");
-  if (await enter.isVisible().catch(() => false)) {
-    await enter.click();
-  }
-  await expect(page.getByTestId("buzz-winner")).toContainText("早押し太郎", {
+When("AdminがVOTINGを押す", async ({ page }) => {
+  await page.getByTestId("dress-voting").click();
+  await expect(page.getByTestId("dress-admin-status")).toContainText("voting", {
     timeout: 15_000,
   });
 });
 
 When(
-  "ゲストがそのルームの {string} に {string} を投稿する",
-  async ({ browser, world }, game: string, text: string) => {
+  "ゲストがドレスで {string} に投票する",
+  async ({ browser }, color: string) => {
     const guest = await browser.newPage();
-    await guest.goto(`/live/${game}/guest?room=${world.room}`);
-    await guest.getByTestId("name-input").fill("投稿者");
-    const enter = guest.getByTestId("enter-room");
-    if (await enter.isVisible().catch(() => false)) {
-      await enter.click();
-    }
-    await guest.getByTestId("request-input").fill(text);
-    await guest.getByTestId("request-post").click();
-    await expect(guest.getByTestId("request-list")).toContainText(text, {
+    await guest.goto("/dress/guest");
+    await guest.getByTestId("dress-name").fill("E2Eゲスト");
+    await expect(guest.getByTestId(`dress-color-${color}`)).toBeVisible({
       timeout: 15_000,
     });
+    await guest.getByTestId(`dress-color-${color}`).click();
+    await expect(guest.getByTestId(`dress-color-${color}`)).toBeVisible();
     await guest.close();
   },
 );
 
-Then(
-  "リクエスト一覧に {string} と表示される",
-  async ({ page }, text: string) => {
-    await expect(page.getByTestId("request-rank")).toContainText(text, {
-      timeout: 15_000,
-    });
-  },
-);
+Then("ドレスの得票が1以上である", async ({ page }) => {
+  await expect
+    .poll(async () => {
+      const res = await page.request.get("/api/dress/state");
+      const data = (await res.json()) as { total?: number };
+      return data.total ?? 0;
+    })
+    .toBeGreaterThanOrEqual(1);
+});

@@ -9,74 +9,47 @@ describe("live store + handlers", () => {
   });
 
   it("UT-LIVE-STORE-01: Admin 作成後に GET 相当で読める", async () => {
-    await handleLiveAdmin("either", "E001", { op: "upsert" });
-    const snap = await getLiveSnapshot("either", "E001");
-    expect(snap?.state.game).toBe("either");
-    expect(snap?.state.room).toBe("E001");
+    await handleLiveAdmin("grade", "G001", { op: "upsert" });
+    const snap = await getLiveSnapshot("grade", "G001");
+    expect(snap?.state.game).toBe("grade");
+    expect(snap?.state.room).toBe("G001");
   });
 
-  it("UT-LIVE-STORE-02: 投票は個別キーで集計される", async () => {
-    await handleLiveAdmin("either", "E002", { op: "openVote" });
-    await handleLiveGuest("either", "E002", {
-      guestId: "g1",
-      name: "花子",
-      kind: "vote",
-      payload: { side: "left" },
-    });
-    await handleLiveGuest("either", "E002", {
-      guestId: "g2",
-      name: "太郎",
-      kind: "vote",
-      payload: { side: "right" },
-    });
-    const snap = await getLiveSnapshot("either", "E002");
-    const summary = snap?.summary as { left: number; right: number; total: number };
-    expect(summary.total).toBe(2);
-    expect(summary.left).toBe(1);
-    expect(summary.right).toBe(1);
-  });
-
-  it("UT-LIVE-STORE-03: 早押しは armed のときだけ受付", async () => {
-    await handleLiveAdmin("buzz", "B001", { op: "upsert" });
+  it("UT-LIVE-STORE-04: 格付けは answering のときだけ受付", async () => {
+    await handleLiveAdmin("grade", "G001", { op: "upsert" });
     await expect(
-      handleLiveGuest("buzz", "B001", {
+      handleLiveGuest("grade", "G001", {
         guestId: "g1",
-        kind: "buzz",
-        payload: {},
+        kind: "answer",
+        payload: { questionIndex: 0, choiceIndex: 0 },
       }),
-    ).rejects.toThrow(/armed/i);
+    ).rejects.toThrow(/not answering/i);
 
-    await handleLiveAdmin("buzz", "B001", { op: "arm" });
-    await handleLiveGuest("buzz", "B001", {
+    await handleLiveAdmin("grade", "G001", { op: "start" });
+    await handleLiveGuest("grade", "G001", {
       guestId: "g1",
-      name: "速い",
-      kind: "buzz",
-      payload: {},
+      name: "満点",
+      kind: "answer",
+      payload: { questionIndex: 0, choiceIndex: 0 },
     });
-    const snap = await getLiveSnapshot("buzz", "B001");
-    const summary = snap?.summary as { winner: { name: string } | null };
-    expect(summary.winner?.name).toBe("速い");
+    const snap = await getLiveSnapshot("grade", "G001");
+    const summary = snap?.summary as {
+      ranking: { name: string; correct: number }[];
+    };
+    expect(summary.ranking[0]?.name).toBe("満点");
+    expect(summary.ranking[0]?.correct).toBe(1);
   });
 
-  it("UT-LIVE-STORE-04: リクエスト投稿といいね", async () => {
-    await handleLiveAdmin("request", "R001", { op: "open" });
-    const posted = await handleLiveGuest("request", "R001", {
+  it("UT-LIVE-STORE-05: 相関図リンクを登録できる", async () => {
+    await handleLiveAdmin("graph", "R001", { op: "collect" });
+    await handleLiveGuest("graph", "R001", {
       guestId: "g1",
-      name: "投稿者",
-      kind: "post",
-      payload: { text: "余興して" },
+      name: "次郎",
+      kind: "link",
+      payload: { name: "次郎", target: "bride", relation: "友人" },
     });
-    const postId = (posted.summary as { ranking: { id: string }[] }).ranking[0]
-      .id;
-    await handleLiveGuest("request", "R001", {
-      guestId: "g2",
-      kind: "like",
-      payload: { postId },
-    });
-    const snap = await getLiveSnapshot("request", "R001");
-    const ranking = (snap?.summary as { ranking: { likes: number; text: string }[] })
-      .ranking;
-    expect(ranking[0].text).toBe("余興して");
-    expect(ranking[0].likes).toBe(1);
+    const snap = await getLiveSnapshot("graph", "R001");
+    const summary = snap?.summary as { nodes: { name: string }[] };
+    expect(summary.nodes.some((n) => n.name === "次郎")).toBe(true);
   });
 });

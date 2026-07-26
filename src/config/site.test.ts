@@ -6,7 +6,7 @@ import {
   siteConfig,
   toolItems,
 } from "@/config/site";
-import { LIVE_GAMES } from "@/lib/live/catalog";
+import { LIVE_GAMES, liveRolePath } from "@/lib/live/catalog";
 
 describe("site config（LP コピー）", () => {
   it("UT-SITE-01: タグラインが実態に合った文言である", () => {
@@ -65,7 +65,7 @@ describe("site config（LP コピー）", () => {
     for (const game of LIVE_GAMES) {
       const item = liveItems.find((t) => t.id === `live-${game.id}`);
       expect(item).toBeDefined();
-      expect(item!.href).toBe(`/live/${game.id}/admin`);
+      expect(item!.href).toBe(liveRolePath(game.id, "admin"));
       expect(item!.title).toBe(game.title);
     }
   });

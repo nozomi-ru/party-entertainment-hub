@@ -14,6 +14,7 @@
 |------------------|----------|
 | 何を作るプロダクトか（機能・受け入れ） | [requirements.md](./requirements.md) |
 | どう実装・構成しているか（API・KV・画面） | [design.md](./design.md) |
+| 余興・ライブ画面の見た目（紙×金） | [ui-design.md](./ui-design.md) |
 | 自動テストで何を合格とするか | [test-spec.md](./test-spec.md) |
 | 利用者ストーリー（SC-*）の合格条件 | [scenario-spec.md](./scenario-spec.md) |
 | テストがいつ走るか・コマンド・pre-push | [ops/testing.md](./ops/testing.md) |
@@ -24,10 +25,11 @@
 | まだ着手しないアプリ案 | [ideas.md](./ideas.md) |
 | Qiita など外部向け下書き | [drafts/qiita-cursor-cloudflare.md](./drafts/qiita-cursor-cloudflare.md) |
 
-**仕様の正**は次の4つです。記事や Cursor skill は、同じ内容を複製せずここへリンクします。
+**仕様の正**は次のとおりです。記事や Cursor skill は、同じ内容を複製せずここへリンクします。
 
 - 要件: `requirements.md`
-- 設計: `design.md`
+- 設計（構成・API）: `design.md`
+- UI デザイン（紙×金）: `ui-design.md`
 - 自動テスト仕様: `test-spec.md`
 - シナリオ仕様: `scenario-spec.md`
 
@@ -44,7 +46,7 @@
 
 | 置き場 | 書くこと | 書かないこと |
 |--------|----------|--------------|
-| `requirements` / `design` / `test-spec` / `scenario-spec` / `roadmap` | プロダクト・テストの事実と方針 | 記事の文体・KPT の長文 |
+| `requirements` / `design` / `ui-design` / `test-spec` / `scenario-spec` / `roadmap` | プロダクト・UI・テストの事実と方針 | 記事の文体・KPT の長文 |
 | `ops/` | 手元・Cloudflare・Git での**手順**と関係ファイルの場所 | 機能要件・合格条件の再定義（正は仕様側） |
 | `drafts/` | 読み手向けの説明・振り返り | 実装の唯一の仕様書として扱うこと |
 | `.cursor/skills/` | Agent の進め方・チェックリスト | design / test-spec の全文コピー |
@@ -54,6 +56,7 @@
 ```text
 要件を変える → requirements.md
 実装の形を変える → design.md（必要なら roadmap も）
+余興・ライブの見た目を変える → ui-design.md（必要なら app.css / .dress-* も）
 テストの合格条件を変える → test-spec.md / scenario-spec.md
 コマンドや CI の動きを変える → ops/testing.md（必要なら workflows）
 非本番の手順を変える → ops/preview.md
@@ -68,6 +71,7 @@ docs/
 ├── README.md          ← この目次（いま読んでいるページ）
 ├── requirements.md    ← プロダクト要件（正）
 ├── design.md          ← 設計・アーキテクチャ（正）
+├── ui-design.md       ← 余興・ライブ UI（紙×金）の正
 ├── test-spec.md       ← 自動テスト仕様（正）
 ├── scenario-spec.md   ← シナリオテスト仕様（利用者ストーリー）
 ├── roadmap.md         ← 次の施策

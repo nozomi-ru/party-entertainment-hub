@@ -2,10 +2,11 @@
 name: kotohogi-cloudflare
 description: >-
   Guides Kotohogi / party-entertainment-hub work: Next.js + OpenNext on Cloudflare
-  Workers, POLL_KV, static app-tools, docs/, Host/Guest poll UX, deploy checklists,
-  Qiita drafts, and KPT retrospectives. Use when editing this repo, deploying to
-  Cloudflare, changing wedding-bingo/quiz/poll, writing docs or Qiita posts, or
-  when the user mentions ことほぎ, Workers, KV, OpenNext, or Cursor commit/push ship loop.
+  Workers, POLL_KV, static app-tools, docs/, Host/Guest poll UX, paper-gold UI
+  (docs/ui-design.md), deploy checklists, Qiita drafts, and KPT retrospectives.
+  Use when editing this repo, deploying to Cloudflare, changing wedding-bingo/quiz/poll/dress
+  or other party UIs, writing docs or Qiita posts, or when the user mentions ことほぎ,
+  Workers, KV, OpenNext, or Cursor commit/push ship loop.
 ---
 
 # Kotohogi × Cloudflare 出荷スキル
@@ -20,6 +21,7 @@ description: >-
 | docs 全体の地図 | [docs/README.md](../../../docs/README.md) |
 | 要件 | [docs/requirements.md](../../../docs/requirements.md) |
 | 設計・API・構成 | [docs/design.md](../../../docs/design.md) |
+| **余興・ライブの見た目（紙×金）** | [docs/ui-design.md](../../../docs/ui-design.md) |
 | 自動テスト仕様 | [docs/test-spec.md](../../../docs/test-spec.md) |
 | シナリオテスト仕様 | [docs/scenario-spec.md](../../../docs/scenario-spec.md) |
 | 次の施策 | [docs/roadmap.md](../../../docs/roadmap.md) |
@@ -28,6 +30,26 @@ description: >-
 | SEO・Search Console・OGP | [docs/ops/seo.md](../../../docs/ops/seo.md) |
 | アクセス分析（CF Web Analytics） | [docs/ops/analytics.md](../../../docs/ops/analytics.md) |
 | Agent 用の短い補足 | [reference.md](reference.md) |
+
+## UI デザイン（必須・既定）
+
+**新規・改修の余興／ライブ画面（Guest・Screen・Admin・`app-tools`）では、ユーザーがデザインを細かく指定しなくても [docs/ui-design.md](../../../docs/ui-design.md) の紙×金を適用する。**
+
+着手前に `ui-design.md` を読む。実装の足場:
+
+| 種別 | 使うもの |
+|------|----------|
+| 静的 HTML | `public/app-tools/shared/app.css`（手本: `wedding-bingo`） |
+| Next.js の紙×金画面 | `DressFrame` / `.dress-*`、または同じトークンで同等フレーム |
+
+やることの要約（詳細は ui-design.md）:
+
+- 紙背景 `#fcfbf9` + 白カード + 二重枠 + 金オーナメント
+- Playfair Display（英字タイトル）+ Noto Serif JP（本文）
+- 金アクセント `#b4975a`。紫グラデ・ネオン・大きなピル群れは禁止
+- LP 専用トーン（ink / champagne）を余興の既定にしない（LP 作業時のみ LP 節）
+
+見た目の方針を変えるときは **先に `docs/ui-design.md` を更新**してから CSS / コンポーネントを揃える。
 
 ## アーキテクチャ（要約のみ）
 
@@ -38,12 +60,13 @@ description: >-
 | Cloudflare KV (`POLL_KV`) | 端末横断の共有 | アンケート票・進行 |
 
 - LP / API: `src/`（Next.js App Router）
-- 余興 UI: `public/app-tools/` の静的 HTML（`src/app` に HTML を置かない）
+- 余興 UI: `public/app-tools/` の静的 HTML（`src/app` に HTML を置かない）。例外: 同期が必要なライブ（例: `/dress/*`）は Next でも紙×金
 - 内部文書: `docs/`（サイト非公開。`public/` に入れない）
 - Worker 名: `kotohogi`（`wrangler.jsonc`）
 - 手元／GitHub Actions の公開: `npm run deploy`（OpenNext build + deploy）
 - Cloudflare ダッシュボード連携時の Deploy 例: `npx wrangler deploy` / 非本番 `npx wrangler versions upload`
 - Windows ARM ではローカル `preview`/`deploy` が落ちやすい → **GitHub Actions（Linux）または CF Git 連携**を優先
+- OpenNext では App Router API に `runtime = 'edge'` を付けない（ビルド失敗。`force-dynamic` のみ）
 
 ## デプロイ前チェックリスト
 
@@ -62,9 +85,9 @@ description: >-
 
 ## 余興ツール（app-tools）の必須 UX
 
-`public/app-tools/` を触るときの約束。正は `docs/requirements.md` §4.6（T-07〜T-11）と `docs/design.md` §5.3b。
+`public/app-tools/` を触るときの約束。正は `docs/requirements.md` §4.6（T-07〜T-11）と `docs/design.md` §5.3b。見た目は **必ず** [ui-design.md](../../../docs/ui-design.md)。
 
-- 共通部品を使う: ロジックは `shared/party-logic.js`、操作まわりは `shared/ui.js`（`window.PartyUI`）
+- 共通部品を使う: ロジックは `shared/party-logic.js`、操作まわりは `shared/ui.js`（`window.PartyUI`）、スタイルは `shared/app.css`
 - **`alert` / `confirm` を新規に足さない**。不足の理由は `.inline-error`、消す操作は「2回押し」
 - 実行できないときはボタンを `disabled` にし、件数など理由を `.count-hint` に出す
 - 参加者名の表示は `PartyUI.escapeHtml` を通す
@@ -109,7 +132,7 @@ description: >-
 ## ドキュメント / Qiita
 
 - 目次・資材地図: `docs/README.md`（まずここ）
-- プロダクト文書: `docs/requirements.md`, `docs/design.md`, `docs/test-spec.md`, `docs/scenario-spec.md`, `docs/roadmap.md`
+- プロダクト文書: `docs/requirements.md`, `docs/design.md`, `docs/ui-design.md`, `docs/test-spec.md`, `docs/scenario-spec.md`, `docs/roadmap.md`
 - 運用: `docs/ops/`（実行手順の正。testing は仕組み＋関係ファイル、preview は非本番）
 - Qiita 下書き: `docs/drafts/qiita-cursor-cloudflare.md`
 - 記事方針:
@@ -120,7 +143,9 @@ description: >-
   - 「高校生でもわかる」など読者を下に見る言い回しは使わない
   - 振り返りは **KPT**（Keep / Problem / Try）。テンプレは [reference.md](reference.md)
 
-## LP デザイン方針（このリポジトリ）
+## LP デザイン方針（ランディングのみ）
+
+余興アプリの紙×金とは別。**LP（`/`）を触るときだけ**適用。
 
 - ブランド名をヒーローの主信号に
 - フルブリード hero、ヒーローにカードやバッジを載せない
@@ -137,6 +162,7 @@ description: >-
 | TS ビルド失敗 `#` | `.d.ts` に `#` コメント | `//` にする |
 | アンケート同期しない | binding 名違い / KV未接続 | `POLL_KV` と本番 KV を確認 |
 | Guest が入れない | Host 未作成 or URL に room なし | Host 先、`?room=` 付き URL |
+| OpenNext ビルド失敗 | API に `runtime = 'edge'` | 外して `force-dynamic` のみ |
 
 ## 次の推奨（Try）
 

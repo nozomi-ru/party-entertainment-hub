@@ -1,7 +1,9 @@
 # Kotohogi — Agent 用リファレンス
 
 SKILL.md から必要時のみ読む。  
-**リポジトリ構成・API・データモデルの正は [docs/design.md](../../../docs/design.md)。** ここでは Agent 向けの短い補足だけ置く。
+**リポジトリ構成・API・データモデルの正は [docs/design.md](../../../docs/design.md)。**  
+**余興・ライブの見た目の正は [docs/ui-design.md](../../../docs/ui-design.md)。**  
+ここでは Agent 向けの短い補足だけ置く。
 
 ## すぐ使うパス
 
@@ -12,6 +14,9 @@ SKILL.md から必要時のみ読む。
 | ルーム／票の正規化 | `src/lib/poll.ts` |
 | KV / メモリ | `src/lib/poll-store.ts` |
 | 余興 HTML | `public/app-tools/` |
+| 余興共通スタイル（紙×金） | `public/app-tools/shared/app.css` |
+| UI デザイン正本 | `docs/ui-design.md` |
+| Next 紙×金フレーム例 | `src/components/dress/DressFrame.tsx` |
 | UrlPack | `public/app-tools/shared/pack.js` |
 | Worker / KV | `wrangler.jsonc` |
 | シナリオ E2E | `e2e/` |

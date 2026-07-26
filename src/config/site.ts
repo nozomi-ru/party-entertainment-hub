@@ -3,7 +3,7 @@
  * アプリURL・アフィリエイトリンクはここだけ編集すれば反映されます。
  */
 
-import { LIVE_GAMES } from "@/lib/live/catalog";
+import { LIVE_GAMES, liveRolePath } from "@/lib/live/catalog";
 
 /** 本番の公開オリジン（末尾スラッシュなし）。カスタムドメイン時は環境変数かここを更新 */
 export const siteUrl = (
@@ -176,7 +176,7 @@ const liveToolItems: ToolItem[] = LIVE_GAMES.map((game) => ({
   title: game.title,
   titleEn: game.short,
   description: game.description,
-  href: `/live/${game.id}/admin`,
+  href: liveRolePath(game.id, "admin"),
   category: "live",
 }));
 
@@ -301,5 +301,16 @@ export const affiliateBanners: AffiliateBanner[] = [
     trackingPixelSrc:
       "https://www15.a8.net/0.gif?a8mat=4B85P5+2MNXYQ+4YJS+614CX",
     alt: "parcy's（パーシーズ）恋愛・結婚のパーソナル診断",
+  },
+  {
+    id: "a8-100x100",
+    href: "https://px.a8.net/svt/ejp?a8mat=4B89KT+6YNIGI+5VGS+5ZMCH",
+    imageSrc:
+      "https://www28.a8.net/svt/bgt?aid=260726141421&wid=001&eno=01&mid=s00000027406001006000&mc=1",
+    imageWidth: 100,
+    imageHeight: 100,
+    trackingPixelSrc:
+      "https://www10.a8.net/0.gif?a8mat=4B89KT+6YNIGI+5VGS+5ZMCH",
+    alt: "おすすめサービス（PR）",
   },
 ];

@@ -112,6 +112,316 @@ body {
   animation-delay: 0.26s;
 }
 
+/* --- ドレス色当て（人間ビンゴ同系：紙×金） --- */
+.dress-app {
+  --dress-bg: #fcfbf9;
+  --dress-text: #1a1a1a;
+  --dress-muted: #4a4a4a;
+  --dress-gold: #b4975a;
+  --dress-border: #dcd7d0;
+  --dress-panel: #faf9f7;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 20px 12px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--dress-bg);
+  color: var(--dress-text);
+  font-family: "Noto Serif JP", "Yu Mincho", "游明朝", serif;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+.dress-nav {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.dress-nav a {
+  color: var(--dress-muted);
+  text-decoration: none;
+  letter-spacing: 0.04em;
+}
+
+.dress-nav a:hover {
+  color: var(--dress-gold);
+}
+
+.dress-nav-brand {
+  font-family: "Playfair Display", serif;
+  letter-spacing: 0.12em;
+  color: var(--dress-gold) !important;
+  text-transform: uppercase;
+}
+
+.dress-card {
+  max-width: 480px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid var(--dress-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  padding: 3.2em 1.5em 2em;
+  text-align: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.dress-card--wide {
+  max-width: 720px;
+}
+
+.dress-card::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid #ebe7e0;
+  pointer-events: none;
+}
+
+.dress-card > * {
+  position: relative;
+}
+
+.dress-ornament {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.dress-ornament::before,
+.dress-ornament::after {
+  content: "";
+  width: 30px;
+  height: 1.5px;
+  background-color: var(--dress-gold);
+  margin: 0 15px;
+}
+
+.dress-ornament svg {
+  width: 12px;
+  height: 12px;
+  fill: var(--dress-gold);
+}
+
+.dress-title {
+  font-family: "Playfair Display", serif;
+  font-size: clamp(2rem, 7vw, 2.5rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  color: var(--dress-text);
+}
+
+.dress-subtitle {
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--dress-gold);
+  margin: 0 0 0.4em;
+}
+
+.dress-lead {
+  font-size: 0.85rem;
+  color: var(--dress-muted);
+  margin: 0.4em auto 1.6em;
+  max-width: 34em;
+}
+
+.dress-body {
+  width: 100%;
+}
+
+.dress-field {
+  text-align: left;
+  margin-bottom: 1em;
+}
+
+.dress-field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--dress-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.03em;
+}
+
+.dress-field input {
+  width: 100%;
+  padding: 0.85em 1em;
+  border: 1px solid var(--dress-border);
+  background: var(--dress-panel);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--dress-text);
+  box-sizing: border-box;
+}
+
+.dress-hint {
+  font-size: 0.8rem;
+  color: var(--dress-muted);
+  margin: 1.2em 0 0;
+}
+
+.dress-error {
+  font-size: 0.85rem;
+  color: #a33;
+  margin: 0.6em 0 0;
+}
+
+.dress-color-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .dress-color-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.dress-color-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 1em 0.6em;
+  border: 1px solid var(--dress-border);
+  background: #fff;
+  font-family: inherit;
+  color: var(--dress-text);
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.dress-color-btn:hover:not(:disabled) {
+  border-color: var(--dress-gold);
+}
+
+.dress-color-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dress-color-btn.is-selected {
+  border-color: var(--dress-gold);
+  box-shadow: 0 6px 18px rgba(180, 151, 90, 0.28);
+  background: #fffcf7;
+}
+
+.dress-color-btn .label {
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+}
+
+.dress-color-btn .count {
+  font-family: "Playfair Display", serif;
+  font-size: 1.4rem;
+  color: var(--dress-gold);
+}
+
+.dress-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.75em 1.4em;
+  border: 1px solid var(--dress-text);
+  background: var(--dress-text);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.dress-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dress-btn--ghost {
+  background: #fff;
+  color: var(--dress-text);
+  border-color: var(--dress-border);
+}
+
+.dress-btn--gold {
+  background: var(--dress-gold);
+  border-color: var(--dress-gold);
+  color: #fff;
+}
+
+.dress-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 1.2em;
+}
+
+.dress-panel {
+  border: 1px solid var(--dress-border);
+  background: var(--dress-panel);
+  padding: 1em 1.1em;
+  text-align: left;
+  margin-top: 1em;
+}
+
+.dress-panel p {
+  margin: 0.35em 0;
+  font-size: 0.88rem;
+  color: var(--dress-muted);
+}
+
+.dress-status {
+  font-size: 0.9rem;
+  color: var(--dress-muted);
+  margin: 1em 0 0;
+}
+
+.dress-status strong {
+  color: var(--dress-text);
+  font-weight: 700;
+}
+
+@keyframes dress-strobe {
+  0%,
+  100% {
+    background-color: #fff8e8;
+  }
+  25% {
+    background-color: #ffe08a;
+  }
+  50% {
+    background-color: #ffffff;
+  }
+  75% {
+    background-color: #f0c14a;
+  }
+}
+
+.dress-strobe {
+  animation: dress-strobe 0.28s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -121,5 +431,10 @@ body {
   .animate-scroll-cue,
   .animate-line-draw {
     animation: none;
+  }
+
+  .dress-strobe {
+    animation: none;
+    background-color: #ffe08a;
   }
 }

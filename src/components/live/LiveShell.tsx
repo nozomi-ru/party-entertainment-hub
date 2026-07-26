@@ -19,7 +19,6 @@ export function LiveShell({ game, role }: Props) {
   const meta = getLiveGame(game);
   const search = useSearchParams();
   const initialRoom = parseRoomParam(search.get("room"));
-  const spotParam = search.get("spot") ?? "";
   const [roomInput, setRoomInput] = useState(initialRoom);
   /** クエリの room はプリフィルのみ。入室ボタンで確定（名前入力のため） */
   const [room, setRoom] = useState("");
@@ -153,7 +152,6 @@ export function LiveShell({ game, role }: Props) {
                 role={role}
                 room={room}
                 displayName={name}
-                spotParam={spotParam}
               />
             </div>
           </>
