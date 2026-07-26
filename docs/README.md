@@ -93,7 +93,7 @@ docs/
 | ビンゴ | `public/app-tools/wedding-bingo/` | requirements §4.2 · design §6 |
 | クイズ | `public/app-tools/wedding-quiz/` | requirements §4.3 · design §7 |
 | アンケート UI | `public/app-tools/wedding-poll/` | requirements §4.4 · design §8 |
-| 幹事・進行ツール群（10種）・一覧 | `public/app-tools/{slug}/`, `public/app-tools/index.html` | requirements §4.6 · design §8b |
+| 幹事・進行ツール群・一覧（LP `#tools`） | `public/app-tools/{slug}/`, `src/components/landing/ToolsGrid.tsx` | requirements §4.6 · design §8b |
 | 余興共通ロジック（単体テスト対象） | `public/app-tools/shared/party-logic.js` | design §5.3 · test-spec §6.3b |
 | 余興共通 UI 部品（単体テスト対象） | `public/app-tools/shared/ui.js` | design §5.3b · test-spec §6.3c |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 |

@@ -44,7 +44,7 @@
 | クイズ | `public/app-tools/wedding-quiz/index.html` | §7 |
 | アンケート UI | `public/app-tools/wedding-poll/index.html` | §8 |
 | 祝福メッセージ | `public/app-tools/wishboard/`, `src/app/api/wish/`, `src/lib/wish*.ts` | §8c |
-| 幹事・進行ツール群 | `public/app-tools/{slug}/`, `public/app-tools/index.html` | §8b |
+| 幹事・進行ツール群 | `public/app-tools/{slug}/`（一覧は LP `#tools`） | §8b |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | §5.3 |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | §5.4 |
 | URL 圧縮 | `public/app-tools/shared/pack.js` | §5.2 |
@@ -138,7 +138,7 @@ party-entertainment-hub/
 ├── public/
 │   ├── _headers
 │   └── app-tools/
-│       ├── index.html         # 余興アプリ一覧（ハブ）
+│       ├── index.html         # 旧ハブ → `/#tools` リダイレクトのみ
 │       ├── shared/pack.js     # URL 圧縮共有
 │       ├── shared/party-logic.js  # 余興共通ロジック（単体テスト対象）
 │       ├── shared/ui.js       # 余興共通 UI 部品
@@ -464,9 +464,17 @@ TTL: 24 時間（KV `expirationTtl`）
 
 ## 8b. 幹事・進行ツール群（TOOL-\*）設計
 
-**要件:** T-01〜T-06 / **一覧:** `public/app-tools/index.html`
+**要件:** T-01〜T-06 / **一覧の正:** LP `ToolsGrid`（`#tools`、`toolItems`）
 
 集客と当日運用を狙った単機能の静的アプリ群。共通ロジック（§5.3）と共通スタイル（§5.4）の上に構築し、**サーバー同期・DB は使わない**（端末内で完結）。
+
+**導線:**
+
+```text
+LP ヒーロー CTA → #tools（ToolsGrid）→ 各アプリ
+各アプリ nav「← ツール一覧」→ /#tools
+旧 /app-tools/index.html → /#tools（リダイレクトのみ・noindex）
+```
 
 | slug | 主な要素 ID（E2E 目印） | 使うロジック | 固有の操作性 |
 |------|--------------------------|--------------|--------------|
@@ -476,13 +484,12 @@ TTL: 24 時間（KV `expirationTtl`）
 | `scoreboard` | `#scoreboard` `#add-team-btn` `#undo-btn` | `rankScores` | 同点は同順位・1つ元に戻す・44px のタップ領域 |
 | `table-talk` | `#draw-btn` `#card-text` `#cat-row` `#custom-input` `#copy-btn` | `drawDifferent` `filterByCategory` | カテゴリ絞り込み・発表モード・スペースで引く・履歴コピー |
 | `photo-mission` | `#mission-list` `#apply-btn` `#copy-remain-btn` `#progress-fill` | `missionProgress` `clampText` | チェック進捗・残り／達成コピー・プリセット復元・2回押しリセット |
-| 一覧 `index.html` | `#tool-filter` `#no-match` | — | キーワードでの絞り込み（`data-keywords` に同義語） |
 
 共通事項:
 
 - 画面上部に「使い方の要点」（`#app-howto`）を表示（要件 T-03）
 - 各ページに固有の `title` / `description` / `canonical` / OGP を持ち、**sitemap（`src/app/sitemap.ts`）に登録**（要件 T-04）
-- LP（`ToolsGrid`＝`toolItems`）と一覧ページ（`app-tools/index.html`）から導線（要件 T-05）
+- 一覧導線は LP の ToolsGrid のみ（要件 T-05）。各ツール nav は `/#tools` へ戻す
 - 入力は必要に応じて localStorage 保存（要件 T-06）
 - 共通 UI 部品 `shared/ui.js`（§5.3b）を読み込み、次を守る
   - **`alert` / `confirm` を使わない**（要件 T-07）。不足は `.inline-error`、取り返しのつく形は「2回押し」

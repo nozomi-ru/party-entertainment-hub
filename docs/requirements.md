@@ -46,9 +46,9 @@
 | アンケート API / 同期 | `src/app/api/poll/`, `src/lib/poll.ts`, `src/lib/poll-store.ts` | design §8.5–8.6 | UT-* / SC-POLL-* |
 | 祝福メッセージ UI | `public/app-tools/wishboard/` | design §8c | （手動 / 将来 SC-WISH-*） |
 | 祝福メッセージ API | `src/app/api/wish/`, `src/lib/wish.ts`, `src/lib/wish-store.ts` | design §8c | UT-WISH-* |
-| 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧 `public/app-tools/index.html`, LP `ToolsGrid.tsx` | design §8b | UT-PARTY-* / SC-TOOLS-* |
+| 幹事・進行ツール群（TOOL-*） | `public/app-tools/{slug}/`, 一覧は LP `ToolsGrid.tsx`（`#tools`） | design §8b | UT-PARTY-* / SC-TOOLS-* |
 | 余興共通ロジック | `public/app-tools/shared/party-logic.js` | design §5.3 | UT-PARTY-* |
-| 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-08〜10 |
+| 余興共通 UI 部品 | `public/app-tools/shared/ui.js` | design §5.3b | UT-UI-* / SC-TOOLS-06〜07・09〜10 |
 | 余興共通スタイル | `public/app-tools/shared/app.css` | design §5.4 | （目視） |
 | Cloudflare / KV | `wrangler.jsonc` | design §9 | 手動 L3・preview |
 | URL 圧縮共有 | `public/app-tools/shared/pack.js` | design §5.2 | （将来 UT-PACK） |
@@ -93,7 +93,6 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | QUIZ | 新郎新婦クイズ | 静的 HTML + API | 4択クイズ（任意ルームで得点を集計） | `public/app-tools/wedding-quiz/` + `/api/quiz` |
 | POLL | リアルタイムアンケート | 静的 HTML + API | Host/Guest 同期投票 | `public/app-tools/wedding-poll/` + `/api/poll` |
 | WISH | 祝福メッセージボード | 静的 HTML + API | Host/Guest 同期のデジタル寄せ書き | `public/app-tools/wishboard/` + `/api/wish` |
-| HUB | 余興アプリ一覧 | 静的 HTML | 全アプリへの導線ページ（LP にも一覧を掲載） | `public/app-tools/index.html` |
 | TOOL-* | 幹事・進行ツール群（6種） | 静的 HTML | 抽選・進行・トーク・フォトなどの単機能アプリ | `public/app-tools/{slug}/` |
 
 **TOOL-\* の内訳（§4.6）:** ビンゴ数字抽選機・抽選ルーレット・カウントダウンタイマー・得点板・テーブルトークカード・フォトミッション。
@@ -114,7 +113,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 |----|------|--------|
 | LP-01 | ブランド名・タグライン・説明をヒーローで提示する | 必須 |
 | LP-02 | 課題→解決のセクションを表示する | 必須 |
-| LP-03 | Party Tools 一覧から各アプリ（ビンゴ／クイズ／アンケート含む）へ導線を持つ | 必須 |
+| LP-03 | Party Tools（`#tools`）が一覧の唯一の導線となり、各アプリへ遷移できる | 必須 |
 | LP-04 | アフィリエイト／おすすめリンクを設定ファイルから差し替え可能にする | 必須 |
 | LP-05 | CTA・機能リンクを `src/config/site.ts` で一元管理する | 必須 |
 
@@ -214,7 +213,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | T-02 | 乱数を使う処理は共通ロジック `party-logic.js` に集約し、単体テスト可能にする | 必須 |
 | T-03 | 各ツールは幹事・司会向けの「使い方の要点」を画面に表示する | 必須 |
 | T-04 | 各ツールは固有の title・description・canonical・OGP を持ち、sitemap に載せる | 必須 |
-| T-05 | 一覧ページ（`app-tools/index.html`）と LP から各ツールへ導線を持つ | 必須 |
+| T-05 | LP の ToolsGrid（`#tools`）から各ツールへ導線を持つ。各ツールは `/#tools` へ戻れる | 必須 |
 | T-06 | 入力内容は必要に応じて localStorage に保存し、再訪時に復元する | 推奨 |
 | T-07 | 入力の不足は `alert` / `confirm` ではなく画面上で理由を示し、実行できないボタンは無効にする | 必須 |
 | T-08 | 結果を出すツールは、その結果をコピーして共有できる | 必須 |
@@ -222,7 +221,7 @@ Host / Guest は主にアンケートで役割が分かれます。ビンゴ・�
 | T-10 | 参加者名などの入力は、表示時にエスケープして画面が壊れないようにする | 必須 |
 | T-11 | 会場で映すツール（抽選機・タイマー）は表示中に画面を消さず、キーボードでも操作できる | 推奨 |
 
-**補足:** 個人情報や共有同期は扱わない（端末内のみ）。ツール一覧は LP（`src/components/landing/ToolsGrid.tsx`）と hub ページ（`public/app-tools/index.html`）の両方から閲覧できる。
+**補足:** 個人情報や共有同期は扱わない（端末内のみ）。ツール一覧の正は LP の ToolsGrid（`#tools`）。旧 `/app-tools/index.html` は `/#tools` へリダイレクトするだけとする。
 
 **T-07〜T-11 の背景:** 当日の使い手は「片手にマイク、片手にスマホ」の幹事・司会である。モーダルダイアログは進行を止め、押し間違いはやり直しが効かず、会場の大画面はスリープで暗くなる。共通の実装は `public/app-tools/shared/ui.js`（design §5.3b）に置く。
 

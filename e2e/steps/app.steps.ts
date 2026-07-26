@@ -373,19 +373,21 @@ Then("問題文に {string} と表示される", async ({ world }, marker: strin
  * 追加ツール（SC-TOOLS-*）
  * ------------------------------------------------------------------ */
 
-Given("余興アプリ一覧を開いている", async ({ page }) => {
-  await page.goto("/app-tools/index.html");
-  await expect(page.locator("h1.app-title")).toHaveText(/Party Tools/i);
-});
-
 Then("一覧に {string} のリンクがある", async ({ page }, name: string) => {
+  const tools = page.locator("#tools");
+  await expect(tools).toBeVisible();
   await expect(
-    page.getByRole("link", { name: new RegExp(name) }).first(),
+    tools.getByRole("link", { name: new RegExp(name) }).first(),
   ).toBeVisible();
 });
 
 When("一覧から {string} を開く", async ({ page }, name: string) => {
-  await page.getByRole("link", { name: new RegExp(name) }).first().click();
+  const tools = page.locator("#tools");
+  await expect(tools).toBeVisible();
+  await tools
+    .getByRole("link", { name: new RegExp(name) })
+    .first()
+    .click();
 });
 
 Then("ビンゴ数字抽選機の画面が表示される", async ({ page }) => {
@@ -465,16 +467,6 @@ Then("{string} の通知が表示される", async ({ page }, message: string) =
     timeout: 15_000,
   });
   await expect(page.locator("#party-toast")).toHaveClass(/show/);
-});
-
-When("一覧を {string} で絞り込む", async ({ page }, keyword: string) => {
-  await page.locator("#tool-filter").fill(keyword);
-});
-
-Then("一覧から {string} のリンクが隠れる", async ({ page }, name: string) => {
-  await expect(page.locator(".tool-link", { hasText: name })).toBeHidden({
-    timeout: 15_000,
-  });
 });
 
 Given("得点板を開いている", async ({ page }) => {

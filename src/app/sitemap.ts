@@ -5,9 +5,8 @@ import { siteUrl } from "@/config/site";
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
 
-  /** 静的余興アプリのパス（priority 0.8）と一覧ページ（0.9） */
+  /** 静的余興アプリのパス（一覧は LP `#tools`。hub はリダイレクトのみで載せない） */
   const toolPaths = [
-    "/app-tools/index.html",
     "/app-tools/wedding-bingo/index.html",
     "/app-tools/wedding-quiz/index.html",
     "/app-tools/wedding-poll/index.html",
@@ -31,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${siteUrl}${path}`,
       lastModified,
       changeFrequency: "monthly" as const,
-      priority: path === "/app-tools/index.html" ? 0.9 : 0.8,
+      priority: 0.8,
     })),
   ];
 }

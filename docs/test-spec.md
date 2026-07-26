@@ -339,11 +339,10 @@ TOOL-\* の操作感を支える共通部品（design §5.3b）のうち、**DOM
 | SC-POLL-04 | `poll.feature` | Host が質問編集→Guest 反映 | 要件 P-10 |
 | SC-BINGO-01 | `bingo.feature` | ビンゴ達成＋日時（使い方表示あり） | 受け入れ2 |
 | SC-QUIZ-01 | `quiz.feature` | 共有 URL で同じ問題（使い方表示あり） | 受け入れ3 |
-| SC-TOOLS-01 | `tools.feature` | 一覧から各ツールへ遷移 | TOOL-* 導線 |
+| SC-TOOLS-01 | `tools.feature` | LP `#tools` から各ツールへ遷移 | TOOL-* 導線 / T-05 |
 | SC-TOOLS-02 | `tools.feature` | ビンゴ数字抽選機で1つ抽選（使い方表示あり） | T-BINGOM |
 | SC-TOOLS-06 | `tools.feature` | 入力不足はダイアログではなく画面上で理由が分かる（ルーレット） | 要件 T-07 |
 | SC-TOOLS-07 | `tools.feature` | 当選の記録をコピーして共有できる（ルーレット） | 要件 T-08 |
-| SC-TOOLS-08 | `tools.feature` | 一覧をキーワードで絞り込める | 要件 T-05 |
 | SC-TOOLS-09 | `tools.feature` | 得点板が加点を取り消せる | 要件 T-09 |
 | SC-TOOLS-10 | `tools.feature` | 抽選機が直前の抽選を取り消せる | 要件 T-09 |
 

@@ -51,11 +51,6 @@ export const pageSeo = {
     description:
       "司会がルームを開き、ゲストはスマホから投票。結果表示のタイミングも司会がコントロールできるライブアンケートです。",
   },
-  tools: {
-    title: "余興アプリ一覧 | ことほぎ",
-    description:
-      "結婚式・二次会・パーティーで使える無料の余興アプリ集。ビンゴ・クイズ・アンケート・寄せ書き・トークカード・フォトミッション・抽選・タイマーなどをスマホから今すぐ。",
-  },
   bingoMachine: {
     title: "ビンゴ数字抽選機 | ことほぎ",
     description:
@@ -102,7 +97,7 @@ export const appLinks = {
     href: "#tools",
   },
   secondaryCta: {
-    label: "ツール一覧を見る",
+    label: "余興ツールを見る",
     href: "#tools",
   },
 } as const;

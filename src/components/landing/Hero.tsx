@@ -13,19 +13,19 @@ export function Hero() {
       {/* eslint-disable-next-line @next/next/no-img-element -- LCP: unoptimized next/image は decoding=async になりやすい */}
       <img
         src={HERO_SRC}
-        alt="祝福に満ちたパーティー会場の様子"
+        alt=""
         width={1280}
-        height={854}
+        height={720}
         fetchPriority="high"
         decoding="sync"
         className="absolute inset-0 h-full w-full object-cover object-center"
       />
       <div
-        className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/70 via-[var(--ink)]/45 to-[var(--ink)]/80"
+        className="absolute inset-0 bg-gradient-to-b from-[var(--ink)]/75 via-[var(--ink)]/50 to-[var(--ink)]/82"
         aria-hidden
       />
       <div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_35%,rgba(168,155,124,0.18),transparent_70%)]"
+        className="absolute inset-0 bg-[radial-gradient(ellipse_65%_40%_at_50%_30%,rgba(168,155,124,0.22),transparent_68%)]"
         aria-hidden
       />
 
