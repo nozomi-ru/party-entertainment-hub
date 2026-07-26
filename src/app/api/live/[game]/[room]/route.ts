@@ -4,8 +4,8 @@ import { handleLiveAdmin, handleLiveGuest } from "@/lib/live/handlers";
 import { ensureLiveState, getLiveSnapshot } from "@/lib/live/store";
 import { normalizeRoom } from "@/lib/poll";
 
+/** OpenNext では App Router の edge runtime を別関数分割しないとビルド失敗するため未指定（他 API と同様） */
 export const dynamic = "force-dynamic";
-export const runtime = "edge";
 
 type RouteContext = {
   params: Promise<{ game: string; room: string }>;
